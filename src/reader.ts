@@ -85,7 +85,7 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
       const value = controller !== undefined
-        ? useController(controller, instance, propertyReader)
+        ? useController(controller, instance, propertyReader, content)
         : propertyReader()
 
       if (value === EOF) {

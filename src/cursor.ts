@@ -11,6 +11,10 @@ export class Cursor {
   index: number = 0
   endianness: CursorEndianness = CursorEndianness.BigEndian
 
+  offset (): number {
+    return this.index
+  }
+
   forward (len: number): number {
     this.index += len
     return this.index

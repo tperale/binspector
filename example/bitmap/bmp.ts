@@ -1,6 +1,6 @@
-import { PrimitiveSymbol, Relation, Count, Enum, Choice } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Enum, Choice, Matrix } from '../../src'
 import {
-  OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
+  OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER
 } from './header'
 import { printColour } from './renderer'
 // import {
@@ -79,17 +79,29 @@ export class Bitmap {
   /* The gap size depend on the offset found in the BitmapFileHeader */
   /* gap */
 
-  @Count(200 * 200)
+  @Matrix('bitmap_header.width', 'bitmap_header.height', { alignment: 4 })
   @Relation(RGB)
-  data: RGB[]
+  data: RGB[][]
 
   render (): void {
-    const lines = Array.from({ length: this.bitmap_header.height }).map((_, i) => {
-      const line = Array.from({ length: this.bitmap_header.width }).map((_, j) => {
-        return printColour(this.data[i * this.bitmap_header.width + j])
+    console.log(this.data.length, this.data.map(x => x.length))
+    // const lines = Array.from({ length: this.bitmap_header.height }).map((_, i) => {
+    //   const line = Array.from({ length: this.bitmap_header.width }).map((_, j) => {
+    //     const data = this.data[i][j]
+    //     if (data) {
+    //       return printColour(this.data[i][j])
+    //     } else {
+    //       return ''
+    //     }
+    //   })
+    //   return line.join('')
+    // })
+    const lines = this.data.map(x => {
+      const line = x.map(rgb => {
+        return printColour(rgb)
       })
       return line.join('')
     })
-    console.log(lines.join('\n'))
+    console.log(lines.reverse().join('\n'))
   }
 }

@@ -12,6 +12,7 @@
 import { type MetaDescriptor, recursiveGet, propertyTargetType } from './common'
 import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject } from '../types'
+import { type Cursor } from '../cursor'
 import Meta from '../metadatas'
 
 export const ControllerSymbol = Symbol('controller')
@@ -37,7 +38,7 @@ export const ControllerOptionsDefault = {
 /**
  * ControllerFunction.
  */
-export type ControllerFunction<T> = (targetInstance: T, read: ControllerReaderFunction, opt?: ControllerOptions<unknown>) => any
+export type ControllerFunction<T> = (targetInstance: T, read: ControllerReaderFunction, cursor?: Cursor, opt?: ControllerOptions<unknown>) => any
 
 /**
  * Controller.
@@ -81,7 +82,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
       target,
       propertyName: propertyKey,
       options,
-      controller: (curr, read) => func(curr, read, options)
+      controller: (curr, read, cursor) => func(curr, read, cursor, options)
     }
 
     Meta.setController(target, propertyKey, controller)
@@ -102,12 +103,14 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
   return function (
     currStateObject: T,
     read: ControllerReaderFunction,
+    cursor: Cursor,
     opt: ControllerOptions<unknown>
   ) {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
     // into an array
     const result = []
+    const startOffset = cursor !== undefined ? cursor.offset() : 0
     // TODO possible bug.
     // The condition `func` is not checked before executing the first `read`
     // This can possibly lead to a bug since the condition could be `i < 0`
@@ -120,13 +123,18 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
         // If you attempt to read a primitive but reached the EOF.
         // EOF might be the only value we don't want to put inside the result array.
         // Other special character like `\0` is discutable.
-        return opt.targetType === String ? result.join('') : result
+        break
       }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject)) {
-        return opt.targetType === String ? result.join('') : result
+        break
       }
     }
+    const endOffset = cursor !== undefined ? cursor.offset() : 0
+    if (opt.alignment > 0 && cursor !== undefined) {
+      cursor.forward((startOffset - endOffset) % opt.alignment)
+    }
+    return opt.targetType === String ? result.join('') : result
   }
 }
 /**
@@ -248,6 +256,28 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions<unk
   return controllerDecoratorFactory('count', whileFunctionFactory(countCheck), opt)
 }
 
+export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+  function countCheck (arg: number | string) {
+    return (_: any, i: number, currStateObject: object): boolean => {
+      // TODO this is not optimal since you will execute the recursiveGet for each iteration
+      const count =
+        typeof arg === 'string'
+          ? recursiveGet(currStateObject, arg)
+          : arg
+
+      return i < count
+    }
+  }
+
+  function matrixController<T> (currStateObject: T, read: ControllerReaderFunction, cursor: Cursor, opt: ControllerOptions<unknown>): any {
+    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, cursor, opt)
+
+    return whileFunctionFactory(countCheck(height))(currStateObject, lineRead, cursor, opt)
+  }
+
+  return controllerDecoratorFactory('matrix', matrixController, opt)
+}
+
 /**
  * useController.
  *
@@ -258,6 +288,6 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions<unk
  *
  * @category Advanced Use
  */
-export function useController<T> (controller: Controller<T>, target: T, reader: ControllerReaderFunction): any {
-  return controller.controller(target, reader)
+export function useController<T> (controller: Controller<T>, target: T, reader: ControllerReaderFunction, ...args: any[]): any {
+  return controller.controller(target, reader, ...args)
 }
