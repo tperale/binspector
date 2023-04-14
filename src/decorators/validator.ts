@@ -129,7 +129,17 @@ export function Validate (validatingFunction: ValidatorFunction<unknown>, opt?: 
  * }
  * ```
  *
- * Or ASCII string.
+ * Or to check the value is one of the value from an array passed as a parameter.
+ *
+ * ```typescript
+ * class Header {
+ *    @Match([1, 8, 16])
+ *    @Relation(PrimitiveSymbol.u8)
+ *    magic: number,
+ * }
+ * ```
+ *
+ * Or an ASCII string.
  *
  * ```typescript
  * class Header {
@@ -154,8 +164,12 @@ export function Match (matchingValue: any, opt?: Partial<ValidatorOptions>): Dec
    */
   const matchValidatorFactory = (matchingValue: any) => {
     return function <T>(value: any, _: T): boolean {
-      if (Array.isArray(matchingValue) && Array.isArray(value)) {
-        return matchingValue.every((x, i) => x === value[i])
+      if (Array.isArray(matchingValue)) {
+        if (Array.isArray(value)) {
+          return matchingValue.every((x, i) => x === value[i])
+        } else {
+          return matchingValue.includes(value)
+        }
       } else {
         return matchingValue === value
       }

@@ -1,7 +1,5 @@
-import { PrimitiveSymbol, Relation, Count, Enum, } from '../../src'
-import {
-  BitmapCompression 
-} from './compression'
+import { PrimitiveSymbol, Relation, Count, Enum, Match } from '../../src'
+import { BitmapCompression } from './compression'
 
 export class OS21XBITMAPHEADER {
   @Relation(PrimitiveSymbol.u16)
@@ -13,7 +11,7 @@ export class OS21XBITMAPHEADER {
   @Relation(PrimitiveSymbol.u16)
   color_plane: number
 
-  // @Match([1, 4, 8, 24])
+  @Match([1, 4, 8, 24])
   @Relation(PrimitiveSymbol.u16)
   bits_per_pixels: number
 }
@@ -28,7 +26,7 @@ export class OS22XBITMAPCOREHEADER {
   @Relation(PrimitiveSymbol.u16)
   color_plane: number
 
-  // @Match([1, 4, 8, 24])
+  @Match([1, 4, 8, 24])
   @Relation(PrimitiveSymbol.u16)
   bits_per_pixels: number
 }
