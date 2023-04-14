@@ -1,10 +1,10 @@
-import { PrimitiveSymbol, Relation, Count, Enum, Choice, Matrix } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset } from '../../src'
 import {
   OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER
 } from './header'
 import { printColour } from './renderer'
 // import {
-//   BitmapCompression 
+//   BitmapCompression
 // } from './compression'
 
 enum BitmapHeaderTypes {
@@ -73,32 +73,39 @@ export class Bitmap {
    */
   /* extra_bit_masks */
 
-  /* If the color depth <= 8 bits */
-  /* color_table */
+  @Count('bitmap_header.palette_length')
+  @IfThen((instance: Bitmap) => instance.bitmap_header.bits_per_pixels <= 8, RGB)
+  @Else()
+  color_table: RGB[]
 
   /* The gap size depend on the offset found in the BitmapFileHeader */
-  /* gap */
+  /* Just use the `@Pre` decorator to move the cursor to the correct place */
 
+  @Offset('file_header.offset')
   @Matrix('bitmap_header.width', 'bitmap_header.height', { alignment: 4 })
-  @Relation(RGB)
-  data: RGB[][]
+  @Choice('bitmap_header.bits_per_pixels', {
+    8: PrimitiveSymbol.u8,
+    24: RGB
+  })
+  data: RGB[][] | number[][]
+
+  toString (): string {
+    return JSON.stringify({
+      file_header: this.file_header,
+      bitmap_header: { size: this.bitmap_header_size, ...this.bitmap_header }
+    }, null, 2)
+  }
 
   render (): void {
     console.log(this.data.length, this.data.map(x => x.length))
-    // const lines = Array.from({ length: this.bitmap_header.height }).map((_, i) => {
-    //   const line = Array.from({ length: this.bitmap_header.width }).map((_, j) => {
-    //     const data = this.data[i][j]
-    //     if (data) {
-    //       return printColour(this.data[i][j])
-    //     } else {
-    //       return ''
-    //     }
-    //   })
-    //   return line.join('')
-    // })
     const lines = this.data.map(x => {
-      const line = x.map(rgb => {
-        return printColour(rgb)
+      const line = x.map(x => {
+        if (this.bitmap_header.bits_per_pixels === 24) {
+          return printColour(x as RGB)
+        } else if (this.bitmap_header.bits_per_pixels === 8) {
+          return printColour(this.color_table[x as number])
+        }
+        return ''
       })
       return line.join('')
     })

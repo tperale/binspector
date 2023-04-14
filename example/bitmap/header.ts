@@ -82,7 +82,7 @@ export class OS22XBITMAPHEADER extends OS22XBITMAPCOREHEADER {
 
 export class BITMAPINFOHEADER extends OS22XBITMAPCOREHEADER {
   @Enum(BitmapCompression)
-  @Relation(PrimitiveSymbol.u16)
+  @Relation(PrimitiveSymbol.u32)
   compression: BitmapCompression
 
   @Relation(PrimitiveSymbol.u32)
@@ -137,5 +137,3 @@ export class BITMAPV4INFOHEADER extends BITMAPV3INFOHEADER {
 
 export class BITMAPV5INFOHEADER extends BITMAPV4INFOHEADER {
 }
-
-

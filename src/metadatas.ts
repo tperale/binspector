@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 import { type PropertyType } from './decorators/primitive'
-import { type Validator, ValidatorSymbol } from './decorators/validator'
+import { type Condition, ConditionSymbol } from './decorators/condition'
 import { type Controller, ControllerSymbol } from './decorators/controller'
 import { type Transformer, TransformerSymbol } from './decorators/transformer'
-import { type Condition, ConditionSymbol } from './decorators/condition'
+import { type Validator, ValidatorSymbol } from './decorators/validator'
+import { type PrePost, PreFunctionSymbol, PostFunctionSymbol  } from './decorators/prepost'
 
 function getMetadata<T> (
   target: T,
@@ -26,20 +27,45 @@ function setMetadata<T> (
   return newMetas
 }
 
-function getValidators<T> (target: T, propertyKey: keyof T): Array<Validator<T>> {
+const FieldSymbol = Symbol('field-symbol')
+
+function getFields<T> (target: T): Array<PropertyType<T>> {
+  const fields = Reflect.getMetadata(FieldSymbol, target as object)
+  return Array.isArray(fields) ? fields : []
+}
+
+function getField<T> (target: T, propertyKey: keyof T): PropertyType<T> | undefined {
+  const fields = getFields(target)
+  return fields.find(x => x.propertyName === propertyKey)
+}
+
+function setField<T> (
+  target: T,
+  field: PropertyType<T>
+): Array<PropertyType<T>> {
+  const fields = [...getFields(target), field]
+  Reflect.defineMetadata(FieldSymbol, fields, target as object)
+  return fields
+}
+
+function isFieldDecorated<T> (target: T, propertyKey: keyof T): boolean {
+  return getField(target, propertyKey) !== undefined
+}
+
+function getPre<T> (target: T, propertyKey: keyof T): Array<PrePost<T>> {
   return getMetadata(
     target,
     propertyKey,
-    ValidatorSymbol
-  ) as Array<Validator<T>>
+    PreFunctionSymbol
+  ) as Array<PrePost<T>>
 }
 
-function setValidator<T> (
+function setPre<T> (
   target: T,
   propertyKey: keyof T,
-  validator: Validator<T>
-): Array<Validator<T>> {
-  return setMetadata(target, propertyKey, validator.type, validator) as Array<Validator<T>>
+  pre: PrePost<T>
+): Array<PrePost<T>> {
+  return setMetadata(target, propertyKey, PreFunctionSymbol, pre) as Array<PrePost<T>>
 }
 
 function getConditions<T> (target: T, propertyKey: keyof T): Array<Condition<T, unknown>> {
@@ -58,6 +84,19 @@ function setCondition<T> (
   return setMetadata(target, propertyKey, ConditionSymbol, condition) as Array<Condition<T, unknown>>
 }
 
+function getController<T> (target: T, propertyKey: keyof T): Controller<T> | undefined {
+  return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
+}
+
+function setController<T> (
+  target: T,
+  propertyKey: keyof T,
+  controller: Controller<T>
+): Controller<T> {
+  Reflect.defineMetadata(ControllerSymbol, controller, target as object, propertyKey as string)
+  return controller
+}
+
 function getTransformers<T> (target: T, propertyKey: keyof T): Array<Transformer<T>> {
   return getMetadata(
     target,
@@ -74,57 +113,55 @@ function setTransformer<T> (
   return setMetadata(target, propertyKey, TransformerSymbol, transformer) as Array<Transformer<T>>
 }
 
-function getController<T> (target: T, propertyKey: keyof T): Controller<T> | undefined {
-  return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
+function getValidators<T> (target: T, propertyKey: keyof T): Array<Validator<T>> {
+  return getMetadata(
+    target,
+    propertyKey,
+    ValidatorSymbol
+  ) as Array<Validator<T>>
 }
 
-function setController<T> (
+function setValidator<T> (
   target: T,
   propertyKey: keyof T,
-  controller: Controller<T>
-): Controller<T> {
-  Reflect.defineMetadata(ControllerSymbol, controller, target as object, propertyKey as string)
-  return controller
+  validator: Validator<T>
+): Array<Validator<T>> {
+  return setMetadata(target, propertyKey, validator.type, validator) as Array<Validator<T>>
 }
 
-const FieldSymbol = Symbol('field-symbol')
-
-function getFields<T> (target: T): Array<PropertyType<T>> {
-  const fields = Reflect.getMetadata(FieldSymbol, target as object)
-  return Array.isArray(fields) ? fields : []
+function getPost<T> (target: T, propertyKey: keyof T): Array<PrePost<T>> {
+  return getMetadata(
+    target,
+    propertyKey,
+    PostFunctionSymbol
+  ) as Array<PrePost<T>>
 }
 
-function getField<T> (target: T, propertyKey: keyof T): PropertyType<T> | undefined {
-  const fields = getFields(target)
-  return fields.find(x => x.propertyName === propertyKey)
-}
-
-function isFieldDecorated<T> (target: T, propertyKey: keyof T): boolean {
-  return getField(target, propertyKey) !== undefined
-}
-
-function setField<T> (
+function setPost<T> (
   target: T,
-  field: PropertyType<T>
-): Array<PropertyType<T>> {
-  const fields = [...getFields(target), field]
-  Reflect.defineMetadata(FieldSymbol, fields, target as object)
-  return fields
+  propertyKey: keyof T,
+  post: PrePost<T>
+): Array<PrePost<T>> {
+  return setMetadata(target, propertyKey, PostFunctionSymbol, post) as Array<PrePost<T>>
 }
 
 export default {
   getMetadata,
   setMetadata,
-  getValidators,
-  setValidator,
-  getTransformers,
-  setTransformer,
+  getField,
+  getFields,
+  setField,
+  isFieldDecorated,
+  getPre,
+  setPre,
   getConditions,
   setCondition,
   getController,
   setController,
-  isFieldDecorated,
-  getField,
-  getFields,
-  setField
+  getTransformers,
+  setTransformer,
+  getValidators,
+  setValidator,
+  getPost,
+  setPost
 }

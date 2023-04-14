@@ -19,6 +19,7 @@ import { useController } from './decorators/controller'
 import { useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
+import { usePrePost } from './decorators/prepost'
 
 /**
  * binread.
@@ -79,6 +80,8 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
   const instance = new ObjectDefinition(...args)
 
   Meta.getFields(instance).forEach((field) => {
+    usePrePost(Meta.getPre(instance, field.propertyName), instance, content)
+
     const controller = Meta.getController(instance, field.propertyName)
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.target, field.propertyName), instance) : field
@@ -105,6 +108,8 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
       useValidators(Meta.getValidators(instance, field.propertyName), transformedValue, instance)
 
       instance[field.propertyName] = transformedValue
+
+      usePrePost(Meta.getPost(instance, field.propertyName), instance, content)
     }
   })
 

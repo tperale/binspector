@@ -15,6 +15,11 @@ export class Cursor {
     return this.index
   }
 
+  move (offset: number): number {
+    this.index = offset
+    return offset
+  }
+
   forward (len: number): number {
     this.index += len
     return this.index
