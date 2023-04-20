@@ -56,6 +56,7 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
       }
       // TODO This is really similar to the code for condition.
       // Should move it to another function probably.
+      // TODO No need to do the check inside the function.
       return () => {
         try {
           if (field.args !== undefined) {

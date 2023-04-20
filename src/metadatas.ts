@@ -4,7 +4,8 @@ import { type Condition, ConditionSymbol } from './decorators/condition'
 import { type Controller, ControllerSymbol } from './decorators/controller'
 import { type Transformer, TransformerSymbol } from './decorators/transformer'
 import { type Validator, ValidatorSymbol } from './decorators/validator'
-import { type PrePost, PreFunctionSymbol, PostFunctionSymbol  } from './decorators/prepost'
+import { type BitField, BitFieldSymbol } from './decorators/bitfield'
+import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from './decorators/prepost'
 
 function getMetadata<T> (
   target: T,
@@ -145,6 +146,25 @@ function setPost<T> (
   return setMetadata(target, propertyKey, PostFunctionSymbol, post) as Array<PrePost<T>>
 }
 
+function getBitField<T> (target: T, propertyKey: keyof T): BitField<T> | undefined {
+  const bitfields = getBitFields(target)
+  return bitfields.find(x => x.propertyName === propertyKey)
+}
+
+function getBitFields<T> (target: T): Array<BitField<T>> {
+  const bitfields = Reflect.getMetadata(BitFieldSymbol, target as object)
+  return Array.isArray(bitfields) ? bitfields : []
+}
+
+function setBitField<T> (
+  target: T,
+  bitfield: BitField<T>
+): Array<BitField<T>> {
+  const bitfields = [...getBitFields(target), bitfield]
+  Reflect.defineMetadata(BitFieldSymbol, bitfields, target as object)
+  return bitfields
+}
+
 export default {
   getMetadata,
   setMetadata,
@@ -163,5 +183,8 @@ export default {
   getValidators,
   setValidator,
   getPost,
-  setPost
+  setPost,
+  getBitField,
+  getBitFields,
+  setBitField
 }
