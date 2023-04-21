@@ -6,7 +6,7 @@ import path from 'path'
 import { Bitmap } from './bmp'
 
 test('', async () => {
-  const data = await fs.readFile(path.join(__dirname, 'lena.bmp'))
+  const data = await fs.readFile(path.join(__dirname, 'sample.bmp'))
   const bmp = binread(new Cursor(data.buffer, CursorEndianness.LittleEndian), Bitmap)
   console.log(bmp.toString())
   // bmp.render()

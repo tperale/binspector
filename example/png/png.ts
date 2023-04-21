@@ -114,12 +114,10 @@ class PNGChunkIDAT {
   @Relation(PrimitiveSymbol.u8)
   data: number
 
-  constructor(length: number) {
+  constructor (length: number) {
     this._length = length
   }
 }
-
-class PNGChunkIEND {}
 
 class PNGChunk {
   @Relation(PrimitiveSymbol.u32)
@@ -136,8 +134,8 @@ class PNGChunk {
   @IfThen((curr: PNGChunk) => curr.type === PNGTypes.pHYs, PNGChunkpHYs)
   @IfThen((curr: PNGChunk) => curr.type === PNGTypes.tIME, PNGChunktIME)
   @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IDAT, PNGChunkIDAT, (curr: PNGChunk) => [curr.length])
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IEND, PNGChunkIEND)
-  data: PNGChunkIDAT | PNGChunkPLTE | PNGChunkbKGD | PNGChunkpHYs | PNGChunktIME | PNGChunkIHDR | PNGChunkIEND
+  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IEND)
+  data: PNGChunkIDAT | PNGChunkPLTE | PNGChunkbKGD | PNGChunkpHYs | PNGChunktIME | PNGChunkIHDR
 
   // @Crc(u32)
   @Relation(PrimitiveSymbol.u32)
@@ -151,10 +149,7 @@ export class PNG {
   magic: number[]
 
   @Validate((chunks: PNGChunk[]) => chunks[0].type === PNGTypes.IHDR)
-  @While((chunk: PNGChunk) => {
-    console.log(chunk)
-    return chunk.type !== PNGTypes.IEND
-  })
+  @While((chunk: PNGChunk) => chunk.type !== PNGTypes.IEND)
   @Relation(PNGChunk)
   chunks: PNGChunk
 }
