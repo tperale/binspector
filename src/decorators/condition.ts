@@ -184,7 +184,7 @@ export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): Dec
  *
  * @category Decorators
  */
-export function Choice<T> (cmp: string | ((targetInstance: T) => any), match: Record<any, Primitive<unknown> | [Primitive<unknown>, RelationParameters<unknown>]>, args?: RelationParameters<unknown>): DecoratorType {
+export function Choice<T> (cmp: string | ((targetInstance: T) => any), match: Record<any, Primitive<unknown> | [Primitive<unknown>, RelationParameters<unknown>] | undefined>, args?: RelationParameters<unknown>): DecoratorType {
   const valueToCompare = typeof cmp === 'string' ? (targetInstance: T) => recursiveGet(targetInstance, cmp) : cmp
   // Mandatory to cast to String because the key is always a string even though you declare it as a number
   const decorators = Object.keys(match).map((key: keyof typeof match) => {

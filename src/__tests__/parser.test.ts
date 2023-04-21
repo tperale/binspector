@@ -329,15 +329,21 @@ describe('Reading binary with conditions', () => {
 
       @Choice((instance: Header) => instance.type, {
         0x01: PrimitiveSymbol.u8,
-        0x02: PrimitiveSymbol.u16
+        0x02: PrimitiveSymbol.u16,
+        0x03: undefined
       })
       payload: number
     }
 
-    const header = new Uint8Array([0x02, 0x00, 0x01]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    const cur1 = new Cursor(new Uint8Array([0x02, 0x00, 0x01]).buffer)
+    expect(binread(cur1, Header)).toMatchObject({
       type: 0x02,
       payload: 0x0001
+    })
+
+    const cur2 = new Cursor(new Uint8Array([0x03, 0x01, 0x01]).buffer)
+    expect(binread(cur2, Header)).toMatchObject({
+      type: 0x03
     })
   })
   it('should work with bitfield', () => {

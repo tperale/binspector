@@ -1,5 +1,7 @@
 import { describe, expect } from '@jest/globals'
 import { Count, While, Until, useController } from '../controller'
+import { Cursor } from '../../cursor'
+import { PrimitiveSymbol } from '../../types'
 import Meta from '../../metadatas'
 
 function * testReader (list: any[]): Generator<any> {
@@ -64,6 +66,65 @@ describe('Testing the usage of the controller decorator', () => {
     const controller = Meta.getController(instance, 'field')
     if (controller !== undefined) {
       expect(useController(controller, instance, () => iterator.next().value)).toStrictEqual([1, 2, 3])
+    }
+  })
+  it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
+    class TestClass {
+      @Count(2, { alignment: 4 })
+      field: number
+    }
+
+    const instance = new TestClass()
+
+    const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+
+    const controller = Meta.getController(instance, 'field')
+    if (controller !== undefined) {
+      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
+      expect(content).toStrictEqual([1, 2])
+      expect(cur.offset()).toStrictEqual(4)
+      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+      expect(cur.offset()).toStrictEqual(5)
+    }
+  })
+  it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
+    class TestClass {
+      @Count(4, { alignment: 4 })
+      field: number
+    }
+
+    const instance = new TestClass()
+
+    const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+
+    const controller = Meta.getController(instance, 'field')
+    if (controller !== undefined) {
+      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
+      expect(content).toStrictEqual([1, 2, 1, 1])
+      expect(cur.offset()).toStrictEqual(4)
+      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+      expect(cur.offset()).toStrictEqual(5)
+    }
+  })
+  it('should read the field until receive a number 5 and then move the cursor back to the previous position before reading it', () => {
+    class TestClass {
+      @While((x: any) => x !== 5, { peek: true })
+      field: number
+
+      next: number
+    }
+
+    const instance = new TestClass()
+
+    const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
+
+    const controller = Meta.getController(instance, 'field')
+    if (controller !== undefined) {
+      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
+      expect(content).toStrictEqual([3, 1])
+      expect(cur.offset()).toStrictEqual(2)
+      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+      expect(cur.offset()).toStrictEqual(3)
     }
   })
   it('should throw an error if no primitive defined', () => {

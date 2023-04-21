@@ -63,7 +63,6 @@ export function Post (func: PrePostFunction<unknown>, opt?: Partial<PrePostOptio
 
 export function Offset (offset: number | string, opt?: Partial<PrePostOptions>): DecoratorType {
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
-    console.log('Offset was: ', cursor.offset(), ' moving to ', typeof offset === 'string' ? recursiveGet(targetInstance, offset) : offset)
     cursor.move(typeof offset === 'string' ? recursiveGet(targetInstance, offset) : offset)
   }, opt)
 }

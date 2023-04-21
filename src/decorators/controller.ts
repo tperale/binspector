@@ -27,12 +27,14 @@ export interface ControllerOptions<T> {
   primitiveCheck: boolean
   targetType: InstantiableObject<T> | undefined
   alignment: number
+  peek: boolean
 }
 
 export const ControllerOptionsDefault = {
   primitiveCheck: true,
   targetType: undefined,
-  alignment: 0
+  alignment: 0,
+  peek: false
 }
 
 /**
@@ -118,6 +120,7 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
     // I have to figure out if it's an issue for the condition to receive a null
     // object. It's probably one for the condition that check the inner object property.
     while (true) {
+      const beforeReadOffset = cursor !== undefined ? cursor.offset() : 0
       const ret = read()
       if (ret === EOF) {
         // If you attempt to read a primitive but reached the EOF.
@@ -127,12 +130,16 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
       }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject)) {
+        if (cursor !== undefined && opt.peek) {
+          result.pop()
+          cursor.move(beforeReadOffset)
+        }
         break
       }
     }
     const endOffset = cursor !== undefined ? cursor.offset() : 0
     if (opt.alignment > 0 && cursor !== undefined) {
-      cursor.forward((startOffset - endOffset) % opt.alignment)
+      cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
     }
     return opt.targetType === String ? result.join('') : result
   }

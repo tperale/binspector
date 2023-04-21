@@ -30,6 +30,7 @@ export function bitFieldDecoratorFactory (name: string, len: number, opt: Partia
   return function <T>(target: T, propertyKey: keyof T) {
     if (opt.primitiveCheck) {
       if (Meta.getFields(target).length > 0) {
+        // TODO Create new Error
         throw new Error('Can\'t define bitfield inside an instance with relations')
       }
     }
@@ -73,10 +74,9 @@ export function useBitField<T> (bitfields: Array<BitField<T>>, targetInstance: T
 
   const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
   const value = cursor.read(getPrimitive(totalBitLength)) as number
-  bitfields.reduce((offset: number, bf) => {
-    // @ts-expect-error Weid thing with the keyof to fix
+  bitfields.reduce((offset: number, bf: BitField<T>) => {
+    // @ts-expect-error Weird thing with the keyof to fix
     targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
-    // targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
     return offset + bf.bitlength
   }, 0)
 
