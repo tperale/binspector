@@ -1,5 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { useBitField, Bitfield } from '../bitfield'
+import { Relation } from '../primitive'
 import Meta from '../../metadatas'
 import { Cursor } from '../../cursor'
 
@@ -23,5 +24,16 @@ describe('Testing the usage of the bitfield decorator', () => {
     const cur = new Cursor(buf)
 
     expect(useBitField(bitfields, instance, cur)).toMatchObject({ field1: 1, field2: 9 })
+  })
+  it('', () => {
+    expect(() => {
+      class TestBitField {
+        @Relation(Number)
+        field1: number = 1
+
+        @Bitfield(6)
+        field2: number
+      }
+    }).toThrow(/Can't define bitfield inside an instance with relations/)
   })
 })

@@ -20,6 +20,7 @@ import { useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
 import { usePrePost } from './decorators/prepost'
+import { useBitField } from './decorators/bitfield'
 
 /**
  * binread.
@@ -79,6 +80,11 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
   // TODO [Cursor] Enter a new 'namespace' that will be used for the debugging history
 
   const instance = new ObjectDefinition(...args)
+
+  const bitfields = Meta.getBitFields(instance)
+  if (bitfields.length > 0) {
+    return useBitField(bitfields, instance, content)
+  }
 
   Meta.getFields(instance).forEach((field) => {
     usePrePost(Meta.getPre(instance, field.propertyName), instance, content)

@@ -28,11 +28,11 @@ export interface BitField<T> extends MetaDescriptor<T> {
 
 export function bitFieldDecoratorFactory (name: string, len: number, opt: Partial<BitFieldOptions> = BitFieldOptionsDefault): DecoratorType {
   return function <T>(target: T, propertyKey: keyof T) {
-    // if (opt.primitiveCheck) {
-    //   if (Meta.getFields(target).length > 0) {
-    //     throw new Error('Can\'t define bitfield inside an instance with relations')
-    //   }
-    // }
+    if (opt.primitiveCheck) {
+      if (Meta.getFields(target).length > 0) {
+        throw new Error('Can\'t define bitfield inside an instance with relations')
+      }
+    }
     const options = {
       ...BitFieldOptionsDefault,
       ...opt
@@ -73,10 +73,10 @@ export function useBitField<T> (bitfields: Array<BitField<T>>, targetInstance: T
 
   const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
   const value = cursor.read(getPrimitive(totalBitLength)) as number
-  console.log(bitfields)
   bitfields.reduce((offset: number, bf) => {
     // @ts-expect-error Weid thing with the keyof to fix
     targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
+    // targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
     return offset + bf.bitlength
   }, 0)
 

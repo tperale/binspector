@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice } from '../decorators'
+import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield } from '../decorators'
 import { EOF, PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
 import { Cursor } from '../cursor'
@@ -338,6 +338,60 @@ describe('Reading binary with conditions', () => {
     expect(binread(new Cursor(header), Header)).toMatchObject({
       type: 0x02,
       payload: 0x0001
+    })
+  })
+  it('should work with bitfield', () => {
+    class BitField {
+      @Bitfield(1)
+      field1: number
+
+      @Bitfield(3)
+      field2: number
+
+      @Bitfield(4)
+      field3: number
+    }
+    class Header {
+      @Relation(BitField)
+      bf: BitField
+    }
+
+    const header = new Uint8Array([0x11]).buffer
+    expect(binread(new Cursor(header), Header)).toMatchObject({
+      bf: {
+        field1: 1,
+        field2: 0,
+        field3: 1
+      }
+    })
+  })
+  it('should work with uncomplete bitfield', () => {
+    class BitField {
+      @Bitfield(2)
+      field1: number
+
+      @Bitfield(10)
+      field2: number
+
+      @Bitfield(3)
+      field3: number
+    }
+    class Header {
+      @Relation(BitField)
+      bf: BitField
+
+      @Relation(PrimitiveSymbol.u8)
+      field: number
+    }
+
+    const header = new Uint8Array([0x30, 0x01, 0x05]).buffer
+    expect(binread(new Cursor(header), Header)).toMatchObject({
+      bf: {
+        field1: 1,
+        field2: 0,
+        field3: 3
+      },
+      field: 5
     })
   })
 })
