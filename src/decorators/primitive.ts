@@ -7,7 +7,7 @@
  *
  * @module Primitive
  */
-import { type MetaDescriptor } from './common'
+import { type MetaDescriptor, commaSeparetedRecursiveGet } from './common'
 import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType } from '../types'
 import Meta from '../metadatas'
 
@@ -141,7 +141,7 @@ export function isRelation<T, K> (field: PropertyType<T>): field is RelationType
  *
  * The `RelationParameters` definition to pass the property `type` and `size` to the `Chunk` constructor is the following `(targetInstance: Protocol) => [targetInstance.type, targetInstance.size]`
  */
-export type RelationParameters<T> = (targetInstance: T) => any[]
+export type RelationParameters<T> = ((targetInstance: T) => any[]) | string
 
 /**
  * RelationType.
@@ -153,7 +153,7 @@ export interface RelationTypeProperty<T, K> extends MetaDescriptor<T> {
    * @type {InstantiableObject} Primitive value that the property hold.
    */
   relation: InstantiableObject<K>
-  args: RelationParameters<T> | undefined
+  args: ((targetInstance: T) => any[]) | undefined
 }
 
 /**
@@ -168,10 +168,11 @@ export interface RelationTypeProperty<T, K> extends MetaDescriptor<T> {
  * @category Advanced Use
  */
 export function createRelationTypeProperty<T, K> (target: T, propertyKey: keyof T, relation: InstantiableObject<K>, args?: RelationParameters<unknown>): RelationTypeProperty<T, K> {
+  const argsFunc = typeof args === 'string' ? (targetInstance: T) => commaSeparetedRecursiveGet(targetInstance, args) : args as ((targetInstance: T) => any[]) | undefined
   return {
     ...createMetaDescriptor(RelationTypePropertySymbol, 'relation', target, propertyKey),
     relation,
-    args
+    args: argsFunc
   }
 }
 
@@ -189,7 +190,7 @@ export function createRelationTypeProperty<T, K> (target: T, propertyKey: keyof 
  */
 
 /**
- * Relation.
+ * `@Relation` decorator
  *
  * Define a decorator that will create a relationship to another binary decleration.
  *

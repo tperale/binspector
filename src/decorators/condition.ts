@@ -12,7 +12,7 @@
  */
 import { recursiveGet, type MetaDescriptor } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
-import { isPrimitiveSymbol, type PrimitiveSymbol, type DecoratorType, type InstantiableObject, Primitive } from '../types'
+import { isPrimitiveSymbol, type DecoratorType, type InstantiableObject, type Primitive } from '../types'
 import { NoConditionMatched } from '../error'
 import Meta from '../metadatas'
 
@@ -33,7 +33,7 @@ export interface Condition<T, K> extends MetaDescriptor<T> {
   /**
    * @type {ControllerFunction<T>} Function to control the flow of execution of the parser/writter
    */
-  condition: ConditionFunction<T> // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
+  condition: ConditionFunction<T>
   /**
    * @type {PrimitiveType<T> | RelationType<T, K> | undefined}
    */
@@ -49,7 +49,7 @@ export interface Condition<T, K> extends MetaDescriptor<T> {
  *
  * @category Advanced Use
  */
-export function conditionDecoratorFactory (name: string, func: ConditionFunction<unknown>, then?: Primitive<unknown>, args?: (currentStateObject: unknown) => any[]): DecoratorType {
+export function conditionDecoratorFactory (name: string, func: ConditionFunction<unknown>, then?: Primitive<unknown>, args?: RelationParameters<unknown>): DecoratorType {
   return function <T>(target: T, propertyKey: keyof T) {
     function createRelation (relationOrPrimitive: Primitive<unknown>): PrimitiveTypeProperty<T> | RelationTypeProperty<T, unknown> {
       if (isPrimitiveSymbol(relationOrPrimitive)) {
@@ -80,6 +80,8 @@ export function conditionDecoratorFactory (name: string, func: ConditionFunction
  * `@IfThen` decorator pass the {@link Primitive.Relation} to read if the condition is met.
  *
  * @param {ControllerIfFunction} func A function that receive the instance as a parameter and return a boolean
+ * @param {Primitive} then
+ * @param {Function} args
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
@@ -118,6 +120,7 @@ export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): Dec
 
 /**
  * @overload
+ *
  * @param {string} cmp
  * @param {Record} match
  * @param {Function} args
@@ -127,6 +130,7 @@ export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): Dec
  */
 /**
  * @overload
+ *
  * @param {Function} cmp
  * @param {Record} match
  * @param {Function} args
@@ -157,6 +161,90 @@ export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): Dec
  * class BinProtocol {
  *   @While((value: Chunk) => value.type !== 0x03)
  *   message: Chunk[]
+ * }
+ * ```
+ *
+ * You can also pass arguments to the relation using comma separeted string.
+ * In the following example I pass teh value of the property 'length' and 'type'
+ * to the constructor of 'Data' on creation. Notice that relation you want to pass
+ * arguments requires to be defined inside of an array of two member.
+ *
+ * ```typescipt
+ * class Data {
+ *   _length: number
+ *
+ *   @Count('_length')
+ *   @Relation(PrimitiveSymbol.u8)
+ *   data: number[]
+ *
+ *   constructor(length: number, type: number) {
+ *     this._length = length
+ *   }
+ * }
+ *
+ * class Header {
+ *   @Count(4)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   magic: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   crc: number
+ * }
+ *
+ * class BinProtocol {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   length: number
+ *
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @Choice('type', {
+ *     0x01: Header,
+ *     0x02: [Data, 'length, type'],
+ *     0x03: undefined,
+ *   })
+ *   data: number
+ * }
+ * ```
+ *
+ * Or functions if you want to perform some operation on the data before passing them to the
+ * constructor.
+ *
+ * ```typescipt
+ * class BinProtocol {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   length: number
+ *
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @Choice('type', {
+ *     0x01: Header,
+ *     0x02: [Data, (instance: BinProtocol) => [instance.length - 5, instance.type]],
+ *     0x03: undefined,
+ *   })
+ *   data: number
+ * }
+ * ```
+
+ * You can also define the default arguments you pass to every relations. In the
+ * following example the value of the property 'length' will be passed to every relation
+ * on creation.
+ *
+ * ```typescipt
+ * class BinProtocol {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   length: number
+ *
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @Choice('type', {
+ *     0x01: Header,
+ *     0x02: Data,
+ *     0x03: undefined,
+ *   }, 'length')
+ *   data: number
  * }
  * ```
  *

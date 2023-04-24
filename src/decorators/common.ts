@@ -27,9 +27,16 @@ export interface MetaDescriptor<T> {
   propertyName: keyof T
 }
 
-export function recursiveGet (obj: any, key: string): any {
+export type ArgumentsAcessor = string
+
+export function recursiveGet (obj: any, key: ArgumentsAcessor): any {
   // TODO Not verified properly right now
-  return key.split('.').reduce((acc, key) => acc[key], obj)
+  return key.split('.').reduce((acc: any, key: string) => acc[key], obj)
+}
+
+export function commaSeparetedRecursiveGet (obj: any, args: ArgumentsAcessor): any[] {
+  const keys = args.split(',')
+  return keys.map(key => recursiveGet(obj, key.trim()))
 }
 
 /**

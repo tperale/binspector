@@ -59,4 +59,36 @@ describe('Testing the usage of the condition decorator', () => {
     const newTestArg = new relation.relation(...relation.args(instance))
     expect(newTestArg).toEqual(expect.objectContaining({ foo: 1 }))
   })
+  it('should work with @Choice that with comma separeted parameters', () => {
+    class TestArg {
+      foo: number
+      bar: number
+
+      constructor (foo: number, bar: number) {
+        this.foo = foo
+        this.bar = bar
+      }
+    }
+
+    class TestClass {
+      foo: number = 1
+      bar: number = 2
+      @Choice('foo', {
+        1: [TestArg, 'foo, bar']
+      })
+      field: TestArg
+    }
+
+    const instance = new TestClass()
+
+    const conditions = Meta.getConditions(instance, 'field')
+    const relation = useConditions(conditions, instance) as RelationTypeProperty<TestClass, TestArg>
+
+    expect(relation).toEqual(expect.objectContaining({ relation: TestArg }))
+    expect(relation.args).toBeDefined()
+
+    // @ts-expect-error testing purpose no worry
+    const newTestArg = new relation.relation(...relation.args(instance))
+    expect(newTestArg).toEqual(expect.objectContaining({ foo: 1, bar: 2 }))
+  })
 })
