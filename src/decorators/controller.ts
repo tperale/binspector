@@ -148,7 +148,6 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
         // EOF might be the only value we don't want to put inside the result array.
         // Other special character like `\0` is discutable.
         const currValue = opt.targetType === String ? result.join('') : result
-        console.log('EOFF ', currValue)
         throw new EOFError(currValue)
       }
       result.push(ret)

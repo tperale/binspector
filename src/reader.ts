@@ -65,7 +65,14 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
           }
         } catch (error) {
           // We need to catch the EOF error because the binread function
-          // can't return it and just throw it.
+          // can't return it so it just throw it EOFError.
+          // It's necessary to return EOF for relation that were not completely read
+          // in a controller. For instance:
+          // class Protocol {
+          //   @Until(EOF)
+          //   @Controller(DataChunk)
+          //   data: DataChunk
+          // }
           if (error instanceof EOFError) {
             return EOF
           } else {
@@ -99,8 +106,8 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
         : propertyReader()
 
       if (value === EOF) {
-        // If the value is EOF here it means it wasn't handled correctly inside a controller
         // TODO error handling throwing an error containing the backtrace + the current state of the object
+        // If the value is EOF here it means it wasn't handled correctly inside a controller
         // Mandatory to throw EOF because returning EOF would break the typing.
         throw new EOFError()
       }
