@@ -220,6 +220,15 @@ describe('Reading binary until EOF', () => {
     const header = new Uint8Array([0x03, 0x02]).buffer
     expect(() => binread(new Cursor(header), Header)).toThrow()
   })
+  it('should throw an error if the condition didn\'t end properly', () => {
+    class Header {
+      @Count(4)
+      @Relation(PrimitiveSymbol.u8)
+      x: number
+    }
+    const header = new Uint8Array([0x03, 0x02]).buffer
+    expect(() => binread(new Cursor(header), Header)).toThrow()
+  })
 })
 
 describe('Reading binary with conditions', () => {

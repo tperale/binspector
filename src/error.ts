@@ -1,7 +1,10 @@
 export class EOFError extends Error {
-  constructor () {
+  value: any
+
+  constructor (value?: any) {
     super('EOF Error')
     this.name = this.constructor.name
+    this.value = value
     // TODO Do something with the history
     // this.history = history
   }

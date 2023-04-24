@@ -13,6 +13,7 @@ import { type MetaDescriptor, recursiveGet, propertyTargetType } from './common'
 import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject } from '../types'
 import { type Cursor } from '../cursor'
+import { EOFError } from '../error'
 import Meta from '../metadatas'
 
 export const ControllerSymbol = Symbol('controller')
@@ -124,7 +125,7 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
     read: ControllerReaderFunction,
     cursor: Cursor,
     opt: ControllerOptions<unknown>
-  ) {
+  ): any {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
     // into an array
@@ -140,11 +141,15 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
       const beforeReadOffset = cursor !== undefined ? cursor.offset() : 0
       const ret = read()
       // TODO If we reach EOF there is no way to notify the program the condition was not met.
+      //   - One option could be to throw the value. The only case we want to compare to EOF
+      //     is `@Until(EOF)` which I could move to another decorator `@EOF` that catch that value.
       if (ret === EOF) {
         // If you attempt to read a primitive but reached the EOF.
         // EOF might be the only value we don't want to put inside the result array.
         // Other special character like `\0` is discutable.
-        break
+        const currValue = opt.targetType === String ? result.join('') : result
+        console.log('EOFF ', currValue)
+        throw new EOFError(currValue)
       }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject)) {
@@ -163,15 +168,40 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
   }
 }
 
+function untilEofController (): any {
+  const wrap = whileFunctionFactory(() => true)
+  return function (
+    currStateObject: any,
+    read: ControllerReaderFunction,
+    cursor: Cursor,
+    opt: ControllerOptions<unknown>
+  ): any {
+    try {
+      wrap(currStateObject, read, cursor, opt)
+    } catch (error) {
+      if (error instanceof EOFError) {
+        return error.value
+      } else {
+        throw error
+      }
+    }
+  }
+}
+
 /**
  * While decorator continue the execution flow while the condition passed as a parameter is not met.
  *
  * @param {ControllerIfFunction} func A function that receive the target instance as a parameter and return a boolean
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
+ * @remark
+ *
+ * Don't use this decorator to compare the current value to EOF. Use {@link Until} instead.
+ *
  * @category Decorators
  */
 export function While<T> (func: ControllerWhileFunction<T>, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+  // TODO Verify you don't expect to compare something to EOF
   return controllerDecoratorFactory('while', whileFunctionFactory(func), opt)
 }
 
@@ -226,7 +256,11 @@ export function While<T> (func: ControllerWhileFunction<T>, opt?: Partial<Contro
  * @category Decorators
  */
 export function Until (arg: any, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
-  return controllerDecoratorFactory('until', whileFunctionFactory((x: number | string | symbol) => x !== arg), opt)
+  if (arg === EOF) {
+    return controllerDecoratorFactory('until', untilEofController(), opt)
+  } else {
+    return controllerDecoratorFactory('until', whileFunctionFactory((x: number | string | symbol) => x !== arg), opt)
+  }
 }
 
 /**
