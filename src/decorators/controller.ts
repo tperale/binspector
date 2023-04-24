@@ -23,10 +23,25 @@ export const ControllerSymbol = Symbol('controller')
 // TODO Change the type to be correct
 export type ControllerReaderFunction = (then?: any) => any
 
+/**
+ * ControllerOptions.
+ */
 export interface ControllerOptions<T> {
+  /**
+   * @type {boolean} Verify a relation already exist before the definition of the controller
+   */
   primitiveCheck: boolean
+  /**
+   * @type {InstantiableObject<T> | undefined} Define the target type for the controller to apply transformation.
+   */
   targetType: InstantiableObject<T> | undefined
+  /**
+   * @type {number} Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
+   */
   alignment: number
+  /**
+   * @type {boolean} Move the cursor back to its previous position when the controller condition is met.
+   */
   peek: boolean
 }
 
@@ -100,6 +115,8 @@ export type ControllerWhileFunction<T> = (curr: any, count?: number, targetInsta
  *
  * @param {ControllerWhileFunction} cond
  * @returns {any}
+ *
+ * @category Advanced Use
  */
 function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
   return function (
@@ -122,6 +139,7 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
     while (true) {
       const beforeReadOffset = cursor !== undefined ? cursor.offset() : 0
       const ret = read()
+      // TODO If we reach EOF there is no way to notify the program the condition was not met.
       if (ret === EOF) {
         // If you attempt to read a primitive but reached the EOF.
         // EOF might be the only value we don't want to put inside the result array.
@@ -144,6 +162,7 @@ function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
     return opt.targetType === String ? result.join('') : result
   }
 }
+
 /**
  * While decorator continue the execution flow while the condition passed as a parameter is not met.
  *
@@ -217,7 +236,7 @@ export function Until (arg: any, opt?: Partial<ControllerOptions<unknown>>): Dec
  * @returns {DecoratorType} The property decorator function ran at runtime
  */
 /**
- * Count decorator define a variable length array based on the primitive.
+ * `@Count` decorator define a variable length array based on the primitive.
  *
  * @example
  *
@@ -263,7 +282,20 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions<unk
   return controllerDecoratorFactory('count', whileFunctionFactory(countCheck), opt)
 }
 
+/**
+ * `@Matrix` decorator create array of arrays based on sizes you pass as arguments.
+ *
+ * @param {number | string} width
+ * @param {number | string} height
+ * @param {Partial} opt
+ * @returns {DecoratorType}
+ */
 export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+  /**
+   * countCheck.
+   *
+   * @param {number | string} arg
+   */
   function countCheck (arg: number | string) {
     return (_: any, i: number, currStateObject: object): boolean => {
       // TODO this is not optimal since you will execute the recursiveGet for each iteration

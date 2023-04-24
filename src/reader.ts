@@ -55,8 +55,6 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
         //   - current object referenced
         throw new SelfReferringFieldError()
       }
-      // TODO This is really similar to the code for condition.
-      // Should move it to another function probably.
       // TODO No need to do the check inside the function.
       return () => {
         try {
@@ -66,6 +64,8 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
             return binread(content, field.relation)
           }
         } catch (error) {
+          // We need to catch the EOF error because the binread function
+          // can't return it and just throw it.
           if (error instanceof EOFError) {
             return EOF
           } else {
@@ -101,8 +101,7 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
       if (value === EOF) {
         // If the value is EOF here it means it wasn't handled correctly inside a controller
         // TODO error handling throwing an error containing the backtrace + the current state of the object
-        // Mandatory error thrown because returning something would break
-        // the typing.
+        // Mandatory to throw EOF because returning EOF would break the typing.
         throw new EOFError()
       }
 
