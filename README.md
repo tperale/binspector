@@ -22,11 +22,21 @@ class ProtocolHeader {
   crc: number;
 }
 
+enum RecordTypes {
+  RecordStart = 0x01,
+  RecordMsg = 0x02,
+  RecordEnd = 0x03,
+}
+
 class Record {
   @Relation(PrimitiveSymbol.u32)
   id: number
 
-  @Count(32)
+  @Enum(RecordTypes)
+  @Relation(PrimitiveSymbol.u8)
+  type: RecordTypes
+
+  @Until('\0')
   @Relation(PrimitiveSymbol.char)
   message: string;
 }
@@ -36,7 +46,7 @@ class Protocol {
   header: ProtocolHeader
 
   @Count('header.len')
-  @Relation(ProtocolHeader)
+  @Relation(Record)
   message: Record
 }
 ```
@@ -46,6 +56,7 @@ class Protocol {
 * It's a class ! Write method that will directly handle the binary
   content from the definition.
 * The binary file definition is re-used for typescript type checking.
+* Extensible. Binary readers based on DSL are hard to extend.
 * Support parsing and serialisation (soon !) of the binary file.
 * It works on the browser. You can create binary file decoder and encoder on
   your webapp frontend without depending on other library on your server.

@@ -20,7 +20,13 @@ export const PostFunctionSymbol = Symbol('post-function')
 
 export type PrePostFunction<T> = (instance: T, cursor: Cursor) => any
 
+/**
+ * PrePostOptions.
+ */
 export interface PrePostOptions {
+  /**
+   * @type {boolean} Verify a relation already exist before the definition of the PrePost function
+   */
   primitiveCheck: boolean
 }
 
@@ -28,8 +34,20 @@ export const PrePostOptionsDefault = {
   primitiveCheck: true
 }
 
+/**
+ * PrePost type interface structure definition.
+ *
+ * @extends {MetaDescriptor<T>}
+ */
 export interface PrePost<T> extends MetaDescriptor<T> {
+  /**
+   * @type {PrePostOptions} Options for prepost decorator
+   */
   options: PrePostOptions
+
+  /**
+   * @type {PrePostFunction<T>} Function that will be executed before or after the Controller, Validator and Transformer decorator.
+   */
   func: PrePostFunction<T>
 }
 
@@ -56,11 +74,11 @@ function prePostFunctionDecoratorFactory (name: string, typeSym: symbol, metaSet
 }
 
 /**
- * preFunctionDecoratorFactory.
+ * `preFunctionDecoratorFactory` function helps create a decorator that will save the metadata of the `Pre` decorator.
  *
- * @param {string} name
- * @param {PrePostFunction} func
- * @param {Partial} opt
+ * @param {string} name Name of the 'pre' decorator.
+ * @param {PrePostFunction} func Function that will be executed before the Controller/Validator/Transfromer validators.
+ * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Advanced Use
@@ -70,11 +88,11 @@ export function preFunctionDecoratorFactory (name: string, func: PrePostFunction
 }
 
 /**
- * postFunctionDecoratorFactory.
+ * `postFunctionDecoratorFactory` function helps create a decorator that will save the metadata of the `Post` decorator.
  *
- * @param {string} name
- * @param {PrePostFunction} func
- * @param {Partial} opt
+ * @param {string} name Name of the 'post' decorator.
+ * @param {PrePostFunction} func Function that will be executed after the Controller/Validator/Transfromer validators.
+ * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Advanced Use
@@ -86,8 +104,8 @@ export function postFunctionDecoratorFactory (name: string, func: PrePostFunctio
 /**
  * `@Pre` decorator defines a function computed before reading the property value.
  *
- * @param {PrePostFunction} func
- * @param {Partial} opt
+ * @param {PrePostFunction} func Function that will be executed before the Controller/Validator/Transfromer validators.
+ * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
@@ -99,8 +117,8 @@ export function Pre (func: PrePostFunction<unknown>, opt?: Partial<PrePostOption
 /**
  * `@Post` decorator defines a function computed after fully reading and transforming the property value.
  *
- * @param {PrePostFunction} func
- * @param {Partial} opt
+ * @param {PrePostFunction} func Function that will be executed after the Controller/Validator/Transfromer validators.
+ * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
@@ -113,7 +131,7 @@ export function Post (func: PrePostFunction<unknown>, opt?: Partial<PrePostOptio
  * `@Offset` decorator define the place to move the cursor of the buffer to perform the following operation on it.
  *
  * @param {number | string} offset
- * @param {Partial} opt
+ * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
@@ -125,11 +143,11 @@ export function Offset (offset: number | string, opt?: Partial<PrePostOptions>):
 }
 
 /**
- * usePrePost.
+ * usePrePost execute an array of `PrePost` decorator metadata on a target instance.
  *
- * @param {Array} prepost
- * @param {T} targetInstance
- * @param {Cursor} cursor
+ * @param {Array} prepost Array of `PrePost` decorator metadatas.
+ * @param {T} targetInstance Current state of the object the `PrePost` decorators are defined in, that will be passed to the PrePost decorator functions.
+ * @param {Cursor} cursor Cursor state that will be passed to the PrePost decorator functions.
  * @returns {void}
  *
  * @category Advanced Use

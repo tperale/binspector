@@ -22,7 +22,7 @@ export const ControllerSymbol = Symbol('controller')
  * ControllerReaderFunction.
  */
 // TODO Change the type to be correct
-export type ControllerReaderFunction = (then?: any) => any
+export type ControllerReaderFunction = () => any
 
 /**
  * ControllerOptions.
@@ -59,15 +59,18 @@ export const ControllerOptionsDefault = {
 export type ControllerFunction<T> = (targetInstance: T, read: ControllerReaderFunction, cursor?: Cursor, opt?: ControllerOptions<unknown>) => any
 
 /**
- * Controller.
+ * Controller type interface structure definition.
  *
  * @extends {MetaDescriptor<T>}
  */
 export interface Controller<T> extends MetaDescriptor<T> {
+  /**
+   * @type {ControllerOptions<unknown>} Options for controller decorator
+   */
   options: ControllerOptions<unknown>
 
   /**
-   * @type {ControllerFunction<T>} Function to control the flow of execution of the parser/writter
+   * @type {ControllerFunction<T>} Function to control the flow of execution of the binary reader
    */
   controller: ControllerFunction<T> // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
 }
@@ -353,13 +356,13 @@ export function Matrix (width: number | string, height: number | string, opt?: P
 /**
  * useController.
  *
- * @param {Controller} controller
- * @param {T} target
- * @param {ControllerReaderFunction} reader
+ * @param {Controller} controller `Controller` decorator metadata.
+ * @param {T} targetInstance Current state of the object the `Controller` is defined in, that will be passed to the `Controller` function.
+ * @param {ControllerReaderFunction} reader Function defining how to read the next chunk of data.
  * @returns {any}
  *
  * @category Advanced Use
  */
-export function useController<T> (controller: Controller<T>, target: T, reader: ControllerReaderFunction, ...args: any[]): any {
-  return controller.controller(target, reader, ...args)
+export function useController<T> (controller: Controller<T>, targetInstance: T, reader: ControllerReaderFunction, ...args: any[]): any {
+  return controller.controller(targetInstance, reader, ...args)
 }
