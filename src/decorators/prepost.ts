@@ -12,7 +12,7 @@
 import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type DecoratorType } from '../types'
-import { type Cursor } from '../cursor'
+import { type Cursor, CursorEndianness } from '../cursor'
 import Meta from '../metadatas'
 
 export const PreFunctionSymbol = Symbol('pre-function')
@@ -140,6 +140,28 @@ export function Offset (offset: number | string, opt?: Partial<PrePostOptions>):
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
     cursor.move(typeof offset === 'string' ? recursiveGet(targetInstance, offset) : offset)
   }, opt)
+}
+
+/**
+ * `@Endian`
+ *
+ * @param {CursorEndianness} endianness
+ * @param {Partial} opt PrePost options.
+ * @returns {DecoratorType} The property decorator function ran at runtime
+ *
+ * @category Decorators
+ */
+export function Endian (endianness: CursorEndianness, opt?: Partial<PrePostOptions>): DecoratorType {
+  return function <T>(target: T, propertyKey: keyof T) {
+    let currentEndian = CursorEndianness.BigEndian
+    preFunctionDecoratorFactory('preEndian', (_, cursor) => {
+      currentEndian = cursor.getEndian()
+      cursor.setEndian(endianness)
+    }, opt)(target, propertyKey as string)
+    postFunctionDecoratorFactory('postEndian', (_, cursor) => {
+      cursor.setEndian(currentEndian)
+    }, opt)(target, propertyKey as string)
+  }
 }
 
 /**

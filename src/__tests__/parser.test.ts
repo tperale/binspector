@@ -1,8 +1,8 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield } from '../decorators'
+import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian } from '../decorators'
 import { EOF, PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
-import { Cursor } from '../cursor'
+import { Cursor, CursorEndianness } from '../cursor'
 
 describe('Reading binary content into js object', () => {
   it('should create a new js object', () => {
@@ -355,6 +355,9 @@ describe('Reading binary with conditions', () => {
       type: 0x03
     })
   })
+})
+
+describe('Reading binary with bitfields', () => {
   it('should work with bitfield', () => {
     class BitField {
       @Bitfield(1)
@@ -407,6 +410,42 @@ describe('Reading binary with conditions', () => {
         field3: 3
       },
       field: 5
+    })
+  })
+})
+
+describe('Reading binary definition with PrePost decorators', () => {
+  it('should offset the cursor to the mentionned address', () => {
+    class Protocol {
+      @Offset(2)
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+    }
+
+    const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
+    expect(binread(new Cursor(header), Protocol)).toMatchObject({
+      value: 0x03
+    })
+  })
+
+  it('should change the endianness and then set it back', () => {
+    class Protocol {
+      @Relation(PrimitiveSymbol.u16)
+      value_1: number
+
+      @Endian(CursorEndianness.LittleEndian)
+      @Relation(PrimitiveSymbol.u16)
+      value_2: number
+
+      @Relation(PrimitiveSymbol.u16)
+      value_3: number
+    }
+
+    const header = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]).buffer
+    expect(binread(new Cursor(header), Protocol)).toMatchObject({
+      value_1: 0x0102,
+      value_2: 0x0403,
+      value_3: 0x0506
     })
   })
 })

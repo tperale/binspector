@@ -1,5 +1,20 @@
 import { EOF, PrimitiveSymbol } from './types'
 
+interface CursorHistoryPrimitive {
+  index: number
+  primtive: PrimitiveSymbol
+  value: any
+}
+
+interface CursorHistoryRelation {
+  index: number
+  name: string
+}
+
+interface CursorHistoryOperation {
+  name: string
+}
+
 export enum CursorEndianness {
   BigEndian = 0,
   LittleEndian = 1,
@@ -23,6 +38,14 @@ export class Cursor {
   forward (len: number): number {
     this.index += len
     return this.index
+  }
+
+  getEndian (): CursorEndianness {
+    return this.endianness
+  }
+
+  setEndian (endian: CursorEndianness): void {
+    this.endianness = endian
   }
 
   getPrimitiveSize (primType: PrimitiveSymbol): number {
