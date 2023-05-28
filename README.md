@@ -100,6 +100,12 @@ Used to create array of integer or string.
 > npm install binspector
 ```
 
+Generate the documentation with the following command.
+
+```
+> npx typedoc --options typedoc.json
+```
+
 ### Usage example
 
 ## The state of decorator in typescript
