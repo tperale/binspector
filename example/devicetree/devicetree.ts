@@ -1,4 +1,4 @@
-import { EOF, NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, IfThen, Peek, Offset, Until } from '../../src'
+import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -65,15 +65,10 @@ class FDTProp {
   @Relation(PrimitiveSymbol.char)
   property: string
 
-  // @Peek('nameoff')
-  // @Until('\0', { targetType: String, alignment: 4 })
   constructor(offset) {
     this._string_off = offset
   }
 }
-
-// class DTBMemoryBlock {
-// }
 
 class DTBStructBlock {
   _string_off: number
@@ -96,23 +91,43 @@ class DTBStructBlock {
   }
 }
 
+function asObjectDtb (result, [struct, ...structs]: DTBStructBlock[]) {
+  if (structs.length === 0) {
+    return [{}, []]
+  } else if (struct.fdttype === DTBStructureBlockToken.FDT_END_NODE) {
+    return [result, structs]
+  } else if (struct.fdttype === DTBStructureBlockToken.FDT_NOP) {
+    return asObjectDtb(result, structs)
+  } else if (struct.fdttype === DTBStructureBlockToken.FDT_BEGIN_NODE) {
+    const [node, nextStructs] = asObjectDtb({}, structs)
+    const [next, nnextStructs] = asObjectDtb({}, nextStructs)
+    return [{
+      ...result,
+      [struct.body.name]: node,
+      ...next
+    }, nnextStructs]
+  } else if (struct.fdttype === DTBStructureBlockToken.FDT_PROP) {
+    asObjectDtb({}, structs)
+    const [next, nextStructs] = asObjectDtb({}, structs)
+    return [{
+      ...result,
+      [struct.body.property]: struct.body.name,
+      ...next
+    }, nextStructs]
+  }
+
+}
+
 export class DTB {
   @Relation(DTBHeader)
   header: DTBHeader
-
-  // @Offset('header.off_mom_rsvmap')
-  // @Relation(DTBMemoryBlock)
-  // memory_block: DTBMemoryBlock
 
   @Offset('header.off_dt_struct')
   @While((struct) => struct.fdttype !== DTBStructureBlockToken.FDT_END)
   @Relation(DTBStructBlock, (cur) => [cur.header.off_dt_strings])
   structs: DTBStructBlock[]
 
-  // @Offset('header.off_dt_strings')
-  // @Until(EOF)
-  // @Until('\0', { targetType: String })
-  // @Relation(PrimitiveSymbol.char)
-  // strings: String
+  asObject (): Object {
+    return asObjectDtb({}, this.structs)[0][""]
+  }
 }
-
