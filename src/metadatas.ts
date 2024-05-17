@@ -166,7 +166,6 @@ function getBitField (metadata: DecoratorMetadataObject, propertyKey: string): B
 
 function getBitFields (metadata: DecoratorMetadataObject): BitField[] {
   const bitfields = metadata[BitFieldSymbol]
-  // const bitfields = Reflect.getMetadata(BitFieldSymbol, target as object)
   return Array.isArray(bitfields) ? bitfields : []
 }
 

@@ -114,6 +114,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
  * ControllerWhileFunction.
  */
 export type ControllerWhileFunction = (curr: any, count?: number, targetInstance?: any) => boolean
+
 /**
  * whileFunctionFactory.
  *
