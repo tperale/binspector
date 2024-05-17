@@ -44,7 +44,7 @@ import { useBitField } from './decorators/bitfield'
  * `ObjectDefinition` passed in param.
  * You can create self refering field by using conditionnal decorator.
  */
-export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): T {
+export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): any {
   function getBinReader (field: PropertyType, instance: any): () => any {
     if (isPrimitiveRelation(field)) {
       return () => content.read(field.primitive)
@@ -88,15 +88,15 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
 
   const instance = new ObjectDefinition(...args)
 
-  const bitfields = Meta.getBitFields(ObjectDefinition[Symbol.metadata])
+  const bitfields = Meta.getBitFields(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject)
   if (bitfields.length > 0) {
     return useBitField(bitfields, instance, content)
   }
 
-  Meta.getFields(ObjectDefinition[Symbol.metadata]).forEach((field) => {
-    usePrePost(Meta.getPre(ObjectDefinition[Symbol.metadata], field.propertyName), instance, content)
+  Meta.getFields(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject).forEach((field) => {
+    usePrePost(Meta.getPre(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), instance, content)
 
-    const controller = Meta.getController(ObjectDefinition[Symbol.metadata], field.propertyName)
+    const controller = Meta.getController(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
@@ -112,17 +112,17 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
         throw new EOFError()
       }
 
-      const transformers = Meta.getTransformers(ObjectDefinition[Symbol.metadata], field.propertyName)
+      const transformers = Meta.getTransformers(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
       const transformedValue = useTransformer(transformers, value, instance)
         transformers.reduce((res, transformer) => {
         return transformer.transformer(res, instance)
       }, value)
 
-      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata], field.propertyName), transformedValue, instance)
+      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), transformedValue, instance)
 
       instance[field.propertyName] = transformedValue
 
-      usePrePost(Meta.getPost(ObjectDefinition[Symbol.metadata], field.propertyName), instance, content)
+      usePrePost(Meta.getPost(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), instance, content)
     }
   })
 

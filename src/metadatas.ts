@@ -7,7 +7,7 @@ import { type BitField, BitFieldSymbol } from './decorators/bitfield'
 import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from './decorators/prepost'
 import { type DecoratorMetadataObject } from './types'
 
-import './symbol-polyfill.ts'
+import './symbol-polyfill'
 
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,

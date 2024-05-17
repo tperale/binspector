@@ -12,7 +12,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = 2
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
   it('should work with custom function', () => {
@@ -27,7 +27,7 @@ describe('Testing the usage of the validator decorator', () => {
     instance.value = 2
     instance.field = 2
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
   it('should work with each member of array', () => {
@@ -39,7 +39,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = [2, 2, 2]
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
   it('should work comparing array', () => {
@@ -51,7 +51,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = [1, 2, 3]
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
   it('should with validate decorator that receive function', () => {
@@ -63,7 +63,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = [1, 2, 3]
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
   it('should work with enum decorator', () => {
@@ -79,7 +79,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = 2
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
 
     expect(instance.field).toStrictEqual(Type.ReadWrite)
@@ -97,7 +97,7 @@ describe('Testing the usage of the validator decorator', () => {
     const instance = new TestClass()
     instance.field = [1, 1, 2]
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     useValidators(validators, instance.field, instance)
   })
 })
@@ -112,7 +112,7 @@ describe('Testing failing validator', () => {
     const instance = new TestClass()
     instance.field = 2
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     expect(() => { useValidators(validators, instance.field, instance) }).toThrow()
   })
   it('should throw an error', () => {
@@ -128,7 +128,7 @@ describe('Testing failing validator', () => {
     const instance = new TestClass()
     instance.field = 3
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata], 'field')
+    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     expect(() => { useValidators(validators, instance.field, instance) }).toThrow()
   })
 })

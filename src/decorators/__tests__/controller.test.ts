@@ -20,7 +20,7 @@ describe('Testing the usage of the controller decorator', () => {
     const instance = new TestClass()
     instance.field = 1
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1, 1])
     }
@@ -33,7 +33,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const instance = new TestClass()
 
-    const controller = Meta.getController(instance.constructor[Symbol.metadata], 'field')
+    const controller = Meta.getController(instance.constructor[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1, 1])
     }
@@ -48,7 +48,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const iterator = testReader(['h', 'e', 'l', 'l', 'o', '\0'])
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       expect(useController(controller, instance, () => iterator.next().value)).toStrictEqual('hello\0')
     }
@@ -63,7 +63,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const iterator = testReader([1, 2, 3])
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       expect(useController(controller, instance, () => iterator.next().value)).toStrictEqual([1, 2, 3])
     }
@@ -78,7 +78,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
       expect(content).toStrictEqual([1, 2])
@@ -97,7 +97,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
       expect(content).toStrictEqual([1, 2, 1, 1])
@@ -118,7 +118,7 @@ describe('Testing the usage of the controller decorator', () => {
 
     const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata], 'field')
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
     if (controller !== undefined) {
       const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
       expect(content).toStrictEqual([3, 1])
