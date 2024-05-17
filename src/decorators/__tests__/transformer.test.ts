@@ -12,7 +12,7 @@ describe('Testing the usage of the transformer decorator', () => {
     const instance = new TestClass()
     instance.field = 1
 
-    const transformers = Meta.getTransformers(instance, 'field')
+    const transformers = Meta.getTransformers(TestClass[Symbol.metadata], 'field')
     expect(useTransformer(transformers, instance.field, instance)).toStrictEqual(2)
   })
   it('should take into account the order of definition starting bottom to top', () => {
@@ -25,7 +25,7 @@ describe('Testing the usage of the transformer decorator', () => {
     const instance = new TestClass()
     instance.field = 1
 
-    const transformers = Meta.getTransformers(instance, 'field')
+    const transformers = Meta.getTransformers(TestClass[Symbol.metadata], 'field')
     expect(useTransformer(transformers, instance.field, instance)).toStrictEqual(5)
   })
   it('should work on arrays', () => {
@@ -39,10 +39,10 @@ describe('Testing the usage of the transformer decorator', () => {
 
     const instance = new TestClass()
 
-    const transformers = Meta.getTransformers(instance, 'field')
+    const transformers = Meta.getTransformers(TestClass[Symbol.metadata], 'field')
     expect(useTransformer(transformers, 1, instance)).toStrictEqual(2)
 
-    const transformers2 = Meta.getTransformers(instance, 'field2')
+    const transformers2 = Meta.getTransformers(TestClass[Symbol.metadata], 'field2')
     expect(useTransformer(transformers2, [1, 2, 3], instance)).toStrictEqual([2, 4, 6])
   })
   it('should work to transform into ascii array', () => {
@@ -58,7 +58,7 @@ describe('Testing the usage of the transformer decorator', () => {
 
     const instance = new TestClass()
 
-    const transformers = Meta.getTransformers(instance, 'field')
+    const transformers = Meta.getTransformers(TestClass[Symbol.metadata], 'field')
     expect(useTransformer(transformers, [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], instance)).toStrictEqual(['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'])
   })
   it('should work to transform into ascii string', () => {
@@ -78,7 +78,7 @@ describe('Testing the usage of the transformer decorator', () => {
 
     const instance = new TestClass()
 
-    const transformers = Meta.getTransformers(instance, 'field')
+    const transformers = Meta.getTransformers(TestClass[Symbol.metadata], 'field')
     expect(useTransformer(transformers, [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], instance)).toStrictEqual('hello world')
   })
 

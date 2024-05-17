@@ -8,7 +8,7 @@
  */
 import { type MetaDescriptor } from './common'
 import { relationExistOrThrow } from './primitive'
-import { type DecoratorType } from '../types'
+import { type DecoratorType, type Context } from '../types'
 import Meta from '../metadatas'
 
 /**
@@ -37,19 +37,19 @@ export const TransformerOptionsDefault = {
 /**
  * TransformerFunction.
  */
-export type TransformerFunction<T> = (value: any, targetInstance: T) => any
+export type TransformerFunction = (value: any, targetInstance: any) => any
 
 /**
  * Transformer.
  *
  * @extends {MetaDescriptor<T>}
  */
-export interface Transformer<T> extends MetaDescriptor<T> {
+export interface Transformer extends MetaDescriptor {
   options: TransformerOptions
   /**
    * @type {TransformerFunction<T>} The transformer function taking the value in input and return the transformed value.
    */
-  transformer: TransformerFunction<T>
+  transformer: TransformerFunction
 }
 
 /**
@@ -62,22 +62,22 @@ export interface Transformer<T> extends MetaDescriptor<T> {
  *
  * @category Advanced Use
  */
-export function transformerDecoratorFactory (name: string, func: TransformerFunction<unknown>, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+export function transformerDecoratorFactory (name: string, func: TransformerFunction, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType {
+  return function (_: any, context: Context) {
     if (opt.primitiveCheck) {
-      relationExistOrThrow(target, propertyKey)
+      relationExistOrThrow(context.metadata, context)
     }
 
-    const transformer: Transformer<T> = {
+    const transformer: Transformer = {
       type: TransformerSymbol,
       name,
-      target,
-      propertyName: propertyKey,
+      metadata: context.metadata,
+      propertyName: context.name,
       options: { ...TransformerOptionsDefault, ...opt },
-      transformer: func as TransformerFunction<T>
+      transformer: func as TransformerFunction
     }
 
-    Meta.setTransformer(target, propertyKey, transformer)
+    Meta.setTransformer(context.metadata, context.name, transformer)
   }
 }
 
@@ -89,7 +89,7 @@ export function transformerDecoratorFactory (name: string, func: TransformerFunc
  *
  * @category Decorators
  */
-export function Transform (transformFunction: TransformerFunction<unknown>, opt: Partial<TransformerOptions>): DecoratorType {
+export function Transform (transformFunction: TransformerFunction, opt: Partial<TransformerOptions>): DecoratorType {
   return transformerDecoratorFactory('transform', transformFunction, opt)
 }
 
@@ -103,7 +103,7 @@ export function Transform (transformFunction: TransformerFunction<unknown>, opt:
  *
  * @category Advanced Use
  */
-export function useTransformer<T> (transformers: Array<Transformer<T>>, propertyValue: any, targetInstance: T): any {
+export function useTransformer (transformers: Array<Transformer>, propertyValue: any, targetInstance: any): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
     if (Array.isArray(transformedTmpValue) && transformer.options.each) {
       return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))

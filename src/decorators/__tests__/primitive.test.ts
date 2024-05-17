@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { Relation } from '../primitive'
-import { PrimitiveSymbol } from '../../types'
+import { PrimitiveSymbol, type DecoratorMetadataObject } from '../../types'
 import Meta from '../../metadatas'
 
 describe('Testing the usage of decorator to create metadata about property', () => {
@@ -16,8 +16,7 @@ describe('Testing the usage of decorator to create metadata about property', () 
       field: number
     }
 
-    const testMatchInstance = new TestMatch()
-    const fields = Meta.getFields(testMatchInstance)
+    const fields = Meta.getFields(TestMatch[Symbol.metadata] as DecoratorMetadataObject)
     expect(fields.map((x: any) => x.propertyName)).toStrictEqual([
       'test',
       'hello',

@@ -5,7 +5,7 @@
  */
 /**
  */
-export interface MetaDescriptor<T> {
+export interface MetaDescriptor {
   /**
    * Validator name.
    */
@@ -17,14 +17,14 @@ export interface MetaDescriptor<T> {
   name: string
 
   /**
-   * Instance object to which this decorator is applied.
+   * Metadata object to which this decorator is applied.
    */
-  target: T
+  metadata: DecoratorMetadataObject
 
   /**
    * Property name of the object the decorator is applied.
    */
-  propertyName: keyof T
+  propertyName: string
 }
 
 export type ArgumentsAcessor = string
@@ -46,6 +46,6 @@ export function commaSeparetedRecursiveGet (obj: any, args: ArgumentsAcessor): a
  * @param {keyof T} propertyKey
  * @returns {Function}
  */
-export function propertyTargetType<T>(target: T, propertyKey: keyof T): Function {
-  return Reflect.getMetadata('design:type', target as object, propertyKey as string)
-}
+// export function propertyTargetType<T>(target: T, propertyKey: keyof T): Function {
+//   return Reflect.getMetadata('design:type', target as object, propertyKey as string)
+// }

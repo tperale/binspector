@@ -1,6 +1,7 @@
 import { describe, expect } from '@jest/globals'
 import Meta from '../metadatas'
 import { ValidatorSymbol, type Validator, ValidatorOptionsDefault } from '../decorators/validator'
+import { type Context } from '../types'
 
 class Coord {
   x: number
@@ -9,30 +10,30 @@ class Coord {
 
 const testSymbol = Symbol('test')
 
-function Decorator (target: any, key: string): void {
-  Meta.setMetadata(target, key, testSymbol, key)
+function Decorator (_: any, context: Context): void {
+  Meta.setMetadata(context.metadata, context.name, testSymbol, context.name)
 }
 
 class MyClass {
   @Decorator
-  field1!: Coord
+  field1: Coord
 
   @Decorator
-  field2!: number[]
+  field2: number[]
 }
 
 describe('Set metadata information through the metadata API', () => {
   it('should manage to retrieve the type information set by the decorator from the Reflect API', () => {
     const c = new MyClass()
-    expect(Meta.getMetadata(c, 'field1', testSymbol)).toStrictEqual(['field1'])
-    expect(Meta.getMetadata(c, 'field2', testSymbol)[0]).toStrictEqual('field2')
+    expect(Meta.getMetadata(MyClass[Symbol.metadata], 'field1', testSymbol)).toStrictEqual(['field1'])
+    expect(Meta.getMetadata(MyClass[Symbol.metadata], 'field2', testSymbol)[0]).toStrictEqual('field2')
   })
   it('should store the validator', () => {
     const c = new MyClass()
-    const validator: Validator<MyClass> = {
+    const validator: Validator = {
       type: ValidatorSymbol,
       name: 'test',
-      target: c,
+      metadata: MyClass[Symbol.metadata],
       propertyName: 'field1',
       options: ValidatorOptionsDefault,
       validator: (_: any) => true

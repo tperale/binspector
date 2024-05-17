@@ -141,7 +141,7 @@ describe('Reading binary with controller', () => {
       @Relation(PrimitiveSymbol.u8)
       len: string
 
-      @Count('len')
+      @Count('len', { targetType: String })
       @Relation(PrimitiveSymbol.char)
       field: string
 
@@ -206,7 +206,7 @@ describe('Reading binary until EOF', () => {
       coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x04 }]
     })
   })
-  it('should throw and error if can\'t read the primitive', () => {
+  it('should throw an error if can\'t read the primitive', () => {
     class Header {
       @Relation(PrimitiveSymbol.u8)
       x: number
@@ -452,14 +452,11 @@ describe('Reading binary definition with PrePost decorators', () => {
 
 describe('Reading self refering binary definition', () => {
   it('should throw an error when defined as a relation', () => {
-    class Header {
-      @Relation(Header)
-      header: Header
-    }
-
-    const header = new Uint8Array([0x03, 0x02, 0x03, 0x04]).buffer
     expect(() => {
-      binread(new Cursor(header), Header)
-    }).toThrow(/Self Referring/)
+      class Header {
+        @Relation(Header)
+        header: Header
+      }
+    }).toThrow()
   })
 })

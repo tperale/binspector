@@ -11,14 +11,14 @@
  */
 import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
-import { type DecoratorType } from '../types'
+import { type DecoratorType, type Context } from '../types'
 import { type Cursor, CursorEndianness } from '../cursor'
 import Meta from '../metadatas'
 
 export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')
 
-export type PrePostFunction<T> = (instance: T, cursor: Cursor) => any
+export type PrePostFunction = (instance: any, cursor: Cursor) => any
 
 /**
  * PrePostOptions.
@@ -37,39 +37,39 @@ export const PrePostOptionsDefault = {
 /**
  * PrePost type interface structure definition.
  *
- * @extends {MetaDescriptor<T>}
+ * @extends {MetaDescriptor}
  */
-export interface PrePost<T> extends MetaDescriptor<T> {
+export interface PrePost extends MetaDescriptor {
   /**
    * @type {PrePostOptions} Options for prepost decorator
    */
   options: PrePostOptions
 
   /**
-   * @type {PrePostFunction<T>} Function that will be executed before or after the Controller, Validator and Transformer decorator.
+   * @type {PrePostFunction} Function that will be executed before or after the Controller, Validator and Transformer decorator.
    */
-  func: PrePostFunction<T>
+  func: PrePostFunction
 }
 
-function prePostFunctionDecoratorFactory (name: string, typeSym: symbol, metaSetter: any, func: PrePostFunction<unknown>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+function prePostFunctionDecoratorFactory (name: string, typeSym: symbol, metaSetter: any, func: PrePostFunction, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
+  return function (_: any, context: Context) {
     if (opt.primitiveCheck) {
-      relationExistOrThrow(target, propertyKey)
+      relationExistOrThrow(context.metadata, context)
     }
     const options = {
       ...PrePostOptionsDefault,
       ...opt
     }
-    const preFunction: PrePost<T> = {
+    const preFunction: PrePost = {
       type: typeSym,
       name,
-      target,
-      propertyName: propertyKey,
+      metadata: context.metadata,
+      propertyName: context.name,
       options,
       func
     }
 
-    metaSetter(target, propertyKey, preFunction)
+    metaSetter(context.metadata, context.name, preFunction)
   }
 }
 
@@ -83,7 +83,7 @@ function prePostFunctionDecoratorFactory (name: string, typeSym: symbol, metaSet
  *
  * @category Advanced Use
  */
-export function preFunctionDecoratorFactory (name: string, func: PrePostFunction<unknown>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
+export function preFunctionDecoratorFactory (name: string, func: PrePostFunction, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
   return prePostFunctionDecoratorFactory(name, PreFunctionSymbol, Meta.setPre, func, opt)
 }
 
@@ -97,7 +97,7 @@ export function preFunctionDecoratorFactory (name: string, func: PrePostFunction
  *
  * @category Advanced Use
  */
-export function postFunctionDecoratorFactory (name: string, func: PrePostFunction<unknown>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
+export function postFunctionDecoratorFactory (name: string, func: PrePostFunction, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
   return prePostFunctionDecoratorFactory(name, PostFunctionSymbol, Meta.setPost, func, opt)
 }
 
@@ -110,7 +110,7 @@ export function postFunctionDecoratorFactory (name: string, func: PrePostFunctio
  *
  * @category Decorators
  */
-export function Pre (func: PrePostFunction<unknown>, opt?: Partial<PrePostOptions>): DecoratorType {
+export function Pre (func: PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
   return preFunctionDecoratorFactory('pre', func, opt)
 }
 
@@ -123,7 +123,7 @@ export function Pre (func: PrePostFunction<unknown>, opt?: Partial<PrePostOption
  *
  * @category Decorators
  */
-export function Post (func: PrePostFunction<unknown>, opt?: Partial<PrePostOptions>): DecoratorType {
+export function Post (func: PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
   return postFunctionDecoratorFactory('post', func, opt)
 }
 
@@ -152,15 +152,15 @@ export function Offset (offset: number | string, opt?: Partial<PrePostOptions>):
  * @category Decorators
  */
 export function Endian (endianness: CursorEndianness, opt?: Partial<PrePostOptions>): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+  return function (_: any, context: Context) {
     let currentEndian = CursorEndianness.BigEndian
     preFunctionDecoratorFactory('preEndian', (_, cursor) => {
       currentEndian = cursor.getEndian()
       cursor.setEndian(endianness)
-    }, opt)(target, propertyKey as string)
+    }, opt)(_, context)
     postFunctionDecoratorFactory('postEndian', (_, cursor) => {
       cursor.setEndian(currentEndian)
-    }, opt)(target, propertyKey as string)
+    }, opt)(_, context)
   }
 }
 
@@ -174,7 +174,7 @@ export function Endian (endianness: CursorEndianness, opt?: Partial<PrePostOptio
  *
  * @category Advanced Use
  */
-export function usePrePost<T> (prepost: Array<PrePost<T>>, targetInstance: T, cursor: Cursor): void {
+export function usePrePost (prepost: Array<PrePost>, targetInstance: any, cursor: Cursor): void {
   prepost.forEach(x => {
     x.func(targetInstance, cursor)
   })

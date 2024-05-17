@@ -12,7 +12,7 @@
  */
 import { recursiveGet, type MetaDescriptor } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
-import { isPrimitiveSymbol, type DecoratorType, type InstantiableObject, type Primitive } from '../types'
+import { isPrimitiveSymbol, type DecoratorType, type InstantiableObject, type Primitive, type Context } from '../types'
 import { NoConditionMatched } from '../error'
 import Meta from '../metadatas'
 
@@ -22,22 +22,22 @@ export const ConditionSymbol = Symbol('condition-symbol')
  * ConditionFunction type are the function passed to the {@link Condition} decorators.
  * It receive the instance of the non finalized object in its current state and return a boolean.
  */
-export type ConditionFunction<T> = (targetInstance: T) => boolean
+export type ConditionFunction = (targetInstance: any) => boolean
 
 /**
  * Condition.
  *
  * @extends {MetaDescriptor<T>}
  */
-export interface Condition<T, K> extends MetaDescriptor<T> {
+export interface Condition extends MetaDescriptor {
   /**
-   * @type {ControllerFunction<T>} Function to control the flow of execution of the parser/writter
+   * @type {ControllerFunction} Function to control the flow of execution of the parser/writter
    */
-  condition: ConditionFunction<T>
+  condition: ConditionFunction
   /**
-   * @type {PrimitiveType<T> | RelationType<T, K> | undefined}
+   * @type {PrimitiveType | RelationType<K> | undefined}
    */
-  relation: PrimitiveTypeProperty<T> | RelationTypeProperty<T, K> | undefined // TODO Rename this to something like FinalPrimitive
+  relation: PrimitiveTypeProperty | RelationTypeProperty | undefined // TODO Rename this to something like FinalPrimitive
 }
 
 /**
@@ -49,30 +49,30 @@ export interface Condition<T, K> extends MetaDescriptor<T> {
  *
  * @category Advanced Use
  */
-export function conditionDecoratorFactory (name: string, func: ConditionFunction<unknown>, then?: Primitive<unknown>, args?: RelationParameters<unknown>): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
-    function createRelation (relationOrPrimitive: Primitive<unknown>): PrimitiveTypeProperty<T> | RelationTypeProperty<T, unknown> {
+export function conditionDecoratorFactory (name: string, func: ConditionFunction, then?: Primitive, args?: RelationParameters): DecoratorType {
+  return function (_: any, context: Context) {
+    function createRelation (relationOrPrimitive: Primitive): PrimitiveTypeProperty | RelationTypeProperty {
       if (isPrimitiveSymbol(relationOrPrimitive)) {
-        return createPrimitiveTypeProperty(target, propertyKey, relationOrPrimitive)
+        return createPrimitiveTypeProperty(context.metadata, context.name, relationOrPrimitive)
       } else { // Check has constructor
-        return createRelationTypeProperty(target, propertyKey, relationOrPrimitive as InstantiableObject<T>, args)
+        return createRelationTypeProperty(context.metadata, context.name, relationOrPrimitive as InstantiableObject, args)
       }
     }
 
-    if (!Meta.isFieldDecorated(target, propertyKey)) {
-      Relation()(target, propertyKey as string)
+    if (!Meta.isFieldDecorated(context.metadata, context.name)) {
+      Relation()(_, context)
     }
 
-    const condition: Condition<T, unknown> = {
+    const condition: Condition = {
       type: ConditionSymbol,
       name,
-      target,
-      propertyName: propertyKey,
-      condition: func as ConditionFunction<T>,
+      metadata: context.metadata,
+      propertyName: context.name,
+      condition: func as ConditionFunction,
       relation: then !== undefined ? createRelation(then) : undefined
     }
 
-    Meta.setCondition(target, propertyKey, condition)
+    Meta.setCondition(context.metadata, context.name, condition)
   }
 }
 
@@ -86,7 +86,7 @@ export function conditionDecoratorFactory (name: string, func: ConditionFunction
  *
  * @category Decorators
  */
-export function IfThen<T, K> (func: ConditionFunction<T>, then?: Primitive<K>, args?: (curr: T) => any[]): DecoratorType {
+export function IfThen (func: ConditionFunction, then?: Primitive, args?: (curr: any) => any[]): DecoratorType {
   return conditionDecoratorFactory('ifthen', func, then, args)
 }
 
@@ -114,7 +114,7 @@ export function IfThen<T, K> (func: ConditionFunction<T>, then?: Primitive<K>, a
  *
  * @category Decorators
  */
-export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): DecoratorType {
+export function Else (then?: Primitive, args?: (curr: any) => any[]): DecoratorType {
   return conditionDecoratorFactory('else', () => true, then, args)
 }
 
@@ -272,18 +272,18 @@ export function Else<T, K> (then?: Primitive<K>, args?: (curr: T) => any[]): Dec
  *
  * @category Decorators
  */
-export function Choice<T> (cmp: string | ((targetInstance: T) => any), match: Record<any, Primitive<unknown> | [Primitive<unknown>, RelationParameters<unknown>] | undefined>, args?: RelationParameters<unknown>): DecoratorType {
-  const valueToCompare = typeof cmp === 'string' ? (targetInstance: T) => recursiveGet(targetInstance, cmp) : cmp
+export function Choice (cmp: string | ((targetInstance: any) => any), match: Record<any, Primitive | [Primitive, RelationParameters] | undefined>, args?: RelationParameters): DecoratorType {
+  const valueToCompare = typeof cmp === 'string' ? (targetInstance: any) => recursiveGet(targetInstance, cmp) : cmp
   // Mandatory to cast to String because the key is always a string even though you declare it as a number
   const decorators = Object.keys(match).map((key: keyof typeof match) => {
     const matchValue = match[key]
     const [primValue, primArgs] = Array.isArray(matchValue) ? [matchValue[0], matchValue[1]] : [matchValue, args]
-    return conditionDecoratorFactory('choice', (targetInstance: T) => key === String(valueToCompare(targetInstance)), primValue, primArgs)
+    return conditionDecoratorFactory('choice', (targetInstance: any) => key === String(valueToCompare(targetInstance)), primValue, primArgs)
   })
 
-  return function <K>(target: K, propertyKey: keyof K) {
+  return function (target: any, context: Context) {
     decorators.forEach(decorator => {
-      decorator(target, propertyKey as string)
+      decorator(target, context)
     })
   }
 }
@@ -299,7 +299,7 @@ export function Choice<T> (cmp: string | ((targetInstance: T) => any), match: Re
  *
  * @category Advanced Use
  */
-export function useConditions<T, K> (conditions: Array<Condition<T, K>>, targetInstance: T): PrimitiveTypeProperty<T> | RelationTypeProperty<T, K> | undefined {
+export function useConditions (conditions: Array<Condition>, targetInstance: any): PrimitiveTypeProperty | RelationTypeProperty | undefined {
   const cond = conditions.reverse().find(cond => cond.condition(targetInstance))
   if (cond === undefined) {
     // TODO Improve the error handling

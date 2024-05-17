@@ -9,9 +9,9 @@
  *
  * @module Controller
  */
-import { type MetaDescriptor, recursiveGet, propertyTargetType } from './common'
+import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
-import { EOF, type DecoratorType, type InstantiableObject } from '../types'
+import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
 import { type Cursor } from '../cursor'
 import { EOFError } from '../error'
 import Meta from '../metadatas'
@@ -27,15 +27,15 @@ export type ControllerReaderFunction = () => any
 /**
  * ControllerOptions.
  */
-export interface ControllerOptions<T> {
+export interface ControllerOptions {
   /**
    * @type {boolean} Verify a relation already exist before the definition of the controller
    */
   primitiveCheck: boolean
   /**
-   * @type {InstantiableObject<T> | undefined} Define the target type for the controller to apply transformation.
+   * @type {InstantiableObject | undefined} Define the target type for the controller to apply transformation.
    */
-  targetType: InstantiableObject<T> | undefined
+  targetType: InstantiableObject | undefined
   /**
    * @type {number} Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
    */
@@ -56,23 +56,23 @@ export const ControllerOptionsDefault = {
 /**
  * ControllerFunction.
  */
-export type ControllerFunction<T> = (targetInstance: T, read: ControllerReaderFunction, cursor?: Cursor, opt?: ControllerOptions<unknown>) => any
+export type ControllerFunction = (targetInstance: any, read: ControllerReaderFunction, cursor?: Cursor, opt?: ControllerOptions) => any
 
 /**
  * Controller type interface structure definition.
  *
- * @extends {MetaDescriptor<T>}
+ * @extends {MetaDescriptor}
  */
-export interface Controller<T> extends MetaDescriptor<T> {
+export interface Controller extends MetaDescriptor {
   /**
    * @type {ControllerOptions<unknown>} Options for controller decorator
    */
-  options: ControllerOptions<unknown>
+  options: ControllerOptions
 
   /**
-   * @type {ControllerFunction<T>} Function to control the flow of execution of the binary reader
+   * @type {ControllerFunction} Function to control the flow of execution of the binary reader
    */
-  controller: ControllerFunction<T> // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
+  controller: ControllerFunction // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
 }
 
 /**
@@ -84,36 +84,36 @@ export interface Controller<T> extends MetaDescriptor<T> {
  *
  * @category Advanced Use
  */
-export function controllerDecoratorFactory (name: string, func: ControllerFunction<unknown>, opt: Partial<ControllerOptions<unknown>> = ControllerOptionsDefault): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+export function controllerDecoratorFactory (name: string, func: ControllerFunction, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType {
+  return function (_: any, context: Context) {
     if (opt.primitiveCheck) {
-      relationExistOrThrow(target, propertyKey)
+      relationExistOrThrow(context.metadata, context)
     }
     // TODO ControllerFunction shoud accept 2 or 3 arguments the optionnal one being accepting the target type or not.
     // TODO This target type will also be useful to create more complex relationship.
-    const targetType: InstantiableObject<unknown> = opt.targetType === undefined ? propertyTargetType(target, propertyKey) as InstantiableObject<unknown> : opt.targetType
+    const targetType: InstantiableObject | undefined = opt.targetType
     const options = {
       ...ControllerOptionsDefault,
       ...opt,
       ...{ targetType }
     }
-    const controller: Controller<T> = {
+    const controller: Controller = {
       type: ControllerSymbol,
       name,
-      target,
-      propertyName: propertyKey,
+      metadata: context.metadata,
+      propertyName: context.name,
       options,
       controller: (curr, read, cursor) => func(curr, read, cursor, options)
     }
 
-    Meta.setController(target, propertyKey, controller)
+    Meta.setController(context.metadata, context.name, controller)
   }
 }
 
 /**
  * ControllerWhileFunction.
  */
-export type ControllerWhileFunction<T> = (curr: any, count?: number, targetInstance?: T) => boolean
+export type ControllerWhileFunction = (curr: any, count?: number, targetInstance?: any) => boolean
 /**
  * whileFunctionFactory.
  *
@@ -122,12 +122,12 @@ export type ControllerWhileFunction<T> = (curr: any, count?: number, targetInsta
  *
  * @category Advanced Use
  */
-function whileFunctionFactory<T> (cond: ControllerWhileFunction<T>): any {
+function whileFunctionFactory (cond: ControllerWhileFunction): any {
   return function (
-    currStateObject: T,
+    currStateObject: any,
     read: ControllerReaderFunction,
     cursor: Cursor,
-    opt: ControllerOptions<unknown>
+    opt: ControllerOptions
   ): any {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
@@ -176,7 +176,7 @@ function untilEofController (): any {
     currStateObject: any,
     read: ControllerReaderFunction,
     cursor: Cursor,
-    opt: ControllerOptions<unknown>
+    opt: ControllerOptions
   ): any {
     try {
       wrap(currStateObject, read, cursor, opt)
@@ -202,7 +202,7 @@ function untilEofController (): any {
  *
  * @category Decorators
  */
-export function While<T> (func: ControllerWhileFunction<T>, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+export function While (func: ControllerWhileFunction, opt?: Partial<ControllerOptions>): DecoratorType {
   // TODO Verify you don't expect to compare something to EOF
   return controllerDecoratorFactory('while', whileFunctionFactory(func), opt)
 }
@@ -257,7 +257,7 @@ export function While<T> (func: ControllerWhileFunction<T>, opt?: Partial<Contro
  *
  * @category Decorators
  */
-export function Until (arg: any, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorType {
   if (arg === EOF) {
     return controllerDecoratorFactory('until', untilEofController(), opt)
   } else {
@@ -296,7 +296,7 @@ export function Until (arg: any, opt?: Partial<ControllerOptions<unknown>>): Dec
  *
  * @category Decorators
  */
-export function Count (arg: number | string, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+export function Count (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
   /**
    * countCheck.
    *
@@ -326,7 +326,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions<unk
  * @param {Partial} opt
  * @returns {DecoratorType}
  */
-export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions<unknown>>): DecoratorType {
+export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
   /**
    * countCheck.
    *
@@ -344,7 +344,7 @@ export function Matrix (width: number | string, height: number | string, opt?: P
     }
   }
 
-  function matrixController<T> (currStateObject: T, read: ControllerReaderFunction, cursor: Cursor, opt: ControllerOptions<unknown>): any {
+  function matrixController (currStateObject: any, read: ControllerReaderFunction, cursor: Cursor, opt: ControllerOptions): any {
     const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, cursor, opt)
 
     return whileFunctionFactory(countCheck(height))(currStateObject, lineRead, cursor, opt)
@@ -363,6 +363,6 @@ export function Matrix (width: number | string, height: number | string, opt?: P
  *
  * @category Advanced Use
  */
-export function useController<T> (controller: Controller<T>, targetInstance: T, reader: ControllerReaderFunction, ...args: any[]): any {
+export function useController (controller: Controller, targetInstance: any, reader: ControllerReaderFunction, ...args: any[]): any {
   return controller.controller(targetInstance, reader, ...args)
 }

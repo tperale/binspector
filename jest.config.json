@@ -1,5 +1,16 @@
 {
+  "verbose": true,
+  "moduleDirectories": [
+    "node_modules",
+    "src"
+  ],
+  "testEnvironment": "node",
+  "testMatch": [
+    "<rootDir>/src/**/__tests__/*.test.ts"
+  ],
   "transform": {
-    "^.+\\.tsx?$": "ts-jest"
-  }
+    "\\.ts$": "babel-jest"
+  },
+  "collectCoverage": true,
+  "coverageDirectory": "./coverage/"
 }

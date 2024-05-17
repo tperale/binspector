@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import { type PropertyType } from './decorators/primitive'
 import { type Condition, ConditionSymbol } from './decorators/condition'
 import { type Controller, ControllerSymbol } from './decorators/controller'
@@ -6,162 +5,178 @@ import { type Transformer, TransformerSymbol } from './decorators/transformer'
 import { type Validator, ValidatorSymbol } from './decorators/validator'
 import { type BitField, BitFieldSymbol } from './decorators/bitfield'
 import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from './decorators/prepost'
+import { type DecoratorMetadataObject } from './types'
+
+import './symbol-polyfill.ts'
 
 function getMetadata<T> (
-  target: T,
-  propertyKey: keyof T,
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
   metadataKey: symbol
 ): T[] {
-  const meta = Reflect.getMetadata(metadataKey, target as object, propertyKey as string) as T[]
+  // TODO Can be optionnal since its set on the set metadata
+  if (metadata[metadataKey] === undefined) {
+    metadata[metadataKey] = {}
+  }
+  const meta = metadata[metadataKey][propertyKey]
   return Array.isArray(meta) ? meta : []
 }
 
 function setMetadata<T> (
-  target: T,
-  propertyKey: keyof T,
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
   metadataKey: symbol,
   newValue: any
 ): T[] {
-  const metas = getMetadata(target, propertyKey, metadataKey)
+  const metas = getMetadata(metadata, propertyKey, metadataKey)
   const newMetas = [...metas, newValue]
-  Reflect.defineMetadata(metadataKey, newMetas, target as object, propertyKey as string)
+  metadata[metadataKey][propertyKey] = newMetas
   return newMetas
 }
 
 const FieldSymbol = Symbol('field-symbol')
 
-function getFields<T> (target: T): Array<PropertyType<T>> {
-  const fields = Reflect.getMetadata(FieldSymbol, target as object)
+function getFields (metadata: DecoratorMetadataObject): PropertyType[] {
+  const fields = metadata[FieldSymbol]
   return Array.isArray(fields) ? fields : []
 }
 
-function getField<T> (target: T, propertyKey: keyof T): PropertyType<T> | undefined {
-  const fields = getFields(target)
+function getField (metadata: DecoratorMetadataObject, propertyKey: string): PropertyType | undefined {
+  const fields = getFields(metadata)
   return fields.find(x => x.propertyName === propertyKey)
 }
 
-function setField<T> (
-  target: T,
-  field: PropertyType<T>
-): Array<PropertyType<T>> {
-  const fields = [...getFields(target), field]
-  Reflect.defineMetadata(FieldSymbol, fields, target as object)
+function setField (
+  metadata: DecoratorMetadataObject,
+  field: PropertyType
+): PropertyType[] {
+  const fields = [...getFields(metadata), field]
+  metadata[FieldSymbol] = fields
   return fields
 }
 
-function isFieldDecorated<T> (target: T, propertyKey: keyof T): boolean {
-  return getField(target, propertyKey) !== undefined
+function isFieldDecorated (metadata: DecoratorMetadataObject, propertyKey: string): boolean {
+  return getField(metadata, propertyKey) !== undefined
 }
 
-function getPre<T> (target: T, propertyKey: keyof T): Array<PrePost<T>> {
+function getPre (metadata: DecoratorMetadataObject, propertyKey: string): PrePost[] {
   return getMetadata(
-    target,
+    metadata,
     propertyKey,
     PreFunctionSymbol
-  ) as Array<PrePost<T>>
+  )
 }
 
-function setPre<T> (
-  target: T,
-  propertyKey: keyof T,
-  pre: PrePost<T>
-): Array<PrePost<T>> {
-  return setMetadata(target, propertyKey, PreFunctionSymbol, pre) as Array<PrePost<T>>
+function setPre (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  pre: PrePost
+): PrePost[] {
+  return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
 }
 
-function getConditions<T> (target: T, propertyKey: keyof T): Array<Condition<T, unknown>> {
+function getConditions (metadata: DecoratorMetadataObject, propertyKey: string): Condition[] {
   return getMetadata(
-    target,
+    metadata,
     propertyKey,
     ConditionSymbol
-  ) as Array<Condition<T, unknown>>
+  )
 }
 
-function setCondition<T> (
-  target: T,
-  propertyKey: keyof T,
-  condition: Condition<T, unknown>
-): Array<Condition<T, unknown>> {
-  return setMetadata(target, propertyKey, ConditionSymbol, condition) as Array<Condition<T, unknown>>
+function setCondition (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  condition: Condition
+): Condition[] {
+  return setMetadata(metadata, propertyKey, ConditionSymbol, condition)
 }
 
-function getController<T> (target: T, propertyKey: keyof T): Controller<T> | undefined {
-  return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
+function getController (metadata: DecoratorMetadataObject, propertyKey: string): Controller | undefined {
+  // return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
+  if (typeof metadata[ControllerSymbol] === 'object') {
+    return metadata[ControllerSymbol][propertyKey]
+  }
+  return undefined
 }
 
-function setController<T> (
-  target: T,
-  propertyKey: keyof T,
-  controller: Controller<T>
-): Controller<T> {
-  Reflect.defineMetadata(ControllerSymbol, controller, target as object, propertyKey as string)
+function setController (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  controller: Controller
+): Controller {
+  if (typeof metadata[ControllerSymbol] !== 'object') {
+    metadata[ControllerSymbol] = {}
+  }
+  metadata[ControllerSymbol][propertyKey] = controller
   return controller
 }
 
-function getTransformers<T> (target: T, propertyKey: keyof T): Array<Transformer<T>> {
+function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string): Transformer[] {
   return getMetadata(
-    target,
+    metadata,
     propertyKey,
     TransformerSymbol
-  ) as Array<Transformer<T>>
+  )
 }
 
-function setTransformer<T> (
-  target: T,
-  propertyKey: keyof T,
-  transformer: Transformer<T>
-): Array<Transformer<T>> {
-  return setMetadata(target, propertyKey, TransformerSymbol, transformer) as Array<Transformer<T>>
+function setTransformer (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  transformer: Transformer
+): Transformer[] {
+  return setMetadata(metadata, propertyKey, TransformerSymbol, transformer)
 }
 
-function getValidators<T> (target: T, propertyKey: keyof T): Array<Validator<T>> {
+function getValidators (metadata: DecoratorMetadataObject, propertyKey: string): Validator[] {
   return getMetadata(
-    target,
+    metadata,
     propertyKey,
     ValidatorSymbol
-  ) as Array<Validator<T>>
+  )
 }
 
-function setValidator<T> (
-  target: T,
-  propertyKey: keyof T,
-  validator: Validator<T>
-): Array<Validator<T>> {
-  return setMetadata(target, propertyKey, validator.type, validator) as Array<Validator<T>>
+function setValidator (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  validator: Validator
+): Validator[] {
+  return setMetadata(metadata, propertyKey, validator.type, validator)
 }
 
-function getPost<T> (target: T, propertyKey: keyof T): Array<PrePost<T>> {
+function getPost (metadata: DecoratorMetadataObject, propertyKey: string): PrePost[] {
   return getMetadata(
-    target,
+    metadata,
     propertyKey,
     PostFunctionSymbol
-  ) as Array<PrePost<T>>
+  )
 }
 
-function setPost<T> (
-  target: T,
-  propertyKey: keyof T,
-  post: PrePost<T>
-): Array<PrePost<T>> {
-  return setMetadata(target, propertyKey, PostFunctionSymbol, post) as Array<PrePost<T>>
+function setPost (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string,
+  post: PrePost
+): PrePost[] {
+  return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
 }
 
-function getBitField<T> (target: T, propertyKey: keyof T): BitField<T> | undefined {
-  const bitfields = getBitFields(target)
+function getBitField (metadata: DecoratorMetadataObject, propertyKey: string): BitField | undefined {
+  const bitfields = getBitFields(metadata)
   return bitfields.find(x => x.propertyName === propertyKey)
 }
 
-function getBitFields<T> (target: T): Array<BitField<T>> {
-  const bitfields = Reflect.getMetadata(BitFieldSymbol, target as object)
+function getBitFields (metadata: DecoratorMetadataObject): BitField[] {
+  const bitfields = metadata[BitFieldSymbol]
+  // const bitfields = Reflect.getMetadata(BitFieldSymbol, target as object)
   return Array.isArray(bitfields) ? bitfields : []
 }
 
-function setBitField<T> (
-  target: T,
-  bitfield: BitField<T>
-): Array<BitField<T>> {
-  const bitfields = [...getBitFields(target), bitfield]
-  Reflect.defineMetadata(BitFieldSymbol, bitfields, target as object)
+function setBitField (
+  metadata: DecoratorMetadataObject,
+  bitfield: BitField
+): BitField[] {
+  const bitfields = [...getBitFields(metadata), bitfield]
+  // Reflect.defineMetadata(BitFieldSymbol, bitfields, target as object)
+  metadata[BitFieldSymbol] = bitfields
   return bitfields
 }
 

@@ -13,7 +13,7 @@ describe('Testing the usage of the condition decorator', () => {
 
     const instance = new TestClass()
 
-    const conditions = Meta.getConditions(instance, 'field')
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata], 'field')
 
     expect(useConditions(conditions, instance)).toEqual(expect.objectContaining({ relation: Number }))
   })
@@ -28,7 +28,7 @@ describe('Testing the usage of the condition decorator', () => {
 
     const instance = new TestClass()
 
-    const conditions = Meta.getConditions(instance, 'field')
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata], 'field')
 
     expect(useConditions(conditions, instance)).toEqual(expect.objectContaining({ relation: Number }))
   })
@@ -50,7 +50,7 @@ describe('Testing the usage of the condition decorator', () => {
 
     const instance = new TestClass()
 
-    const conditions = Meta.getConditions(instance, 'field')
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata], 'field')
     const relation = useConditions(conditions, instance) as RelationTypeProperty<TestClass, TestArg>
     expect(relation).toEqual(expect.objectContaining({ relation: TestArg }))
     expect(relation.args).toBeDefined()
@@ -81,7 +81,7 @@ describe('Testing the usage of the condition decorator', () => {
 
     const instance = new TestClass()
 
-    const conditions = Meta.getConditions(instance, 'field')
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata], 'field')
     const relation = useConditions(conditions, instance) as RelationTypeProperty<TestClass, TestArg>
 
     expect(relation).toEqual(expect.objectContaining({ relation: TestArg }))

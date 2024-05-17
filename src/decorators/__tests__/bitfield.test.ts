@@ -18,7 +18,7 @@ describe('Testing the usage of the bitfield decorator', () => {
 
     const instance = new TestBitField()
 
-    const bitfields = Meta.getBitFields(instance)
+    const bitfields = Meta.getBitFields(TestBitField[Symbol.metadata])
 
     const buf = new Uint8Array([0b00100101]).buffer
     const cur = new Cursor(buf)

@@ -24,14 +24,24 @@ export function isPrimitiveSymbol (x: any): x is PrimitiveSymbol {
   return Object.prototype.hasOwnProperty.call(PrimitiveSymbol, x)
 }
 
+export type DecoratorMetadataObject = Record<PropertyKey, any>
+
+/**
+ * Context
+ */
+export interface Context {
+  name: string,
+  metadata: DecoratorMetadataObject,
+}
+
 /**
  * DecoratorType.
  */
-export type DecoratorType = (target: any, propertyKey: string) => void
+export type DecoratorType = (target: any, context: Context) => void
 
 /**
  * InstantiableObject.
  */
-export type InstantiableObject<T> = (new (...args: any[]) => T)
+export type InstantiableObject = (new (...args: any[]) => any)
 
-export type Primitive<T> = InstantiableObject<T> | PrimitiveSymbol
+export type Primitive = InstantiableObject | PrimitiveSymbol

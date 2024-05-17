@@ -44,8 +44,8 @@ import { useBitField } from './decorators/bitfield'
  * `ObjectDefinition` passed in param.
  * You can create self refering field by using conditionnal decorator.
  */
-export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObject<T>, ...args: any[]): T {
-  function getBinReader<T> (field: PropertyType<T>, instance: T): () => any {
+export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): T {
+  function getBinReader (field: PropertyType, instance: any): () => any {
     if (isPrimitiveRelation(field)) {
       return () => content.read(field.primitive)
     } else if (isRelation(field)) {
@@ -88,17 +88,17 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
 
   const instance = new ObjectDefinition(...args)
 
-  const bitfields = Meta.getBitFields(instance)
+  const bitfields = Meta.getBitFields(ObjectDefinition[Symbol.metadata])
   if (bitfields.length > 0) {
     return useBitField(bitfields, instance, content)
   }
 
-  Meta.getFields(instance).forEach((field) => {
-    usePrePost(Meta.getPre(instance, field.propertyName), instance, content)
+  Meta.getFields(ObjectDefinition[Symbol.metadata]).forEach((field) => {
+    usePrePost(Meta.getPre(ObjectDefinition[Symbol.metadata], field.propertyName), instance, content)
 
-    const controller = Meta.getController(instance, field.propertyName)
+    const controller = Meta.getController(ObjectDefinition[Symbol.metadata], field.propertyName)
     // TODO [Cursor] Pass the field name information to add to the namespace
-    const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.target, field.propertyName), instance) : field
+    const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
       const value = controller !== undefined
@@ -112,17 +112,17 @@ export function binread<T> (content: Cursor, ObjectDefinition: InstantiableObjec
         throw new EOFError()
       }
 
-      const transformers = Meta.getTransformers(instance, field.propertyName)
+      const transformers = Meta.getTransformers(ObjectDefinition[Symbol.metadata], field.propertyName)
       const transformedValue = useTransformer(transformers, value, instance)
         transformers.reduce((res, transformer) => {
         return transformer.transformer(res, instance)
       }, value)
 
-      useValidators(Meta.getValidators(instance, field.propertyName), transformedValue, instance)
+      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata], field.propertyName), transformedValue, instance)
 
       instance[field.propertyName] = transformedValue
 
-      usePrePost(Meta.getPost(instance, field.propertyName), instance, content)
+      usePrePost(Meta.getPost(ObjectDefinition[Symbol.metadata], field.propertyName), instance, content)
     }
   })
 

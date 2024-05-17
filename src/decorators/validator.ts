@@ -4,7 +4,7 @@
  *
  * @module Validator
  */
-import { type DecoratorType } from '../types'
+import { type DecoratorType, type Context } from '../types'
 import { type MetaDescriptor } from './common'
 import { relationExistOrThrow } from './primitive'
 import { ValidationTestFailed } from '../error'
@@ -43,20 +43,20 @@ export const ValidatorOptionsDefault = {
 /**
  * ValidatorFunction.
  */
-export type ValidatorFunction<T> = (value: any, targetInstance: T) => boolean
+export type ValidatorFunction = (value: any, targetInstance: any) => boolean
 
 /**
  * Validator.
  *
- * @extends {MetaDescriptor<T>}
+ * @extends {MetaDescriptor}
  */
-export interface Validator<T> extends MetaDescriptor<T> {
+export interface Validator extends MetaDescriptor {
   options: ValidatorOptions
 
   /**
-   * @type {ValidatorFunction<T>}
+   * @type {ValidatorFunction}
    */
-  validator: ValidatorFunction<T>
+  validator: ValidatorFunction
 }
 
 /**
@@ -69,22 +69,22 @@ export interface Validator<T> extends MetaDescriptor<T> {
  *
  * @category Advanced Use
  */
-export function validatorDecoratorFactory (name: string, func: ValidatorFunction<unknown>, opt: Partial<ValidatorOptions> = ValidatorOptionsDefault): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+export function validatorDecoratorFactory (name: string, func: ValidatorFunction, opt: Partial<ValidatorOptions> = ValidatorOptionsDefault): DecoratorType {
+  return function (_: any, context: Context) {
     if (opt.primitiveCheck) {
-      relationExistOrThrow(target, propertyKey)
+      relationExistOrThrow(context.metadata, context)
     }
 
-    const validator: Validator<T> = {
+    const validator: Validator = {
       type: ValidatorSymbol,
       name,
-      target,
-      propertyName: propertyKey,
+      metadata: context.metadata,
+      propertyName: context.name,
       options: { ...ValidatorOptionsDefault, ...opt },
-      validator: func as ValidatorFunction<T>
+      validator: func
     }
 
-    Meta.setValidator(target, propertyKey, validator)
+    Meta.setValidator(context.metadata, context.name, validator)
   }
 }
 
@@ -96,7 +96,7 @@ export function validatorDecoratorFactory (name: string, func: ValidatorFunction
  *
  * @category Decorators
  */
-export function Validate (validatingFunction: ValidatorFunction<unknown>, opt?: Partial<ValidatorOptions>): DecoratorType {
+export function Validate (validatingFunction: ValidatorFunction, opt?: Partial<ValidatorOptions>): DecoratorType {
   return validatorDecoratorFactory('validate', validatingFunction, opt)
 }
 
@@ -261,8 +261,8 @@ export function Enum (enumeration: Record<string, string | number>, opt?: Partia
  *
  * @category Advanced Use
  */
-export function useValidators<T> (validators: Array<Validator<T>>, value: any, targetInstance: T): void {
-  validators.forEach((validator: Validator<T>) => {
+export function useValidators (validators: Array<Validator>, value: any, targetInstance: any): void {
+  validators.forEach((validator: Validator) => {
     if (validator.options.each) {
       value.forEach((x: any) => {
         if (!validator.validator(x, targetInstance)) {

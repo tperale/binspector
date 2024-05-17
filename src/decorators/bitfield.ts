@@ -8,7 +8,7 @@
  * @module Bitfield
  */
 import { type MetaDescriptor } from './common'
-import { type DecoratorType, PrimitiveSymbol } from '../types'
+import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
 import { type Cursor } from '../cursor'
 import Meta from '../metadatas'
 
@@ -28,7 +28,7 @@ export const BitFieldOptionsDefault = {
   primitiveCheck: true
 }
 
-export interface BitField<T> extends MetaDescriptor<T> {
+export interface BitField extends MetaDescriptor {
   options: BitFieldOptions
   bitlength: number
 }
@@ -44,9 +44,9 @@ export interface BitField<T> extends MetaDescriptor<T> {
  * @category Advanced Use
  */
 export function bitFieldDecoratorFactory (name: string, len: number, opt: Partial<BitFieldOptions> = BitFieldOptionsDefault): DecoratorType {
-  return function <T>(target: T, propertyKey: keyof T) {
+  return function (_: any, context: Context) {
     if (opt.primitiveCheck) {
-      if (Meta.getFields(target).length > 0) {
+      if (Meta.getFields(context.metadata).length > 0) {
         // TODO Create new Error
         throw new Error('Can\'t define bitfield inside an instance with relations')
       }
@@ -55,16 +55,16 @@ export function bitFieldDecoratorFactory (name: string, len: number, opt: Partia
       ...BitFieldOptionsDefault,
       ...opt
     }
-    const bitfield: BitField<T> = {
+    const bitfield: BitField = {
       type: BitFieldSymbol,
       name,
-      target,
-      propertyName: propertyKey,
+      metadata: context.metadata,
+      propertyName: context.name,
       options,
       bitlength: len
     }
 
-    Meta.setBitField(target, bitfield)
+    Meta.setBitField(context.metadata, bitfield)
   }
 }
 
@@ -105,7 +105,7 @@ export function Bitfield (len: number): DecoratorType {
   return bitFieldDecoratorFactory('bitfield', len)
 }
 
-export function useBitField<T> (bitfields: Array<BitField<T>>, targetInstance: T, cursor: Cursor): T {
+export function useBitField (bitfields: Array<BitField>, targetInstance: any, cursor: Cursor): any {
   const getPrimitive = (length: number): PrimitiveSymbol => {
     const remainToAlign = (8 - (length % 8)) % 8
     switch ((length + remainToAlign) / 8) {
@@ -124,8 +124,7 @@ export function useBitField<T> (bitfields: Array<BitField<T>>, targetInstance: T
 
   const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
   const value = cursor.read(getPrimitive(totalBitLength)) as number
-  bitfields.reduce((offset: number, bf: BitField<T>) => {
-    // @ts-expect-error Weird thing with the keyof to fix
+  bitfields.reduce((offset: number, bf: BitField) => {
     targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
     return offset + bf.bitlength
   }, 0)
