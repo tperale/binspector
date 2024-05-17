@@ -29,7 +29,7 @@ class RGB {
 
 class BitmapFileHeader {
   @Enum(BitmapHeaderTypes)
-  @Count(2)
+  @Count(2, { targetType: String })
   @Relation(PrimitiveSymbol.char)
   type: string
 

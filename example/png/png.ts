@@ -124,7 +124,7 @@ class PNGChunk {
   length: number
 
   @Enum(PNGTypes)
-  @Count(4)
+  @Count(4, { targetType: String })
   @Relation(PrimitiveSymbol.char)
   type: PNGTypes
 

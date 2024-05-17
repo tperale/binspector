@@ -6,7 +6,8 @@
   ],
   "testEnvironment": "node",
   "testMatch": [
-    "<rootDir>/src/**/__tests__/*.test.ts"
+    "<rootDir>/src/**/__tests__/*.test.ts",
+    "<rootDir>/example/**/*.test.ts"
   ],
   "transform": {
     "\\.ts$": "babel-jest"
