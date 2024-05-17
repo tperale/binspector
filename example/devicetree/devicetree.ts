@@ -1,4 +1,4 @@
-import { EOF, Choice, PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, IfThen, Peek, Offset, Until } from '../../src'
+import { EOF, NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, IfThen, Peek, Offset, Until } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -42,7 +42,7 @@ class DTBHeader {
 }
 
 class FDTBeginNode {
-  @Until('\0', { targetType: String, alignment: 4 })
+  @NullTerminatedString({ alignment: 4 })
   @Relation(PrimitiveSymbol.char)
   name: string
 }
@@ -61,7 +61,7 @@ class FDTProp {
   name: string
 
   @Peek((curr) => curr._string_off + curr.nameoff)
-  @Until('\0', { targetType: String })
+  @NullTerminatedString()
   @Relation(PrimitiveSymbol.char)
   property: string
 

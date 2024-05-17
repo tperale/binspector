@@ -266,6 +266,23 @@ export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorTyp
   }
 }
 
+export function NullTerminatedString (opt?: Partial<ControllerOptions>): DecoratorType {
+ return controllerDecoratorFactory('nullterminatedstring', (
+      currStateObject: any,
+      read: ControllerReaderFunction,
+      cursor: Cursor,
+      opt: ControllerOptions
+    ) => {
+      const stringOpt = {
+        ...opt,
+        targetType: String
+      }
+      console.log(stringOpt)
+      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, cursor, stringOpt)
+      return result.slice(0, -1)
+    }, opt)
+}
+
 /**
  * @overload
  *

@@ -160,7 +160,6 @@ export function Peek (offset: number | string | PrePostFunction, opt?: Partial<P
     preFunctionDecoratorFactory('pre-peek', (targetInstance, cursor) => {
       const preOff = cursor.offset()
       postFunctionDecoratorFactory('post-peek', (_, cursor) => {
-        console.log(preOff)
         cursor.move(preOff)
       }, opt)(_, context)
       const offCompute = typeof offset === 'string'
@@ -168,7 +167,6 @@ export function Peek (offset: number | string | PrePostFunction, opt?: Partial<P
         : typeof offset === 'number'
           ? offset
           : offset(targetInstance, cursor) as number
-      console.log(offCompute)
       cursor.move(offCompute)
     }, opt)(_, context)
   }
