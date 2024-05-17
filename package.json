@@ -2,7 +2,7 @@
   "name": "binspector",
   "description": "A _truly_ declarative library for binary file and protocol definition written in typescript. Read binary files based on class definition and decorators directly from your webapp.",
   "version": "0.0.2",
-  "main": "dist/index.js",
+  "main": "dist/binspector.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
