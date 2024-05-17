@@ -136,10 +136,42 @@ export function Post (func: PrePostFunction, opt?: Partial<PrePostOptions>): Dec
  *
  * @category Decorators
  */
-export function Offset (offset: number | string, opt?: Partial<PrePostOptions>): DecoratorType {
+export function Offset (offset: number | string | PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
-    cursor.move(typeof offset === 'string' ? recursiveGet(targetInstance, offset) : offset)
+    const offCompute = typeof offset === 'string' ? recursiveGet(targetInstance, offset)
+      : typeof offset === 'number'
+        ? offset
+        : offset(targetInstance, cursor) as number
+    cursor.move(offCompute)
   }, opt)
+}
+
+/**
+ * `@Peek` decorator define the place to move the cursor of the buffer then move it back
+ *
+ * @param {number | string} offset
+ * @param {Partial} opt PrePost options.
+ * @returns {DecoratorType} The property decorator function ran at runtime
+ *
+ * @category Decorators
+ */
+export function Peek (offset: number | string | PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
+  return (_: any, context: Context) => {
+    preFunctionDecoratorFactory('pre-peek', (targetInstance, cursor) => {
+      const preOff = cursor.offset()
+      postFunctionDecoratorFactory('post-peek', (_, cursor) => {
+        console.log(preOff)
+        cursor.move(preOff)
+      }, opt)(_, context)
+      const offCompute = typeof offset === 'string'
+        ? recursiveGet(targetInstance, offset)
+        : typeof offset === 'number'
+          ? offset
+          : offset(targetInstance, cursor) as number
+      console.log(offCompute)
+      cursor.move(offCompute)
+    }, opt)(_, context)
+  }
 }
 
 /**
