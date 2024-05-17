@@ -1,12 +1,15 @@
+const webpack = require('webpack')
 const path = require('path')
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src') + '/index.ts',
+  entry: {
+    'binspector': path.resolve(__dirname, 'src') + '/index.ts',
+  },
   module: {
     rules: [
       {
         test: /\.ts?$/,
-        use: 'ts-loader',
+        use: ['babel-loader', 'ts-loader'],
         exclude: /node_modules/
       }
     ]
@@ -16,10 +19,8 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'parser.js',
-    library: {
-      name: '@sport-files/parser',
-      type: 'umd'
-    }
+    filename: '[name].js',
+    libraryTarget: 'umd',
+    library: 'binspector'
   }
 }

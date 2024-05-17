@@ -1,7 +1,7 @@
 # 🕵️ binspector, your binary file assistant
 
 A _truly_ declarative library for binary file and protocol definition
-written in typescript. Read and write binary files based on class
+written in typescript. Read binary files based on class
 definition and decorators directly on your webapp.
 
 ```typescript
@@ -68,33 +68,7 @@ class Protocol {
   * Conditions
 * No dependencies (except `reflect-metadata` for now)
 
-## Getting started
-
-### The basic principle
-
-* `@Relation`
-
-* `PrimitiveSymbol`
-
-  * `u8`: Unsigned 8 bit integer
-  * `u16`: Unsigned 16 bit integer
-  * `u32`: Unsigned 32 bit integer
-  * `i8`: Signed 8 bit integer
-  * `i16`: Signed 16 bit integer
-  * `i32`: Signed 32 bit integer
-  * `char`: 8 bit character
-
-* `@Relation`
-
-- Controller decorators
-
-* `@Count`
-
-Used to create array of integer or string.
-
-* `@Match`
-
-### Installation
+## Installation
 
 ```
 > npm install binspector
@@ -105,15 +79,3 @@ Generate the documentation with the following command.
 ```
 > npx typedoc --options typedoc.json
 ```
-
-### Usage example
-
-## The state of decorator in typescript
-
-Right now this library is based on the `--experimentalDecorators` feature of
-typescript.
-I plan to move to the official Typescript 5 decorator API once the [decorator metadata proposal](https://github.com/tc39/proposal-decorator-metadata)
-reach stage 3 and [reach](https://github.com/microsoft/TypeScript/issues/53461) Typescript.
-
-In the future if more reflection capability are added to typescript it will be
-added to improve this library.

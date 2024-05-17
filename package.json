@@ -1,16 +1,21 @@
 {
   "name": "binspector",
+  "description": "A _truly_ declarative library for binary file and protocol definition written in typescript. Read binary files based on class definition and decorators directly from your webapp.",
   "version": "0.0.1",
-  "main": "dist/parser.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
   "module": "src/index.ts",
   "scripts": {
-    "build": "webpack --mode=development",
+    "build": "webpack --mode=production",
     "test": "jest",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "jsdoc": "jsdoc -a all -c jsdoc.json -r -R README.md index.js -d docs/jsdoc",
     "jsdoc2md": "jsdoc2md --files index.js > docs/API.md"
   },
-  "author": "tperale",
+  "author": "thomperale",
   "license": "MIT",
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.24.1",
@@ -19,6 +24,7 @@
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "babel-loader": "^9.1.3",
     "eslint": "^8.56.0",
     "eslint-config-standard-with-typescript": "^43.0.1",
     "eslint-plugin-import": "^2.27.5",
@@ -33,7 +39,6 @@
     "webpack": "^5.76.1",
     "webpack-cli": "^5.0.1"
   },
-  "description": "A _truly_ declarative library for binary file and protocol definition written in typescript. Read and write binary files based on class definition and decorators directly on your webapp.",
   "directories": {
     "doc": "docs",
     "example": "example"
