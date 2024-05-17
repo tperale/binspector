@@ -19,6 +19,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
+    globalObject: 'this',
     filename: '[name].js',
     libraryTarget: 'umd',
     library: 'binspector'
