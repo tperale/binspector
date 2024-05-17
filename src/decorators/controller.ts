@@ -277,7 +277,6 @@ export function NullTerminatedString (opt?: Partial<ControllerOptions>): Decorat
         ...opt,
         targetType: String
       }
-      console.log(stringOpt)
       const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, cursor, stringOpt)
       return result.slice(0, -1)
     }, opt)
