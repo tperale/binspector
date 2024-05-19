@@ -87,7 +87,7 @@ describe('Testing the usage of the controller decorator', () => {
       expect(cur.offset()).toStrictEqual(5)
     }
   })
-  it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
+  it('should read 4 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
       @Count(4, { alignment: 4 })
       field: number
