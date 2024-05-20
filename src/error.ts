@@ -1,3 +1,5 @@
+import { type Cursor } from './cursor'
+
 export class EOFError extends Error {
   value: any
 
@@ -32,7 +34,8 @@ export class UnknownPropertyType extends Error {
 }
 
 export class ValidationTestFailed extends Error {
-  constructor (name: string, propertyName: string, propertyValue: unknown, message: string) {
-    super(`The '${name}' validation for property '${propertyName}' with value '${String(propertyValue)}' failed: ${message}`)
+  constructor (name: string, propertyName: string, propertyValue: unknown, message: string, cursor?: Cursor) {
+    const offset = cursor === undefined ? '' : `at address offset 0x${cursor.offset().toString(16)}`
+    super(`The '${name}' validation for property '${propertyName}' with value '${String(propertyValue)}' ${offset} failed: ${message}`)
   }
 }

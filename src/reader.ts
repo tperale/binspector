@@ -118,7 +118,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
         return transformer.transformer(res, instance)
       }, value)
 
-      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), transformedValue, instance)
+      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), transformedValue, instance, content)
 
       instance[field.propertyName] = transformedValue
 

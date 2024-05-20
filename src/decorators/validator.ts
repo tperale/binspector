@@ -4,6 +4,7 @@
  *
  * @module Validator
  */
+import { type Cursor } from '../cursor'
 import { type DecoratorType, type Context } from '../types'
 import { type MetaDescriptor } from './common'
 import { relationExistOrThrow } from './primitive'
@@ -224,7 +225,7 @@ export function Match (matchingValue: any, opt?: Partial<ValidatorOptions>): Dec
  * @category Decorators
  */
 export function Enum (enumeration: Record<string, string | number>, opt?: Partial<ValidatorOptions>): DecoratorType {
-  function enumerationValidator<T> (value: any, _: T): boolean {
+  function enumerationValidator (value: any, _: any): boolean {
     return Object.prototype.hasOwnProperty.call(enumeration, value)
   }
 
@@ -261,17 +262,17 @@ export function Enum (enumeration: Record<string, string | number>, opt?: Partia
  *
  * @category Advanced Use
  */
-export function useValidators (validators: Array<Validator>, value: any, targetInstance: any): void {
+export function useValidators (validators: Array<Validator>, value: any, targetInstance: any, cursor?: Cursor): void {
   validators.forEach((validator: Validator) => {
     if (validator.options.each) {
       value.forEach((x: any) => {
         if (!validator.validator(x, targetInstance)) {
-          throw new ValidationTestFailed(validator.name, String(validator.propertyName), x, validator.options.message)
+          throw new ValidationTestFailed(validator.name, String(validator.propertyName), x, validator.options.message, cursor)
         }
       })
     } else {
       if (!validator.validator(value, targetInstance)) {
-        throw new ValidationTestFailed(validator.name, String(validator.propertyName), value, validator.options.message)
+        throw new ValidationTestFailed(validator.name, String(validator.propertyName), value, validator.options.message, cursor)
       }
     }
   })
