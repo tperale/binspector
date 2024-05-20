@@ -1,10 +1,12 @@
 import { describe, expect } from '@jest/globals'
-import { useConditions, IfThen, Choice } from '../condition'
+import { useConditions, IfThen, Else, Choice } from '../condition'
 import { type RelationTypeProperty } from '../primitive'
+import { Cursor } from '../../cursor'
+import { PrimitiveSymbol } from '../../types'
 import Meta from '../../metadatas'
 
 describe('Testing the usage of the condition decorator', () => {
-  it('should return a "Number" relation', () => {
+  it('should return a "Number" relation from @IfThen decorator', () => {
     class TestClass {
       testField: number = 1
       @IfThen((obj: TestClass) => obj.testField === 1, Number)
@@ -16,6 +18,18 @@ describe('Testing the usage of the condition decorator', () => {
     const conditions = Meta.getConditions(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
 
     expect(useConditions(conditions, instance)).toEqual(expect.objectContaining({ relation: Number }))
+  })
+  it('should return a "String" relation from @Else decorator', () => {
+    class TestClass {
+      @IfThen((_) => false, Number)
+      @Else(String)
+      field: number
+    }
+
+    const instance = new TestClass()
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
+
+    expect(useConditions(conditions, instance)).toEqual(expect.objectContaining({ relation: String }))
   })
   it('should work with @Choice decorator and return a "Number" relation', () => {
     class TestClass {
@@ -91,4 +105,18 @@ describe('Testing the usage of the condition decorator', () => {
     const newTestArg = new relation.relation(...relation.args(instance))
     expect(newTestArg).toEqual(expect.objectContaining({ foo: 1, bar: 2 }))
   })
+  it('should throw an error because no condition match', () => {
+    class TestClass {
+      @IfThen((_) => false, Number)
+      field: number
+    }
+
+    const instance = new TestClass()
+    const conditions = Meta.getConditions(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
+
+    expect(() => {
+      useConditions(conditions, instance)
+    }).toThrow()
+  })
+ 
 })
