@@ -10,6 +10,19 @@ function * testReader (list: any[]): Generator<any> {
   }
 }
 
+function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void, args?: any[]): void {
+  const instance = new TargetClass()
+
+  if (preFunc !== undefined) {
+    preFunc(instance)
+  }
+
+  const controller = Meta.getController(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
+  if (controller !== undefined) {
+    expect(useController(controller, instance, reader, args)).toStrictEqual(equal)
+  }
+}
+
 describe('Testing the usage of the controller decorator', () => {
   it('should read 3 time the field property', () => {
     class TestClass {
@@ -17,13 +30,7 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 1
-
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1, 1])
-    }
+    testController(TestClass, 'field', () => 1, [1, 1, 1], (x) => { x.field = 1 })
   })
   it('should read 2 time the field property based on the runtime value of property of TestClass using recursiveGet', () => {
     class TestClass {
@@ -33,13 +40,7 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-    instance.count = 2
-
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1])
-    }
+    testController(TestClass, 'field', () => 1, [1, 1], (x) => { x.count = 2 })
   })
   it('should use recursiveGet to get child property', () => {
     class TestClass {
@@ -49,12 +50,7 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1])
-    }
+    testController(TestClass, 'field', () => 1, [1, 1])
   })
   it('should read 3 using a function defined by while decorator', () => {
     class TestClass {
@@ -62,12 +58,7 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-
-    const controller = Meta.getController(instance.constructor[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1, 1])
-    }
+    testController(TestClass, 'field', () => 1, [1, 1, 1])
   })
   it('should read the field based on the other field value', () => {
     class TestClass {
@@ -75,14 +66,8 @@ describe('Testing the usage of the controller decorator', () => {
       field: string
     }
 
-    const instance = new TestClass()
-
     const iterator = testReader(['h', 'e', 'l', 'l', 'o', '\0'])
-
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => iterator.next().value)).toStrictEqual('hello\0')
-    }
+    testController(TestClass, 'field', () => iterator.next().value, 'hello\0')
   })
   it('should read the field based until it receive a number 3', () => {
     class TestClass {
@@ -90,14 +75,8 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-
     const iterator = testReader([1, 2, 3])
-
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      expect(useController(controller, instance, () => iterator.next().value)).toStrictEqual([1, 2, 3])
-    }
+    testController(TestClass, 'field', () => iterator.next().value, [1, 2, 3])
   })
   it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
@@ -105,18 +84,12 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2], undefined, cur)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
-      expect(content).toStrictEqual([1, 2])
-      expect(cur.offset()).toStrictEqual(4)
-      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
-      expect(cur.offset()).toStrictEqual(5)
-    }
+    expect(cur.offset()).toStrictEqual(4)
+    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+    expect(cur.offset()).toStrictEqual(5)
   })
   it('should read 4 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
@@ -124,18 +97,12 @@ describe('Testing the usage of the controller decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 1, 1], undefined, cur)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
-      expect(content).toStrictEqual([1, 2, 1, 1])
-      expect(cur.offset()).toStrictEqual(4)
-      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
-      expect(cur.offset()).toStrictEqual(5)
-    }
+    expect(cur.offset()).toStrictEqual(4)
+    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+    expect(cur.offset()).toStrictEqual(5)
   })
   it('should read the field until receive a number 5 and then move the cursor back to the previous position before reading it', () => {
     class TestClass {
@@ -145,18 +112,12 @@ describe('Testing the usage of the controller decorator', () => {
       next: number
     }
 
-    const instance = new TestClass()
-
     const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
+    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [3, 1], undefined, cur)
 
-    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    if (controller !== undefined) {
-      const content = useController(controller, instance, () => cur.read(PrimitiveSymbol.u8), cur)
-      expect(content).toStrictEqual([3, 1])
-      expect(cur.offset()).toStrictEqual(2)
-      expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
-      expect(cur.offset()).toStrictEqual(3)
-    }
+    expect(cur.offset()).toStrictEqual(2)
+    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
+    expect(cur.offset()).toStrictEqual(3)
   })
   it('should throw an error if no primitive defined', () => {
     expect(() => {
