@@ -10,7 +10,7 @@ function * testReader (list: any[]): Generator<any> {
   }
 }
 
-function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void, args?: any[]): void {
+function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void, cursor?: Cursor): void {
   const instance = new TargetClass()
 
   if (preFunc !== undefined) {
@@ -19,7 +19,7 @@ function testController (TargetClass: new () => any, field: string, reader: () =
 
   const controller = Meta.getController(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
   if (controller !== undefined) {
-    expect(useController(controller, instance, reader, args)).toStrictEqual(equal)
+    expect(useController(controller, instance, reader, cursor)).toStrictEqual(equal)
   }
 }
 
