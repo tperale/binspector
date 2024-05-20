@@ -12,7 +12,7 @@
  */
 import { recursiveGet, type MetaDescriptor } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
-import { isPrimitiveSymbol, type DecoratorType, type InstantiableObject, type Primitive, type Context } from '../types'
+import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types'
 import { NoConditionMatched } from '../error'
 import Meta from '../metadatas'
 
@@ -55,7 +55,7 @@ export function conditionDecoratorFactory (name: string, func: ConditionFunction
       if (isPrimitiveSymbol(relationOrPrimitive)) {
         return createPrimitiveTypeProperty(context.metadata, context.name, relationOrPrimitive)
       } else { // Check has constructor
-        return createRelationTypeProperty(context.metadata, context.name, relationOrPrimitive as InstantiableObject, args)
+        return createRelationTypeProperty(context.metadata, context.name, relationOrPrimitive, args)
       }
     }
 
@@ -68,7 +68,7 @@ export function conditionDecoratorFactory (name: string, func: ConditionFunction
       name,
       metadata: context.metadata,
       propertyName: context.name,
-      condition: func as ConditionFunction,
+      condition: func,
       relation: then !== undefined ? createRelation(then) : undefined
     }
 
@@ -299,7 +299,7 @@ export function Choice (cmp: string | ((targetInstance: any) => any), match: Rec
  *
  * @category Advanced Use
  */
-export function useConditions (conditions: Array<Condition>, targetInstance: any): PrimitiveTypeProperty | RelationTypeProperty | undefined {
+export function useConditions (conditions: Condition[], targetInstance: any): PrimitiveTypeProperty | RelationTypeProperty | undefined {
   const cond = conditions.reverse().find(cond => cond.condition(targetInstance))
   if (cond === undefined) {
     // TODO Improve the error handling
