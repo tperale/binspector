@@ -57,7 +57,7 @@ class Protocol {
   content from the definition.
 * The binary file definition is re-used for typescript type checking.
 * Extensible. Binary readers based on DSL are hard to extend.
-* Support parsing and serialisation (soon !) of the binary file.
+* Support parsing (and serialisation in the future) of the binary file.
 * It works on the browser. You can create binary file decoder and encoder on
   your webapp frontend without depending on other library on your server.
 * Support the common operation done on binary files.
@@ -66,16 +66,16 @@ class Protocol {
   * Bit fields and enum
   * Reference other structure
   * Conditions
-* No dependencies (except `reflect-metadata` for now)
+* No dependencies
 
 ## Installation
 
-```
+```txt
 > npm install binspector
 ```
 
 Generate the documentation with the following command.
 
-```
+```txt
 > npx typedoc --options typedoc.json
 ```
