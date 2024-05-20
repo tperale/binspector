@@ -56,9 +56,9 @@ class FDTProp {
   @Relation(PrimitiveSymbol.u32)
   nameoff: number
 
-  @Count('len', { targetType: String, alignment: 4 })
-  @Relation(PrimitiveSymbol.char)
-  name: string
+  @Count('len', { alignment: 4 })
+  @Relation(PrimitiveSymbol.u8)
+  name: number[]
 
   @Peek((curr) => curr._string_off + curr.nameoff)
   @NullTerminatedString()
@@ -91,31 +91,67 @@ class DTBStructBlock {
   }
 }
 
-function asObjectDtb (result, [struct, ...structs]: DTBStructBlock[]) {
-  if (structs.length === 0) {
-    return [{}, []]
-  } else if (struct.fdttype === DTBStructureBlockToken.FDT_END_NODE) {
-    return [result, structs]
-  } else if (struct.fdttype === DTBStructureBlockToken.FDT_NOP) {
-    return asObjectDtb(result, structs)
-  } else if (struct.fdttype === DTBStructureBlockToken.FDT_BEGIN_NODE) {
-    const [node, nextStructs] = asObjectDtb({}, structs)
-    const [next, nnextStructs] = asObjectDtb({}, nextStructs)
-    return [{
-      ...result,
-      [struct.body.name]: node,
-      ...next
-    }, nnextStructs]
-  } else if (struct.fdttype === DTBStructureBlockToken.FDT_PROP) {
-    asObjectDtb({}, structs)
-    const [next, nextStructs] = asObjectDtb({}, structs)
-    return [{
-      ...result,
-      [struct.body.property]: struct.body.name,
-      ...next
-    }, nextStructs]
+function bytesToArray (bytes: number[]) {
+  const result = []
+  let current = []
+  for (const b of bytes) {
+    if (b == 0) {
+      if (current.length > 0) {
+        result.push(current)
+        current = []
+      } else {
+        return []
+      }
+    } else {
+      current.push(b)
+    }
   }
 
+  return result
+}
+
+function isString (bytes: number[]) {
+  const array = bytesToArray(bytes)
+
+  return array.every(byteStr => byteStr.every((x) => 
+    (x >= 0x2c && x <= 0x3B)
+    || (x >= 0x40 && x <= 0x7a)
+  ))
+}
+
+function asObjectDtb (structs: DTBStructBlock[]) {
+  function setObject (o: object, current: string[], key: string, value: any) {
+    const currentObj = current.reduce((obj, k) => obj[k], o)
+
+    currentObj[key] = value
+  }
+  
+  const current = []
+  const result = {}
+  for (const struct of structs) {
+    if (struct.fdttype === DTBStructureBlockToken.FDT_END) {
+      return result
+    } else if (struct.fdttype === DTBStructureBlockToken.FDT_NOP) {
+      continue
+    } else if (struct.fdttype === DTBStructureBlockToken.FDT_END_NODE) {
+      current.pop()
+    } else if (struct.fdttype === DTBStructureBlockToken.FDT_BEGIN_NODE) {
+      const propName = struct.body.name
+      setObject(result, current, propName, {})
+      current.push(propName)
+    } else if (struct.fdttype === DTBStructureBlockToken.FDT_PROP) {
+      const propKey = struct.body.property
+      const arrayStr = bytesToArray(struct.body.name) 
+      const propValue = arrayStr.length === 0
+        ? struct.body.name
+        : isString(struct.body.name)
+          ? arrayStr.length === 1
+            ? String.fromCharCode(...arrayStr[0])
+            : arrayStr.map(x => String.fromCharCode(...x))
+          : struct.body.name
+      setObject(result, current, propKey, propValue)
+    }
+  }
 }
 
 export class DTB {
@@ -128,6 +164,6 @@ export class DTB {
   structs: DTBStructBlock[]
 
   asObject (): Object {
-    return asObjectDtb({}, this.structs)[0][""]
+    return asObjectDtb(this.structs)[""]
   }
 }
