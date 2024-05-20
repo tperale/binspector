@@ -56,7 +56,7 @@ export const ControllerOptionsDefault = {
 /**
  * ControllerFunction.
  */
-export type ControllerFunction = (targetInstance: any, read: ControllerReaderFunction, cursor?: Cursor, opt?: ControllerOptions) => any
+export type ControllerFunction = (targetInstance: any, read: ControllerReaderFunction, opt: ControllerOptions, cursor?: Cursor) => any
 
 /**
  * Controller type interface structure definition.
@@ -85,27 +85,27 @@ export interface Controller extends MetaDescriptor {
  * @category Advanced Use
  */
 export function controllerDecoratorFactory (name: string, func: ControllerFunction, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType {
+  // TODO The targetType should be set using reflection if TypeScript ever support that feature.
+  const targetType: InstantiableObject | undefined = opt.targetType
+  const options = {
+    ...ControllerOptionsDefault,
+    ...opt,
+    ...{ targetType }
+  }
+
   return function (_: any, context: Context) {
-    if (opt.primitiveCheck) {
+    if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
-    // TODO ControllerFunction shoud accept 2 or 3 arguments the optionnal one being accepting the target type or not.
-    // TODO This target type will also be useful to create more complex relationship.
-    const targetType: InstantiableObject | undefined = opt.targetType
-    const options = {
-      ...ControllerOptionsDefault,
-      ...opt,
-      ...{ targetType }
-    }
+
     const controller: Controller = {
       type: ControllerSymbol,
       name,
       metadata: context.metadata,
       propertyName: context.name,
       options,
-      controller: (curr, read, cursor) => func(curr, read, cursor, options)
+      controller: (curr, read, cursor) => func(curr, read, options, cursor)
     }
-
     Meta.setController(context.metadata, context.name, controller)
   }
 }
@@ -113,7 +113,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
 /**
  * ControllerWhileFunction.
  */
-export type ControllerWhileFunction = (curr: any, count?: number, targetInstance?: any) => boolean
+export type ControllerWhileFunction = (curr: any, count: number, targetInstance: any) => boolean
 
 /**
  * whileFunctionFactory.
@@ -123,12 +123,12 @@ export type ControllerWhileFunction = (curr: any, count?: number, targetInstance
  *
  * @category Advanced Use
  */
-function whileFunctionFactory (cond: ControllerWhileFunction): any {
+function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunction {
   return function (
     currStateObject: any,
     read: ControllerReaderFunction,
-    cursor: Cursor,
-    opt: ControllerOptions
+    opt: ControllerOptions,
+    cursor?: Cursor
   ): any {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
@@ -176,11 +176,11 @@ function untilEofController (): any {
   return function (
     currStateObject: any,
     read: ControllerReaderFunction,
-    cursor: Cursor,
-    opt: ControllerOptions
+    opt: ControllerOptions,
+    cursor?: Cursor
   ): any {
     try {
-      wrap(currStateObject, read, cursor, opt)
+      wrap(currStateObject, read, opt, cursor)
     } catch (error) {
       if (error instanceof EOFError) {
         return error.value
@@ -270,14 +270,14 @@ export function NullTerminatedString (opt?: Partial<ControllerOptions>): Decorat
  return controllerDecoratorFactory('nullterminatedstring', (
       currStateObject: any,
       read: ControllerReaderFunction,
-      cursor: Cursor,
-      opt: ControllerOptions
+      opt: ControllerOptions,
+      cursor?: Cursor
     ) => {
       const stringOpt = {
         ...opt,
         targetType: String
       }
-      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, cursor, stringOpt)
+      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, stringOpt, cursor)
       return result.slice(0, -1)
     }, opt)
 }
@@ -315,24 +315,36 @@ export function NullTerminatedString (opt?: Partial<ControllerOptions>): Decorat
  */
 export function Count (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
   /**
-   * countCheck.
+   * countFactory
    *
    * @param {any} _
    * @param {number} i
    * @param {object} currStateObject
    * @returns {boolean}
    */
-  function countCheck (_: any, i: number, currStateObject: object): boolean {
-    // TODO this is not optimal since you will execute the recursiveGet for each iteration
+  function countFactory (
+    currStateObject: any,
+    read: ControllerReaderFunction,
+    opt: ControllerOptions,
+    cursor?: Cursor
+  ): any {
     const count =
       typeof arg === 'string'
         ? recursiveGet(currStateObject, arg)
         : arg
 
-    return i < count
+    if (typeof count !== 'number') {
+      throw Error('End type should be a number')
+    }
+
+    if (count > 0) {
+      return whileFunctionFactory((_: any, i: number) => i < count)(currStateObject, read, opt, cursor)
+    }
+
+    return []
   }
 
-  return controllerDecoratorFactory('count', whileFunctionFactory(countCheck), opt)
+  return controllerDecoratorFactory('count', countFactory, opt)
 }
 
 /**
@@ -361,10 +373,10 @@ export function Matrix (width: number | string, height: number | string, opt?: P
     }
   }
 
-  function matrixController (currStateObject: any, read: ControllerReaderFunction, cursor: Cursor, opt: ControllerOptions): any {
-    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, cursor, opt)
+  function matrixController (currStateObject: any, read: ControllerReaderFunction, opt: ControllerOptions, cursor?: Cursor): any {
+    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, opt, cursor)
 
-    return whileFunctionFactory(countCheck(height))(currStateObject, lineRead, cursor, opt)
+    return whileFunctionFactory(countCheck(height))(currStateObject, lineRead, opt, cursor)
   }
 
   return controllerDecoratorFactory('matrix', matrixController, opt)
@@ -380,6 +392,6 @@ export function Matrix (width: number | string, height: number | string, opt?: P
  *
  * @category Advanced Use
  */
-export function useController (controller: Controller, targetInstance: any, reader: ControllerReaderFunction, ...args: any[]): any {
-  return controller.controller(targetInstance, reader, ...args)
+export function useController (controller: Controller, targetInstance: any, reader: ControllerReaderFunction, cursor?: Cursor): any {
+  return controller.controller(targetInstance, reader, cursor)
 }

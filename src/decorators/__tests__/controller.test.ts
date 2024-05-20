@@ -80,7 +80,7 @@ describe('Testing the usage of the controller decorator', () => {
   })
   it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
-      @Count(2, { alignment: 4 })
+      @Count(2, { primitiveCheck: false, alignment: 4 })
       field: number
     }
 
@@ -93,7 +93,7 @@ describe('Testing the usage of the controller decorator', () => {
   })
   it('should read 4 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
-      @Count(4, { alignment: 4 })
+      @Count(4, { primitiveCheck: false, alignment: 4 })
       field: number
     }
 
@@ -106,7 +106,7 @@ describe('Testing the usage of the controller decorator', () => {
   })
   it('should read the field until receive a number 5 and then move the cursor back to the previous position before reading it', () => {
     class TestClass {
-      @While((x: any) => x !== 5, { peek: true })
+      @While((x: any) => x !== 5, { primitiveCheck: false, peek: true })
       field: number
 
       next: number
@@ -118,6 +118,19 @@ describe('Testing the usage of the controller decorator', () => {
     expect(cur.offset()).toStrictEqual(2)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(3)
+  })
+  it('should not move the Cursor if Count(0) is used', () => {
+    class TestClass {
+      @Count(0, { primitiveCheck: false })
+      field: number
+    }
+
+    const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
+    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], undefined, cur)
+
+    expect(cur.offset()).toStrictEqual(0)
+    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(0x03)
+    expect(cur.offset()).toStrictEqual(1)
   })
   it('should throw an error if no primitive defined', () => {
     expect(() => {
