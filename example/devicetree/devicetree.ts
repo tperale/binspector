@@ -65,7 +65,7 @@ class FDTProp {
   @Relation(PrimitiveSymbol.char)
   property: string
 
-  constructor(offset) {
+  constructor(offset: number) {
     this._string_off = offset
   }
 }
@@ -86,14 +86,14 @@ class DTBStructBlock {
   })
   body: FDTBeginNode | FDTProp | undefined
 
-  constructor(string_memory_offset) {
+  constructor(string_memory_offset: number) {
     this._string_off = string_memory_offset
   }
 }
 
-function bytesToArray (bytes: number[]) {
-  const result = []
-  let current = []
+function bytesToArray (bytes: number[]): number[][] {
+  const result: number[][] = []
+  let current: number[] = []
   for (const b of bytes) {
     if (b == 0) {
       if (current.length > 0) {
