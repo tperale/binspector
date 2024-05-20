@@ -25,6 +25,37 @@ describe('Testing the usage of the controller decorator', () => {
       expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1, 1])
     }
   })
+  it('should read 2 time the field property based on the runtime value of property of TestClass using recursiveGet', () => {
+    class TestClass {
+      count = 1
+
+      @Count('count', { primitiveCheck: false })
+      field: number
+    }
+
+    const instance = new TestClass()
+    instance.count = 2
+
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
+    if (controller !== undefined) {
+      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1])
+    }
+  })
+  it('should use recursiveGet to get child property', () => {
+    class TestClass {
+      child = { count: 2 }
+
+      @Count('child.count', { primitiveCheck: false })
+      field: number
+    }
+
+    const instance = new TestClass()
+
+    const controller = Meta.getController(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
+    if (controller !== undefined) {
+      expect(useController(controller, instance, () => 1)).toStrictEqual([1, 1])
+    }
+  })
   it('should read 3 using a function defined by while decorator', () => {
     class TestClass {
       @While((_: any, i: number) => i < 3, { primitiveCheck: false })
