@@ -15,12 +15,29 @@ import {
   type PropertyType
 } from './decorators/primitive'
 import { EOF, type InstantiableObject } from './types'
-import { useController } from './decorators/controller'
+import { useController, ControllerReader } from './decorators/controller'
 import { useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
 import { usePrePost } from './decorators/prepost'
 import { useBitField } from './decorators/bitfield'
+
+class BinReader extends ControllerReader {
+  _cursor: Cursor
+
+  offset (): number {
+    return this._cursor.offset()
+  }
+
+  move (address: number): number {
+    return this._cursor.move(address)
+  }
+
+  constructor (reader: () => any, cursor: Cursor) {
+    super(reader)
+    this._cursor = cursor
+  }
+}
 
 /**
  * binread.
@@ -45,9 +62,10 @@ import { useBitField } from './decorators/bitfield'
  * You can create self refering field by using conditionnal decorator.
  */
 export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): any {
-  function getBinReader (field: PropertyType, instance: any): () => any {
+  function getBinReader (field: PropertyType, instance: any): BinReader {
     if (isPrimitiveRelation(field)) {
-      return () => content.read(field.primitive)
+      const readerFunc = () => content.read(field.primitive)
+      return new BinReader(readerFunc, content)
     } else if (isRelation(field)) {
       if (field.relation === ObjectDefinition) {
         // TODO Improve error handling
@@ -56,7 +74,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
         throw new SelfReferringFieldError()
       }
       // TODO No need to do the check inside the function.
-      return () => {
+      const readerFunc = () => {
         try {
           if (field.args !== undefined) {
             return binread(content, field.relation, ...field.args(instance))
@@ -80,6 +98,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
           }
         }
       }
+      return new BinReader(readerFunc, content)
     } else {
       throw new UnknownPropertyType(field)
     }
@@ -102,8 +121,8 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
       const value = controller !== undefined
-        ? useController(controller, instance, propertyReader, content)
-        : propertyReader()
+        ? useController(controller, instance, propertyReader)
+        : propertyReader.read()
 
       if (value === EOF) {
         // TODO error handling throwing an error containing the backtrace + the current state of the object

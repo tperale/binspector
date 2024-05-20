@@ -12,17 +12,34 @@
 import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
-import { type Cursor } from '../cursor'
 import { EOFError } from '../error'
 import Meta from '../metadatas'
 
 export const ControllerSymbol = Symbol('controller')
 
 /**
- * ControllerReaderFunction.
+ * ControllerReader
  */
 // TODO Change the type to be correct
-export type ControllerReaderFunction = () => any
+// export type ControllerReader = () => any
+export abstract class ControllerReader {
+  _reader: () => any
+
+  abstract offset (): number
+  abstract move (address: number): number
+
+  read (): any {
+    return this._reader()
+  }
+
+  forward (x: number): number {
+    return this.move(this.offset() + x)
+  }
+
+  constructor (reader: () => any) {
+    this._reader = reader
+  }
+}
 
 /**
  * ControllerOptions.
@@ -56,7 +73,8 @@ export const ControllerOptionsDefault = {
 /**
  * ControllerFunction.
  */
-export type ControllerFunction = (targetInstance: any, read: ControllerReaderFunction, opt: ControllerOptions, cursor?: Cursor) => any
+export type ControllerFunction = (targetInstance: any, read: ControllerReader, opt: ControllerOptions) => any
+export type OptionlessControllerFunction = (targetInstance: any, read: ControllerReader) => any
 
 /**
  * Controller type interface structure definition.
@@ -72,7 +90,7 @@ export interface Controller extends MetaDescriptor {
   /**
    * @type {ControllerFunction} Function to control the flow of execution of the binary reader
    */
-  controller: ControllerFunction // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
+  controller: OptionlessControllerFunction // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
 }
 
 /**
@@ -104,7 +122,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
       metadata: context.metadata,
       propertyName: context.name,
       options,
-      controller: (curr, read, cursor) => func(curr, read, options, cursor)
+      controller: (curr, read) => func(curr, read, options)
     }
     Meta.setController(context.metadata, context.name, controller)
   }
@@ -126,15 +144,14 @@ export type ControllerWhileFunction = (curr: any, count: number, targetInstance:
 function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunction {
   return function (
     currStateObject: any,
-    read: ControllerReaderFunction,
-    opt: ControllerOptions,
-    cursor?: Cursor
+    reader: ControllerReader,
+    opt: ControllerOptions
   ): any {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
     // into an array
     const result = []
-    const startOffset = cursor !== undefined ? cursor.offset() : 0
+    const startOffset = reader.offset()
     // TODO possible bug.
     // The condition `func` is not checked before executing the first `read`
     // This can possibly lead to a bug since the condition could be `i < 0`
@@ -142,8 +159,8 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
     // I have to figure out if it's an issue for the condition to receive a null
     // object. It's probably one for the condition that check the inner object property.
     while (true) {
-      const beforeReadOffset = cursor !== undefined ? cursor.offset() : 0
-      const ret = read()
+      const beforeReadOffset = reader.offset()
+      const ret = reader.read()
       // TODO If we reach EOF there is no way to notify the program the condition was not met.
       //   - One option could be to throw the value. The only case we want to compare to EOF
       //     is `@Until(EOF)` which I could move to another decorator `@EOF` that catch that value.
@@ -156,31 +173,30 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
       }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject)) {
-        if (cursor !== undefined && opt.peek) {
+        if (opt.peek) {
           result.pop()
-          cursor.move(beforeReadOffset)
+          reader.move(beforeReadOffset)
         }
         break
       }
     }
-    const endOffset = cursor !== undefined ? cursor.offset() : 0
-    if (opt.alignment > 0 && cursor !== undefined) {
-      cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
+    const endOffset = reader.offset()
+    if (opt.alignment > 0) {
+      reader.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
     }
     return opt.targetType === String ? result.join('') : result
   }
 }
 
-function untilEofController (): any {
+function untilEofController (): ControllerFunction {
   const wrap = whileFunctionFactory(() => true)
   return function (
     currStateObject: any,
-    read: ControllerReaderFunction,
-    opt: ControllerOptions,
-    cursor?: Cursor
+    read: ControllerReader,
+    opt: ControllerOptions
   ): any {
     try {
-      wrap(currStateObject, read, opt, cursor)
+      wrap(currStateObject, read, opt)
     } catch (error) {
       if (error instanceof EOFError) {
         return error.value
@@ -269,15 +285,14 @@ export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorTyp
 export function NullTerminatedString (opt?: Partial<ControllerOptions>): DecoratorType {
  return controllerDecoratorFactory('nullterminatedstring', (
       currStateObject: any,
-      read: ControllerReaderFunction,
-      opt: ControllerOptions,
-      cursor?: Cursor
+      read: ControllerReader,
+      opt: ControllerOptions
     ) => {
       const stringOpt = {
         ...opt,
         targetType: String
       }
-      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, stringOpt, cursor)
+      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, read, stringOpt)
       return result.slice(0, -1)
     }, opt)
 }
@@ -324,9 +339,8 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
    */
   function countFactory (
     currStateObject: any,
-    read: ControllerReaderFunction,
-    opt: ControllerOptions,
-    cursor?: Cursor
+    read: ControllerReader,
+    opt: ControllerOptions
   ): any {
     const count =
       typeof arg === 'string'
@@ -338,7 +352,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
     }
 
     if (count > 0) {
-      return whileFunctionFactory((_: any, i: number) => i < count)(currStateObject, read, opt, cursor)
+      return whileFunctionFactory((_: any, i: number) => i < count)(currStateObject, read, opt)
     }
 
     return []
@@ -373,10 +387,27 @@ export function Matrix (width: number | string, height: number | string, opt?: P
     }
   }
 
-  function matrixController (currStateObject: any, read: ControllerReaderFunction, opt: ControllerOptions, cursor?: Cursor): any {
-    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, opt, cursor)
+  class MatrixReader extends ControllerReader {
+    _controller: ControllerReader
 
-    return whileFunctionFactory(countCheck(height))(currStateObject, lineRead, opt, cursor)
+    offset (): number {
+      return this._controller.offset()
+    }
+
+    move (address: number): number {
+      return this._controller.move(address)
+    }
+
+    constructor (reader: () => any, controller: ControllerReader) {
+      super(reader)
+      this._controller = controller
+    }
+  }
+
+  function matrixController (currStateObject: any, read: ControllerReader, opt: ControllerOptions): any {
+    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, read, opt)
+
+    return whileFunctionFactory(countCheck(height))(currStateObject, new MatrixReader(lineRead, read), opt)
   }
 
   return controllerDecoratorFactory('matrix', matrixController, opt)
@@ -387,11 +418,11 @@ export function Matrix (width: number | string, height: number | string, opt?: P
  *
  * @param {Controller} controller `Controller` decorator metadata.
  * @param {T} targetInstance Current state of the object the `Controller` is defined in, that will be passed to the `Controller` function.
- * @param {ControllerReaderFunction} reader Function defining how to read the next chunk of data.
+ * @param {ControllerReader} reader Function defining how to read the next chunk of data.
  * @returns {any}
  *
  * @category Advanced Use
  */
-export function useController (controller: Controller, targetInstance: any, reader: ControllerReaderFunction, cursor?: Cursor): any {
-  return controller.controller(targetInstance, reader, cursor)
+export function useController (controller: Controller, targetInstance: any, reader: ControllerReader): any {
+  return controller.controller(targetInstance, reader)
 }

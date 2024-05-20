@@ -1,8 +1,39 @@
 import { describe, expect } from '@jest/globals'
-import { Count, While, Until, useController } from '../controller'
+import { Count, While, Until, useController, ControllerReader } from '../controller'
 import { Cursor } from '../../cursor'
 import { PrimitiveSymbol } from '../../types'
 import Meta from '../../metadatas'
+
+class TestReader extends ControllerReader {
+  offset (): number {
+    return 0
+  }
+
+  move (address: number): number {
+    return address
+  }
+
+  constructor (read: () => any) {
+    super(read)
+  }
+}
+
+class BinReader extends ControllerReader {
+  _cursor: Cursor
+
+  offset (): number {
+    return this._cursor.offset()
+  }
+
+  move (address: number): number {
+    return this._cursor.move(address)
+  }
+
+  constructor(reader: () => any, cursor: Cursor) {
+    super(reader)
+    this._cursor = cursor
+  }
+}
 
 function * testReader (list: any[]): Generator<any> {
   for (const x of list) {
@@ -10,7 +41,7 @@ function * testReader (list: any[]): Generator<any> {
   }
 }
 
-function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void, cursor?: Cursor): void {
+function testControllerGeneric (TargetClass: new () => any, field: string, reader: ControllerReader, equal: any, preFunc?: (instance: any) => void): void {
   const instance = new TargetClass()
 
   if (preFunc !== undefined) {
@@ -19,8 +50,16 @@ function testController (TargetClass: new () => any, field: string, reader: () =
 
   const controller = Meta.getController(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
   if (controller !== undefined) {
-    expect(useController(controller, instance, reader, cursor)).toStrictEqual(equal)
+    expect(useController(controller, instance, reader)).toStrictEqual(equal)
   }
+}
+
+function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void): void {
+  return testControllerGeneric(TargetClass, field, new TestReader(reader), equal, preFunc)
+}
+
+function testControllerCursor (TargetClass: new () => any, field: string, reader: () => any, equal: any, cursor: Cursor, preFunc?: (instance: any) => void): void {
+  return testControllerGeneric(TargetClass, field, new BinReader(reader, cursor), equal, preFunc)
 }
 
 describe('Testing the usage of the controller decorator', () => {
@@ -85,7 +124,7 @@ describe('Testing the usage of the controller decorator', () => {
     }
 
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
-    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2], undefined, cur)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2], cur)
 
     expect(cur.offset()).toStrictEqual(4)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
@@ -98,7 +137,7 @@ describe('Testing the usage of the controller decorator', () => {
     }
 
     const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
-    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 1, 1], undefined, cur)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 1, 1], cur)
 
     expect(cur.offset()).toStrictEqual(4)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
@@ -113,7 +152,7 @@ describe('Testing the usage of the controller decorator', () => {
     }
 
     const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
-    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [3, 1], undefined, cur)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [3, 1], cur)
 
     expect(cur.offset()).toStrictEqual(2)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
@@ -126,7 +165,7 @@ describe('Testing the usage of the controller decorator', () => {
     }
 
     const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
-    testController(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], undefined, cur)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], cur)
 
     expect(cur.offset()).toStrictEqual(0)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(0x03)
