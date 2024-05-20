@@ -11,7 +11,7 @@ import './symbol-polyfill'
 
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   metadataKey: symbol
 ): T[] {
   // TODO Can be optionnal since its set on the set metadata
@@ -24,7 +24,7 @@ function getMetadata<T> (
 
 function setMetadata<T> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   metadataKey: symbol,
   newValue: any
 ): T[] {
@@ -41,7 +41,7 @@ function getFields (metadata: DecoratorMetadataObject): PropertyType[] {
   return Array.isArray(fields) ? fields : []
 }
 
-function getField (metadata: DecoratorMetadataObject, propertyKey: string): PropertyType | undefined {
+function getField (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PropertyType | undefined {
   const fields = getFields(metadata)
   return fields.find(x => x.propertyName === propertyKey)
 }
@@ -55,11 +55,11 @@ function setField (
   return fields
 }
 
-function isFieldDecorated (metadata: DecoratorMetadataObject, propertyKey: string): boolean {
+function isFieldDecorated (metadata: DecoratorMetadataObject, propertyKey: string | symbol): boolean {
   return getField(metadata, propertyKey) !== undefined
 }
 
-function getPre (metadata: DecoratorMetadataObject, propertyKey: string): PrePost[] {
+function getPre (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PrePost[] {
   return getMetadata(
     metadata,
     propertyKey,
@@ -75,7 +75,7 @@ function setPre (
   return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
 }
 
-function getConditions (metadata: DecoratorMetadataObject, propertyKey: string): Condition[] {
+function getConditions (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Condition[] {
   return getMetadata(
     metadata,
     propertyKey,
@@ -85,13 +85,13 @@ function getConditions (metadata: DecoratorMetadataObject, propertyKey: string):
 
 function setCondition (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   condition: Condition
 ): Condition[] {
   return setMetadata(metadata, propertyKey, ConditionSymbol, condition)
 }
 
-function getController (metadata: DecoratorMetadataObject, propertyKey: string): Controller | undefined {
+function getController (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller | undefined {
   // return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
   if (typeof metadata[ControllerSymbol] === 'object') {
     return metadata[ControllerSymbol][propertyKey]
@@ -101,7 +101,7 @@ function getController (metadata: DecoratorMetadataObject, propertyKey: string):
 
 function setController (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   controller: Controller
 ): Controller {
   if (typeof metadata[ControllerSymbol] !== 'object') {
@@ -111,7 +111,7 @@ function setController (
   return controller
 }
 
-function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string): Transformer[] {
+function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Transformer[] {
   return getMetadata(
     metadata,
     propertyKey,
@@ -121,13 +121,13 @@ function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string
 
 function setTransformer (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   transformer: Transformer
 ): Transformer[] {
   return setMetadata(metadata, propertyKey, TransformerSymbol, transformer)
 }
 
-function getValidators (metadata: DecoratorMetadataObject, propertyKey: string): Validator[] {
+function getValidators (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Validator[] {
   return getMetadata(
     metadata,
     propertyKey,
@@ -137,13 +137,13 @@ function getValidators (metadata: DecoratorMetadataObject, propertyKey: string):
 
 function setValidator (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   validator: Validator
 ): Validator[] {
   return setMetadata(metadata, propertyKey, validator.type, validator)
 }
 
-function getPost (metadata: DecoratorMetadataObject, propertyKey: string): PrePost[] {
+function getPost (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PrePost[] {
   return getMetadata(
     metadata,
     propertyKey,
@@ -153,13 +153,13 @@ function getPost (metadata: DecoratorMetadataObject, propertyKey: string): PrePo
 
 function setPost (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: string | symbol,
   post: PrePost
 ): PrePost[] {
   return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
 }
 
-function getBitField (metadata: DecoratorMetadataObject, propertyKey: string): BitField | undefined {
+function getBitField (metadata: DecoratorMetadataObject, propertyKey: string | symbol): BitField | undefined {
   const bitfields = getBitFields(metadata)
   return bitfields.find(x => x.propertyName === propertyKey)
 }

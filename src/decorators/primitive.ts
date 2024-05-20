@@ -12,8 +12,8 @@ import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type 
 import Meta from '../metadatas'
 
 export class RelationNotDefinedError extends Error {
-  constructor (propertyKey: string) {
-    super(`No relation defined for the property '${propertyKey}'`)
+  constructor (propertyKey: string | symbol) {
+    super(`No relation defined for the property '${propertyKey.toString()}'`)
   }
 }
 
@@ -23,7 +23,7 @@ export class RelationAlreadyDefinedError extends Error {
   }
 }
 
-function createMetaDescriptor (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: string): MetaDescriptor {
+function createMetaDescriptor (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: string | symbol): MetaDescriptor {
   return {
     type,
     name,
@@ -70,7 +70,7 @@ export interface PrimitiveTypeProperty extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function createPrimitiveTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string, primitive: PrimitiveSymbol): PrimitiveTypeProperty {
+export function createPrimitiveTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string | symbol, primitive: PrimitiveSymbol): PrimitiveTypeProperty {
   return {
     ...createMetaDescriptor(PrimitiveTypePropertySymbol, 'primitive', metadata, propertyKey),
     primitive
@@ -167,7 +167,7 @@ export interface RelationTypeProperty extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function createRelationTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string, relation: InstantiableObject, args?: RelationParameters): RelationTypeProperty {
+export function createRelationTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string | symbol, relation: InstantiableObject, args?: RelationParameters): RelationTypeProperty {
   const argsFunc = typeof args === 'string' ? (targetInstance: any) => commaSeparetedRecursiveGet(targetInstance, args) : args as ((targetInstance: any) => any[]) | undefined
   return {
     ...createMetaDescriptor(RelationTypePropertySymbol, 'relation', metadata, propertyKey),

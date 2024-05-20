@@ -24,13 +24,14 @@ export interface MetaDescriptor {
   /**
    * Property name of the object the decorator is applied.
    */
-  propertyName: string
+  propertyName: string | symbol
 }
 
 export type ArgumentsAcessor = string
 
 export function recursiveGet (obj: any, key: ArgumentsAcessor): any {
   // TODO Not verified properly right now
+
   return key.split('.').reduce((acc: any, key: string) => acc[key], obj)
 }
 

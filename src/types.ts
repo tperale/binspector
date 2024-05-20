@@ -29,10 +29,10 @@ export type DecoratorMetadataObject = Record<PropertyKey, any>
 /**
  * Context
  */
-export interface Context {
-  name: string,
-  metadata: DecoratorMetadataObject,
-}
+export type Context =
+    | ClassAccessorDecoratorContext
+    | ClassGetterDecoratorContext
+    | ClassFieldDecoratorContext
 
 /**
  * DecoratorType.
