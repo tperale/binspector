@@ -20,8 +20,6 @@ export const ControllerSymbol = Symbol('controller')
 /**
  * ControllerReader
  */
-// TODO Change the type to be correct
-// export type ControllerReader = () => any
 export abstract class ControllerReader {
   _reader: () => any
 
