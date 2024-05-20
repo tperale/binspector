@@ -9,7 +9,8 @@
   ],
   "module": "src/index.ts",
   "scripts": {
-    "build": "webpack --mode=production",
+    "clean": "npx rimraf dist",
+    "build": "npm run clean && webpack --mode=production",
     "test": "jest",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
     "jsdoc": "jsdoc -a all -c jsdoc.json -r -R README.md index.js -d docs/jsdoc",
