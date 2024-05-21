@@ -63,8 +63,10 @@ export interface Transformer extends MetaDescriptor {
  * @category Advanced Use
  */
 export function transformerDecoratorFactory (name: string, func: TransformerFunction, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType {
+  const options = { ...TransformerOptionsDefault, ...opt }
+
   return function (_: any, context: Context) {
-    if (opt.primitiveCheck) {
+    if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
 
@@ -73,7 +75,7 @@ export function transformerDecoratorFactory (name: string, func: TransformerFunc
       name,
       metadata: context.metadata,
       propertyName: context.name,
-      options: { ...TransformerOptionsDefault, ...opt },
+      options,
       transformer: func as TransformerFunction
     }
 

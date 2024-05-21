@@ -52,14 +52,13 @@ export interface PrePost extends MetaDescriptor {
 }
 
 function prePostFunctionDecoratorFactory (name: string, typeSym: symbol, metaSetter: any, func: PrePostFunction, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType {
+  const options = { ...PrePostOptionsDefault, ...opt }
+
   return function (_: any, context: Context) {
-    if (opt.primitiveCheck) {
+    if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
-    const options = {
-      ...PrePostOptionsDefault,
-      ...opt
-    }
+
     const preFunction: PrePost = {
       type: typeSym,
       name,

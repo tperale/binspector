@@ -44,17 +44,16 @@ export interface BitField extends MetaDescriptor {
  * @category Advanced Use
  */
 export function bitFieldDecoratorFactory (name: string, len: number, opt: Partial<BitFieldOptions> = BitFieldOptionsDefault): DecoratorType {
+  const options = { ...BitFieldOptionsDefault, ...opt }
+
   return function (_: any, context: Context) {
-    if (opt.primitiveCheck) {
+    if (options.primitiveCheck) {
       if (Meta.getFields(context.metadata).length > 0) {
         // TODO Create new Error
         throw new Error('Can\'t define bitfield inside an instance with relations')
       }
     }
-    const options = {
-      ...BitFieldOptionsDefault,
-      ...opt
-    }
+
     const bitfield: BitField = {
       type: BitFieldSymbol,
       name,
