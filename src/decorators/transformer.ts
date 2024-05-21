@@ -76,7 +76,7 @@ export function transformerDecoratorFactory (name: string, func: TransformerFunc
       metadata: context.metadata,
       propertyName: context.name,
       options,
-      transformer: func as TransformerFunction
+      transformer: func
     }
 
     Meta.setTransformer(context.metadata, context.name, transformer)
@@ -105,7 +105,7 @@ export function Transform (transformFunction: TransformerFunction, opt: Partial<
  *
  * @category Advanced Use
  */
-export function useTransformer (transformers: Array<Transformer>, propertyValue: any, targetInstance: any): any {
+export function useTransformer (transformers: Transformer[], propertyValue: any, targetInstance: any): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
     if (Array.isArray(transformedTmpValue) && transformer.options.each) {
       return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
