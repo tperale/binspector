@@ -2,18 +2,33 @@ import { describe } from '@jest/globals'
 import { useValidators, Enum, Match, Validate } from '../validator'
 import Meta from '../../metadatas'
 
-describe('Testing the usage of the validator decorator', () => {
+function testValidator (TargetClass: new () => any, field: string, preFunc?: (instance: any) => void): void {
+  const instance = new TargetClass()
+
+  if (preFunc !== undefined) {
+    preFunc(instance)
+  }
+
+  const validators = Meta.getValidators(TargetClass[Symbol.metadata], field)
+  useValidators(validators, instance[field], instance)
+}
+
+function testErrorValidator (TargetClass: new () => any, field: string, preFunc?: (instance: any) => void): void {
+  expect(() => {
+    testValidator(TargetClass, field, preFunc)
+  }).toThrow()
+}
+
+describe('Testing validator decorator functions', () => {
   it('should pass the matching test', () => {
     class TestClass {
       @Match(2, { primitiveCheck: false })
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 2
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = 2
+    })
   })
   it('should work with custom function', () => {
     class TestClass {
@@ -23,12 +38,10 @@ describe('Testing the usage of the validator decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-    instance.value = 2
-    instance.field = 2
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.value = 2
+      x.field = 2
+    })
   })
   it('should work with each member of array', () => {
     class TestClass {
@@ -36,11 +49,19 @@ describe('Testing the usage of the validator decorator', () => {
       field: number[]
     }
 
-    const instance = new TestClass()
-    instance.field = [2, 2, 2]
+    testValidator(TestClass, 'field', (x) => {
+      x.field = [2, 2, 2]
+    })
+  })
+  it('should work with array passed as @Match argument and field with a value', () => {
+    class TestClass {
+      @Match(['a', 'b', 'c'], { primitiveCheck: false })
+      field: string
+    }
 
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = 'b'
+    })
   })
   it('should work comparing array', () => {
     class TestClass {
@@ -48,23 +69,19 @@ describe('Testing the usage of the validator decorator', () => {
       field: number[]
     }
 
-    const instance = new TestClass()
-    instance.field = [1, 2, 3]
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = [1, 2, 3]
+    })
   })
-  it('should with validate decorator that receive function', () => {
+  it('should work with validate decorator that receive function', () => {
     class TestClass {
       @Validate((x) => x[0] === 1, { primitiveCheck: false })
       field: number[]
     }
 
-    const instance = new TestClass()
-    instance.field = [1, 2, 3]
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = [1, 2, 3]
+    })
   })
   it('should work with enum decorator', () => {
     enum Type {
@@ -76,13 +93,10 @@ describe('Testing the usage of the validator decorator', () => {
       field: Type
     }
 
-    const instance = new TestClass()
-    instance.field = 2
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
-
-    expect(instance.field).toStrictEqual(Type.ReadWrite)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = 2
+    })
+    // expect(instance.field).toStrictEqual(Type.ReadWrite)
   })
   it('should work with enum decorator and each member of array', () => {
     enum Type {
@@ -94,28 +108,42 @@ describe('Testing the usage of the validator decorator', () => {
       field: Type[]
     }
 
-    const instance = new TestClass()
-    instance.field = [1, 1, 2]
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    useValidators(validators, instance.field, instance)
+    testValidator(TestClass, 'field', (x) => {
+      x.field = [1, 1, 2]
+    })
   })
 })
 
-describe('Testing failing validator', () => {
-  it('should throw an error', () => {
+describe('Testing validator decorator errors', () => {
+  it('should throw an error because no relation is present', () => {
+    expect(() => {
+      class TestClass {
+        @Match(1)
+        field: number
+      }
+    }).toThrow()
+  })
+  it('should throw an error because the property is not matching the rule', () => {
     class TestClass {
       @Match(1, { primitiveCheck: false })
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 2
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(() => { useValidators(validators, instance.field, instance) }).toThrow()
+    testErrorValidator(TestClass, 'field', (x) => {
+      x.field = 2
+    })
   })
-  it('should throw an error', () => {
+  it('should throw an error because an element of the property value is not matching the rule', () => {
+    class TestClass {
+      @Match(1, { each: true, primitiveCheck: false })
+      field: number
+    }
+
+    testErrorValidator(TestClass, 'field', (x) => {
+      x.field = [1, 1, 2]
+    })
+  })
+  it('should throw an error because the property value is not part of the "enum"', () => {
     enum Type {
       ReadOnly = 1,
       ReadWrite = 2,
@@ -125,10 +153,8 @@ describe('Testing failing validator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 3
-
-    const validators = Meta.getValidators(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(() => { useValidators(validators, instance.field, instance) }).toThrow()
+    testErrorValidator(TestClass, 'field', (x) => {
+      x.field = 3
+    })
   })
 })

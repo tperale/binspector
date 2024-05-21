@@ -71,8 +71,10 @@ export interface Validator extends MetaDescriptor {
  * @category Advanced Use
  */
 export function validatorDecoratorFactory (name: string, func: ValidatorFunction, opt: Partial<ValidatorOptions> = ValidatorOptionsDefault): DecoratorType {
+  const options = { ...ValidatorOptionsDefault, ...opt }
+
   return function (_: any, context: Context) {
-    if (opt.primitiveCheck) {
+    if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
 
@@ -81,7 +83,7 @@ export function validatorDecoratorFactory (name: string, func: ValidatorFunction
       name,
       metadata: context.metadata,
       propertyName: context.name,
-      options: { ...ValidatorOptionsDefault, ...opt },
+      options,
       validator: func
     }
 
