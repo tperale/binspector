@@ -2,7 +2,7 @@
  * Module definition of {@link Controller} decorators.
  *
  * {@link Controller} type decorators define decorators used to modify the
- * parser/writter behaviour based on property only present at runtime,
+ * parser/writter behavior based on property only present at runtime,
  * create array based on runtime property (see {@link While})
  * or to create array of primitive of fixed length (see {@link Count}) or
  * undefined length (see {@link Until}).
@@ -186,34 +186,62 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
   }
 }
 
-function untilEofController (): ControllerFunction {
-  const wrap = whileFunctionFactory(() => true)
-  return function (
-    currStateObject: any,
-    read: ControllerReader,
-    opt: ControllerOptions
-  ): any {
-    try {
-      wrap(currStateObject, read, opt)
-    } catch (error) {
-      if (error instanceof EOFError) {
-        return error.value
-      } else {
-        throw error
-      }
-    }
-  }
-}
-
 /**
  * While decorator continue the execution flow while the condition passed as a parameter is not met.
  *
- * @param {ControllerIfFunction} func A function that receive the target instance as a parameter and return a boolean
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @remark
+ *
+ * By default the relation that does not match the condition will be included in the result and the
+ * cursor will be set after that relation. This is the default behavior because that's what we expect
+ * most of the time.
+ * To not include the relation that doesn't match the condition and move back the cursor to the position
+ * before it was read use the `peek` option.
  *
  * @remark
  *
  * Don't use this decorator to compare the current value to EOF. Use {@link Until} instead.
+ *
+ * @example
+ *
+ * Use this decorator to make decisions based on the object currently interpreted.
+ *
+ * ```typescript
+ * class BinObject {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @Relation(PrimitiveSymbol.u8)
+ *   len: number
+ *
+ *   @Count('len')
+ *   @Relation(PrimitiveSymbol.u8)
+ *   blob: number[]
+ * }
+ * class BinProtocol {
+ *   @While((obj) => obj.type !== 0x00)
+ *   @Relation(BinObject)
+ *   objs: BinObject[]
+ * }
+ * ```
+ *
+ * Use the `peek` option to not include the element that does not match the condition.
+ * With this option the cursor will then be set back before the element was read and not
+ * included in the resulting array.
+ *
+ * ```typescript
+ * class BinProtocol {
+ *   @While((elem) => elem !== 0x00, { peek: true })
+ *   @Relation(PrimitiveSymbol.u8)
+ *   array: number[]
+ *
+ *   @Match(0x00)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   end_elem: number
+ * }
+ * ```
+
+ * @param {ControllerWhileFunction} func A function that return a boolean and receive three arguments: the currently read relation, the count and a reference the target instance.
+ * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
  */
@@ -246,11 +274,13 @@ export function While (func: ControllerWhileFunction, opt?: Partial<ControllerOp
  * The difference between Until and {@link Count} is that this decorator accept to create arrays
  * of undefined length.
  *
- * This function also accept function as argument and will read until the condition is met.
- * If you need to use a function to verify an equality based on another field the {@link While}
- * decorator is better suited.
- *
  * @remark
+ *
+ * This decorator doesn't accept a function as argument.
+ * If you need to use a function to verify an equality based on the currently read value
+ * use the {@link While} decorator instead.
+ *
+ * @example
  *
  * You can use this decorator to read relation or primitive until the EOF.
  *
@@ -273,6 +303,25 @@ export function While (func: ControllerWhileFunction, opt?: Partial<ControllerOp
  * @category Decorators
  */
 export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorType {
+  function untilEofController (): ControllerFunction {
+    const wrap = whileFunctionFactory(() => true)
+    return function (
+      currStateObject: any,
+      read: ControllerReader,
+      opt: ControllerOptions
+    ): any {
+      try {
+        wrap(currStateObject, read, opt)
+      } catch (error) {
+        if (error instanceof EOFError) {
+          return error.value
+        } else {
+          throw error
+        }
+      }
+    }
+  }
+
   if (arg === EOF) {
     return controllerDecoratorFactory('until', untilEofController(), opt)
   } else {
@@ -280,6 +329,19 @@ export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorTyp
   }
 }
 
+/**
+ * `@NullTerminatedString` decorator read a string until the '\0' character is met and always interpret a string.
+ *
+ * @remark
+ *
+ * This decorator is similar to `@Until('\0', { targetType: String })` but `@Until` will include the `\0` while
+ * this decorator always drops it.
+ *
+ * @param {Partial} opt
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
 export function NullTerminatedString (opt?: Partial<ControllerOptions>): DecoratorType {
  return controllerDecoratorFactory('nullterminatedstring', (
       currStateObject: any,
@@ -309,10 +371,13 @@ export function NullTerminatedString (opt?: Partial<ControllerOptions>): Decorat
  * The decorator also allows to refer to another field already present in the binary definition target instance.
  *
  * ```typescript
- * {
- *   len: u16,
+ * class BinProtocol {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   len: Number
+ *
  *   @Count('len')
- *   vec: u8,
+ *   @Relation(PrimitiveSymbol.u8)
+ *   vec: Number
  * }
  * ```
  *
@@ -366,6 +431,8 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
  * @param {number | string} height
  * @param {Partial} opt
  * @returns {DecoratorType}
+ *
+ * @category Decorators
  */
 export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
   /**
