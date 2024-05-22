@@ -12,7 +12,6 @@ describe('Using the hexdump', () => {
       0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32
     ]).buffer
     const curr = new BinaryCursor(arr)
-    console.log(hexDumpLine(curr, 0))
     console.log(hexDump(curr))
     expect(true).toBe(true)
   })

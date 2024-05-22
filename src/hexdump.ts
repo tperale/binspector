@@ -1,42 +1,64 @@
 import { type BinaryCursor } from './cursor'
 
-function hexToAscii (value: number): string {
+interface HexdumpOptions {
+  lineLength: number
+  base: number
+  showAddress: boolean
+  showAsciiRepresentation: boolean
+  nonAsciiCharRepresentation: string
+  separator: string
+}
+
+const defaultHexdumpOptions: HexdumpOptions = {
+  lineLength: 16,
+  base: 16,
+  showAddress: true,
+  showAsciiRepresentation: true,
+  nonAsciiCharRepresentation: '.',
+  separator: '|'
+}
+
+function hexToAscii (value: number, opt: HexdumpOptions): string {
   if (value >= 0x20 && value <= 0x7e) {
     return String.fromCharCode(value)
   } else {
-    return '.'
+    return opt.nonAsciiCharRepresentation
   }
 }
 
-export function hexDumpLine (cur: BinaryCursor, address: number): string {
-  const lineLength = 16
-  const offset = address
-  const offsetFinish = Math.min(offset + lineLength, cur.length())
+export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOptions): string {
+  const offsetFinish = Math.min(offset + opt.lineLength, cur.length())
   // TODO add padding at the end if (off + lineLength)
-  const buf = new Uint8Array(cur.data.buffer.slice(offset, offsetFinish))
+  const buf = [...new Uint8Array(cur.data.buffer.slice(offset, offsetFinish))]
+  let line = ''
+
   // Printing the address
-  const lineNumber = Math.round(address / lineLength) * lineLength
-  let line = lineNumber.toString(16).padStart(8, '0') + ' | '
+  if (opt.showAddress) {
+    const lineNumber = Math.round(offset / opt.lineLength) * opt.lineLength
+    line += `${lineNumber.toString(opt.base).padStart(8, '0')} ${opt.separator} `
+  }
+
   // Printing the HEX value of the binary array
   for (const value of buf) {
-    line += value.toString(16).padStart(2, '0') + ' '
+    line += value.toString(opt.base).padStart(2, '0') + ' '
   }
-  line += ' | '
-  // Printing the ASCII value of the binary array
-  for (const value of buf) {
-    line += hexToAscii(value)
+
+  if (opt.showAsciiRepresentation) {
+    line += `${opt.separator} ${buf.map(x => hexToAscii(x, opt)).join('')}`
   }
   return line
 }
 
-export function hexDump (cur: BinaryCursor, opt: { start: number, length: number, lineLength: number } = { start: 0, length: 0, lineLength: 16 }): string {
+export function hexDump (cur: BinaryCursor, opt?: Partial<HexdumpOptions>): string {
+  const options = { ...defaultHexdumpOptions, ...opt }
+
   // TODO offset based on line length to start printing the hexdump
   let content = ''
   let offset = 0
   while (offset < cur.length()) {
-    content += hexDumpLine(cur, offset)
+    content += hexDumpLine(cur, offset, options)
     content += '\n'
-    offset += opt.lineLength
+    offset += options.lineLength
   }
   return content
 }
