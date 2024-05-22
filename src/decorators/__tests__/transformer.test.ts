@@ -2,18 +2,25 @@ import { describe, expect } from '@jest/globals'
 import { transformerDecoratorFactory, Transform, useTransformer } from '../transformer'
 import Meta from '../../metadatas'
 
-describe('Testing the usage of the transformer decorator', () => {
+function testTransformer (TargetClass: new () => any, field: string, value: any, equal: any, preFunc?: (instance: any) => void): void {
+  const instance = new TargetClass()
+
+  if (preFunc !== undefined) {
+    preFunc(instance)
+  }
+
+  const transformers = Meta.getTransformers(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
+  expect(useTransformer(transformers, value, instance)).toStrictEqual(equal)
+}
+
+describe('@Transformer: functions', () => {
   it('should double the content of the property', () => {
     class TestClass {
       @Transform(x => x * 2, { primitiveCheck: false })
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 1
-
-    const transformers = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(useTransformer(transformers, instance.field, instance)).toStrictEqual(2)
+    testTransformer(TestClass, 'field', 1, 2)
   })
   it('should take into account the order of definition starting bottom to top', () => {
     class TestClass {
@@ -22,11 +29,7 @@ describe('Testing the usage of the transformer decorator', () => {
       field: number
     }
 
-    const instance = new TestClass()
-    instance.field = 1
-
-    const transformers = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(useTransformer(transformers, instance.field, instance)).toStrictEqual(5)
+    testTransformer(TestClass, 'field', 1, 5)
   })
   it('should work on arrays', () => {
     class TestClass {
@@ -37,16 +40,11 @@ describe('Testing the usage of the transformer decorator', () => {
       field2: number[]
     }
 
-    const instance = new TestClass()
-
-    const transformers = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(useTransformer(transformers, 1, instance)).toStrictEqual(2)
-
-    const transformers2 = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field2')
-    expect(useTransformer(transformers2, [1, 2, 3], instance)).toStrictEqual([2, 4, 6])
+    testTransformer(TestClass, 'field', 1, 2)
+    testTransformer(TestClass, 'field2', [1, 2, 3], [2, 4, 6])
   })
   it('should work to transform into ascii array', () => {
-    function asciiTransform (value: any, _: any): string {
+    function asciiTransform (value: number): string {
       return String.fromCharCode(value)
     }
     const ASCII = transformerDecoratorFactory('ascii', asciiTransform, { each: true, primitiveCheck: false })
@@ -56,30 +54,29 @@ describe('Testing the usage of the transformer decorator', () => {
       field: string
     }
 
-    const instance = new TestClass()
-
-    const transformers = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(useTransformer(transformers, [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], instance)).toStrictEqual(['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'])
+    testTransformer(TestClass, 'field', [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], ['h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'])
   })
   it('should work to transform into ascii string', () => {
-    function asciiTransform (value: any, _: any): string {
-      if (Array.isArray(value)) {
-        return value.map(x => String.fromCharCode(x)).join('')
-      } else {
-        return String.fromCharCode(value)
-      }
-    }
-    const ASCII = transformerDecoratorFactory('ascii', asciiTransform, { primitiveCheck: false })
+    const ToString = transformerDecoratorFactory('tostring', (x: string[]) => x.join(''), { primitiveCheck: false })
+    const ASCII = transformerDecoratorFactory('ascii', (x: number) => String.fromCharCode(x), { each: true, primitiveCheck: false })
 
     class TestClass {
+      @ToString
       @ASCII
       field: string
     }
 
-    const instance = new TestClass()
-
-    const transformers = Meta.getTransformers(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-    expect(useTransformer(transformers, [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], instance)).toStrictEqual('hello world')
+    testTransformer(TestClass, 'field', [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], 'hello world')
   })
+})
 
+describe('@Transformer: Errors', () => {
+  it('should throw when no relation defined', () => {
+    expect(() => {
+      class TestClass {
+        @Transform(_ => 1)
+        field: number
+      }
+    }).toThrow()
+  })
 })
