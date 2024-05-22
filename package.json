@@ -44,9 +44,10 @@
     "doc": "docs",
     "example": "example"
   },
+  "homepage": "https://tperale.github.io/binspector/",
   "repository": {
     "type": "git",
-    "url": "github.com/tperale/binspector"
+    "url": "git+https://github.com/tperale/binspector"
   },
   "keywords": [
     "parser",
