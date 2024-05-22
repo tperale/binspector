@@ -12,7 +12,7 @@
 import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type DecoratorType, type Context } from '../types'
-import { type Cursor, CursorEndianness } from '../cursor'
+import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor'
 import Meta from '../metadatas'
 
 export const PreFunctionSymbol = Symbol('pre-function')
@@ -174,21 +174,23 @@ export function Peek (offset: number | string | PrePostFunction, opt?: Partial<P
 /**
  * `@Endian`
  *
- * @param {CursorEndianness} endianness
+ * @param {BinaryCursorEndianness} endianness
  * @param {Partial} opt PrePost options.
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
  * @category Decorators
  */
-export function Endian (endianness: CursorEndianness, opt?: Partial<PrePostOptions>): DecoratorType {
+export function Endian (endianness: BinaryCursorEndianness, opt?: Partial<PrePostOptions>): DecoratorType {
   return function (_: any, context: Context) {
-    let currentEndian = CursorEndianness.BigEndian
     preFunctionDecoratorFactory('preEndian', (_, cursor) => {
-      currentEndian = cursor.getEndian()
-      cursor.setEndian(endianness)
-    }, opt)(_, context)
-    postFunctionDecoratorFactory('postEndian', (_, cursor) => {
-      cursor.setEndian(currentEndian)
+      if (cursor instanceof BinaryCursor) {
+        const currentEndian = cursor.getEndian()
+        cursor.setEndian(endianness)
+
+        postFunctionDecoratorFactory('postEndian', (_) => {
+          cursor.setEndian(currentEndian)
+        }, opt)(_, context)
+      }
     }, opt)(_, context)
   }
 }

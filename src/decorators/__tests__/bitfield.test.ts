@@ -2,7 +2,7 @@ import { describe, expect } from '@jest/globals'
 import { useBitField, Bitfield } from '../bitfield'
 import { Relation } from '../primitive'
 import Meta from '../../metadatas'
-import { Cursor } from '../../cursor'
+import { BinaryCursor } from '../../cursor'
 
 describe('Testing the usage of the bitfield decorator', () => {
   it('should return a bitfield populated', () => {
@@ -21,7 +21,7 @@ describe('Testing the usage of the bitfield decorator', () => {
     const bitfields = Meta.getBitFields(TestBitField[Symbol.metadata] as DecoratorMetadataObject)
 
     const buf = new Uint8Array([0b00100101]).buffer
-    const cur = new Cursor(buf)
+    const cur = new BinaryCursor(buf)
 
     expect(useBitField(bitfields, instance, cur)).toMatchObject({ field1: 1, field2: 9 })
   })

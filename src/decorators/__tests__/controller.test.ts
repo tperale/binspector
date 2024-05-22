@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { Count, While, Until, useController, ControllerReader } from '../controller'
-import { Cursor } from '../../cursor'
+import { BinaryCursor } from '../../cursor'
 import { PrimitiveSymbol } from '../../types'
 import Meta from '../../metadatas'
 
@@ -19,7 +19,7 @@ class TestReader extends ControllerReader {
 }
 
 class BinReader extends ControllerReader {
-  _cursor: Cursor
+  _cursor: BinaryCursor
 
   offset (): number {
     return this._cursor.offset()
@@ -29,7 +29,7 @@ class BinReader extends ControllerReader {
     return this._cursor.move(address)
   }
 
-  constructor(reader: () => any, cursor: Cursor) {
+  constructor(reader: () => any, cursor: BinaryCursor) {
     super(reader)
     this._cursor = cursor
   }
@@ -58,7 +58,7 @@ function testController (TargetClass: new () => any, field: string, reader: () =
   return testControllerGeneric(TargetClass, field, new TestReader(reader), equal, preFunc)
 }
 
-function testControllerCursor (TargetClass: new () => any, field: string, reader: () => any, equal: any, cursor: Cursor, preFunc?: (instance: any) => void): void {
+function testControllerCursor (TargetClass: new () => any, field: string, reader: () => any, equal: any, cursor: BinaryCursor, preFunc?: (instance: any) => void): void {
   return testControllerGeneric(TargetClass, field, new BinReader(reader, cursor), equal, preFunc)
 }
 
@@ -126,7 +126,7 @@ describe('@Controller: functions w/ cursor', () => {
       field: number
     }
 
-    const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+    const cur = new BinaryCursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2], cur)
 
     expect(cur.offset()).toStrictEqual(4)
@@ -139,7 +139,7 @@ describe('@Controller: functions w/ cursor', () => {
       field: number
     }
 
-    const cur = new Cursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
+    const cur = new BinaryCursor(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 1, 1], cur)
 
     expect(cur.offset()).toStrictEqual(4)
@@ -154,7 +154,7 @@ describe('@Controller: functions w/ cursor', () => {
       next: number
     }
 
-    const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
+    const cur = new BinaryCursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [3, 1], cur)
 
     expect(cur.offset()).toStrictEqual(2)
@@ -167,7 +167,7 @@ describe('@Controller: functions w/ cursor', () => {
       field: number
     }
 
-    const cur = new Cursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
+    const cur = new BinaryCursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], cur)
 
     expect(cur.offset()).toStrictEqual(0)

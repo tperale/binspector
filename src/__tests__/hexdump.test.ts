@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { hexDump, hexDumpLine } from '../hexdump'
-import { Cursor } from '../cursor'
+import { BinaryCursor } from '../cursor'
 
 describe('Using the hexdump', () => {
   it('should display the binary', () => {
@@ -11,7 +11,7 @@ describe('Using the hexdump', () => {
       0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
       0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32
     ]).buffer
-    const curr = new Cursor(arr)
+    const curr = new BinaryCursor(arr)
     console.log(hexDumpLine(curr, 0))
     console.log(hexDump(curr))
     expect(true).toBe(true)

@@ -15,16 +15,29 @@ interface CursorHistoryOperation {
   name: string
 }
 
-export enum CursorEndianness {
+/**
+ * Cursor
+ */
+export abstract class Cursor {
+  abstract offset (): number
+  abstract move (address: number): number
+  abstract read (primitive: PrimitiveSymbol): string | number | typeof EOF
+
+  forward (x: number): number {
+    return this.move(this.offset() + x)
+  }
+}
+
+export enum BinaryCursorEndianness {
   BigEndian = 0,
   LittleEndian = 1,
 }
 
-export class Cursor {
+export class BinaryCursor extends Cursor {
   endian: boolean = false
   data: DataView
   index: number = 0
-  endianness: CursorEndianness = CursorEndianness.BigEndian
+  endianness: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian
 
   offset (): number {
     return this.index
@@ -35,16 +48,11 @@ export class Cursor {
     return offset
   }
 
-  forward (len: number): number {
-    this.index += len
-    return this.index
-  }
-
-  getEndian (): CursorEndianness {
+  getEndian (): BinaryCursorEndianness {
     return this.endianness
   }
 
-  setEndian (endian: CursorEndianness): void {
+  setEndian (endian: BinaryCursorEndianness): void {
     this.endianness = endian
   }
 
@@ -78,17 +86,17 @@ export class Cursor {
       case PrimitiveSymbol.u8:
         return [size, this.data.getUint8(this.index)]
       case PrimitiveSymbol.u16:
-        return [size, this.data.getUint16(this.index, this.endianness === CursorEndianness.LittleEndian)]
+        return [size, this.data.getUint16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
       case PrimitiveSymbol.u32:
-        return [size, this.data.getUint32(this.index, this.endianness === CursorEndianness.LittleEndian)]
+        return [size, this.data.getUint32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
       // case .u64:
       //   return [1, this.data.getBigUint64(this.index)];
       case PrimitiveSymbol.i8:
         return [size, this.data.getInt8(this.index)]
       case PrimitiveSymbol.i16:
-        return [size, this.data.getInt16(this.index, this.endianness === CursorEndianness.LittleEndian)]
+        return [size, this.data.getInt16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
       case PrimitiveSymbol.i32:
-        return [size, this.data.getInt32(this.index, this.endianness === CursorEndianness.LittleEndian)]
+        return [size, this.data.getInt32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
       // case .i64:
       //   return [1, this.data.getBigInt64(this.index)];
       case PrimitiveSymbol.char:
@@ -112,7 +120,8 @@ export class Cursor {
     return this.data.byteLength
   }
 
-  constructor (array: ArrayBuffer, endian: CursorEndianness = CursorEndianness.BigEndian) {
+  constructor (array: ArrayBuffer, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+    super()
     this.data = new DataView(array)
     this.endianness = endian
   }

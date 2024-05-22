@@ -2,7 +2,7 @@ import { describe, expect } from '@jest/globals'
 import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian } from '../decorators'
 import { EOF, PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
-import { Cursor, CursorEndianness } from '../cursor'
+import { BinaryCursor, BinaryCursorEndianness } from '../cursor'
 
 describe('Reading binary content into js object', () => {
   it('should create a new js object', () => {
@@ -15,7 +15,7 @@ describe('Reading binary content into js object', () => {
     }
 
     const coord = new Uint8Array([0x09, 0x20]).buffer
-    expect(binread(new Cursor(coord), Coord)).toMatchObject({ x: 9, y: 32 })
+    expect(binread(new BinaryCursor(coord), Coord)).toMatchObject({ x: 9, y: 32 })
   })
   it('should create a new nested js object', () => {
     class Coord {
@@ -35,7 +35,7 @@ describe('Reading binary content into js object', () => {
     }
 
     const header = new Uint8Array([0x09, 0x20, 0x10, 0x21]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       fstCoord: { x: 9, y: 32 },
       sndCoord: { x: 16, y: 33 }
     })
@@ -47,7 +47,7 @@ describe('Reading binary content into js object', () => {
     }
 
     const header = new Uint8Array([0x41]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       character: 'A'
     })
   })
@@ -73,7 +73,7 @@ describe('Reading binary content into js object', () => {
     }
 
     const header = new Uint8Array([0x02, 0x01, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       size: 0x02,
       relation: { buf: [0x01, 0x02] }
     })
@@ -89,7 +89,7 @@ describe('Reading binary with validator', () => {
     }
 
     const header = new Uint8Array([0x01]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       field: 0x01
     })
   })
@@ -102,7 +102,7 @@ describe('Reading binary with validator', () => {
     }
 
     const header = new Uint8Array([0x01, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       field: [0x01, 0x02]
     })
   })
@@ -116,7 +116,7 @@ describe('Reading binary with controller', () => {
       array: number[]
     }
     const header = new Uint8Array([0x01, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       array: [0x01, 0x02]
     })
   })
@@ -131,7 +131,7 @@ describe('Reading binary with controller', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02, 0x03, 0x04]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       len: 0x03,
       field: [0x02, 0x03, 0x04]
     })
@@ -151,7 +151,7 @@ describe('Reading binary with controller', () => {
     }
 
     const header = new Uint8Array([0x03, 0x41, 0x42, 0x43, 0x41, 0x42, 0x43]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       len: 0x03,
       field: 'ABC',
       array: ['A', 'B', 'C']
@@ -168,7 +168,7 @@ describe('Reading binary with controller', () => {
     }
 
     const header = new Uint8Array([0x03, 0x01, 0x02, 0x03]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       something: 0x03,
       array: [0x01, 0x02, 0x03]
     })
@@ -184,7 +184,7 @@ describe('Reading binary until EOF', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02, 0x03, 0x04]).buffer
-    expect(binread(new Cursor(header), Header).coords).toStrictEqual([0x03, 0x02, 0x03, 0x04])
+    expect(binread(new BinaryCursor(header), Header).coords).toStrictEqual([0x03, 0x02, 0x03, 0x04])
   })
   it('should read the relation until the EOF', () => {
     class Coord {
@@ -202,7 +202,7 @@ describe('Reading binary until EOF', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02, 0x03, 0x04]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x04 }]
     })
   })
@@ -218,7 +218,7 @@ describe('Reading binary until EOF', () => {
       z: number
     }
     const header = new Uint8Array([0x03, 0x02]).buffer
-    expect(() => binread(new Cursor(header), Header)).toThrow()
+    expect(() => binread(new BinaryCursor(header), Header)).toThrow()
   })
   it('should throw an error if the condition didn\'t end properly', () => {
     class Header {
@@ -227,7 +227,7 @@ describe('Reading binary until EOF', () => {
       x: number
     }
     const header = new Uint8Array([0x03, 0x02]).buffer
-    expect(() => binread(new Cursor(header), Header)).toThrow()
+    expect(() => binread(new BinaryCursor(header), Header)).toThrow()
   })
 })
 
@@ -247,7 +247,7 @@ describe('Reading binary with conditions', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       coord: { x: 0x03, y: 0x02 }
     })
   })
@@ -267,7 +267,7 @@ describe('Reading binary with conditions', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02, 0x03, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x02 }]
     })
   })
@@ -301,7 +301,7 @@ describe('Reading binary with conditions', () => {
     }
 
     const header = new Uint8Array([0x02, 0x03, 0x02, 0x03]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       coords: { x: 0x03, y: 0x02, z: 0x03 }
     })
   })
@@ -322,7 +322,7 @@ describe('Reading binary with conditions', () => {
     }
 
     const header = new Uint8Array([0x01, 0xFF, 0x02]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       data: [{
         type: 0x01,
         payload: 0xFF
@@ -344,13 +344,13 @@ describe('Reading binary with conditions', () => {
       payload: number
     }
 
-    const cur1 = new Cursor(new Uint8Array([0x02, 0x00, 0x01]).buffer)
+    const cur1 = new BinaryCursor(new Uint8Array([0x02, 0x00, 0x01]).buffer)
     expect(binread(cur1, Header)).toMatchObject({
       type: 0x02,
       payload: 0x0001
     })
 
-    const cur2 = new Cursor(new Uint8Array([0x03, 0x01, 0x01]).buffer)
+    const cur2 = new BinaryCursor(new Uint8Array([0x03, 0x01, 0x01]).buffer)
     expect(binread(cur2, Header)).toMatchObject({
       type: 0x03
     })
@@ -375,7 +375,7 @@ describe('Reading binary with bitfields', () => {
     }
 
     const header = new Uint8Array([0x11]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       bf: {
         field1: 1,
         field2: 0,
@@ -403,7 +403,7 @@ describe('Reading binary with bitfields', () => {
     }
 
     const header = new Uint8Array([0x30, 0x01, 0x05]).buffer
-    expect(binread(new Cursor(header), Header)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       bf: {
         field1: 1,
         field2: 0,
@@ -423,7 +423,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
-    expect(binread(new Cursor(header), Protocol)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Protocol)).toMatchObject({
       value: 0x03
     })
   })
@@ -433,7 +433,7 @@ describe('Reading binary definition with PrePost decorators', () => {
       @Relation(PrimitiveSymbol.u16)
       value_1: number
 
-      @Endian(CursorEndianness.LittleEndian)
+      @Endian(BinaryCursorEndianness.LittleEndian)
       @Relation(PrimitiveSymbol.u16)
       value_2: number
 
@@ -442,7 +442,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]).buffer
-    expect(binread(new Cursor(header), Protocol)).toMatchObject({
+    expect(binread(new BinaryCursor(header), Protocol)).toMatchObject({
       value_1: 0x0102,
       value_2: 0x0403,
       value_3: 0x0506
