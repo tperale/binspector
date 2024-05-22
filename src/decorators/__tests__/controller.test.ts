@@ -1,10 +1,10 @@
 import { describe, expect } from '@jest/globals'
 import { Count, While, Until, useController, ControllerReader } from '../controller'
-import { BinaryCursor } from '../../cursor'
+import { Cursor, BinaryCursor } from '../../cursor'
 import { PrimitiveSymbol } from '../../types'
 import Meta from '../../metadatas'
 
-class TestReader extends ControllerReader {
+class TestCursor extends Cursor {
   offset (): number {
     return 0
   }
@@ -13,25 +13,8 @@ class TestReader extends ControllerReader {
     return address
   }
 
-  constructor (read: () => any) {
-    super(read)
-  }
-}
-
-class BinReader extends ControllerReader {
-  _cursor: BinaryCursor
-
-  offset (): number {
-    return this._cursor.offset()
-  }
-
-  move (address: number): number {
-    return this._cursor.move(address)
-  }
-
-  constructor(reader: () => any, cursor: BinaryCursor) {
-    super(reader)
-    this._cursor = cursor
+  constructor () {
+    super()
   }
 }
 
@@ -41,7 +24,7 @@ function * testReader (list: any[]): Generator<any> {
   }
 }
 
-function testControllerGeneric (TargetClass: new () => any, field: string, reader: ControllerReader, equal: any, preFunc?: (instance: any) => void): void {
+function testControllerGeneric (TargetClass: new () => any, field: string, cursor: Cursor, reader: ControllerReader, equal: any, preFunc?: (instance: any) => void): void {
   const instance = new TargetClass()
 
   if (preFunc !== undefined) {
@@ -50,16 +33,16 @@ function testControllerGeneric (TargetClass: new () => any, field: string, reade
 
   const controller = Meta.getController(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
   if (controller !== undefined) {
-    expect(useController(controller, instance, reader)).toStrictEqual(equal)
+    expect(useController(controller, instance, cursor, reader)).toStrictEqual(equal)
   }
 }
 
-function testController (TargetClass: new () => any, field: string, reader: () => any, equal: any, preFunc?: (instance: any) => void): void {
-  return testControllerGeneric(TargetClass, field, new TestReader(reader), equal, preFunc)
+function testController (TargetClass: new () => any, field: string, reader: ControllerReader, equal: any, preFunc?: (instance: any) => void): void {
+  return testControllerGeneric(TargetClass, field, new TestCursor(), reader, equal, preFunc)
 }
 
-function testControllerCursor (TargetClass: new () => any, field: string, reader: () => any, equal: any, cursor: BinaryCursor, preFunc?: (instance: any) => void): void {
-  return testControllerGeneric(TargetClass, field, new BinReader(reader, cursor), equal, preFunc)
+function testControllerCursor (TargetClass: new () => any, field: string, reader: ControllerReader, equal: any, cursor: BinaryCursor, preFunc?: (instance: any) => void): void {
+  return testControllerGeneric(TargetClass, field, cursor, reader, equal, preFunc)
 }
 
 describe('@Controller: functions', () => {

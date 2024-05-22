@@ -14,6 +14,8 @@ export enum PrimitiveSymbol {
   char,
 }
 
+
+
 /**
  * isPrimitiveSymbol.
  *

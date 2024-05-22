@@ -15,29 +15,12 @@ import {
   type PropertyType
 } from './decorators/primitive'
 import { EOF, type InstantiableObject } from './types'
-import { useController, ControllerReader } from './decorators/controller'
+import { useController, type ControllerReader } from './decorators/controller'
 import { useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
 import { usePrePost } from './decorators/prepost'
 import { useBitField } from './decorators/bitfield'
-
-class BinReader extends ControllerReader {
-  _cursor: Cursor
-
-  offset (): number {
-    return this._cursor.offset()
-  }
-
-  move (address: number): number {
-    return this._cursor.move(address)
-  }
-
-  constructor (reader: () => any, cursor: Cursor) {
-    super(reader)
-    this._cursor = cursor
-  }
-}
 
 /**
  * binread.
@@ -62,10 +45,10 @@ class BinReader extends ControllerReader {
  * You can create self refering field by using conditionnal decorator.
  */
 export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): any {
-  function getBinReader (field: PropertyType, instance: any): BinReader {
+  function getBinReader (field: PropertyType, instance: any): ControllerReader {
     if (isPrimitiveRelation(field)) {
       const readerFunc = () => content.read(field.primitive)
-      return new BinReader(readerFunc, content)
+      return readerFunc
     } else if (isRelation(field)) {
       if (field.relation === ObjectDefinition) {
         // TODO Improve error handling
@@ -98,7 +81,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
           }
         }
       }
-      return new BinReader(readerFunc, content)
+      return readerFunc
     } else {
       throw new UnknownPropertyType(field)
     }
@@ -121,8 +104,8 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
       const value = controller !== undefined
-        ? useController(controller, instance, propertyReader)
-        : propertyReader.read()
+        ? useController(controller, instance, content, propertyReader)
+        : propertyReader()
 
       if (value === EOF) {
         // TODO error handling throwing an error containing the backtrace + the current state of the object
