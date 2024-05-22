@@ -62,7 +62,7 @@ function testControllerCursor (TargetClass: new () => any, field: string, reader
   return testControllerGeneric(TargetClass, field, new BinReader(reader, cursor), equal, preFunc)
 }
 
-describe('Testing the usage of the controller decorator', () => {
+describe('@Controller: functions', () => {
   it('should read 3 time the field property', () => {
     class TestClass {
       @Count(3, { primitiveCheck: false })
@@ -117,6 +117,9 @@ describe('Testing the usage of the controller decorator', () => {
     const iterator = testReader([1, 2, 3])
     testController(TestClass, 'field', () => iterator.next().value, [1, 2, 3])
   })
+})
+
+describe('@Controller: functions w/ cursor', () => {
   it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
     class TestClass {
       @Count(2, { primitiveCheck: false, alignment: 4 })
@@ -171,6 +174,9 @@ describe('Testing the usage of the controller decorator', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(0x03)
     expect(cur.offset()).toStrictEqual(1)
   })
+})
+
+describe('@Controller: errors', () => {
   it('should throw an error if no primitive defined', () => {
     expect(() => {
       class TestClass {
