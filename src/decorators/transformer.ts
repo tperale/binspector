@@ -91,7 +91,7 @@ export function transformerDecoratorFactory (name: string, func: TransformerFunc
  *
  * @category Decorators
  */
-export function Transform (transformFunction: TransformerFunction, opt: Partial<TransformerOptions>): DecoratorType {
+export function Transform (transformFunction: TransformerFunction, opt?: Partial<TransformerOptions>): DecoratorType {
   return transformerDecoratorFactory('transform', transformFunction, opt)
 }
 
