@@ -28,24 +28,23 @@ function hexToAscii (value: number, opt: HexdumpOptions): string {
 
 export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOptions): string {
   const offsetFinish = Math.min(offset + opt.lineLength, cur.length())
-  // TODO add padding at the end if (off + lineLength)
   const buf = [...new Uint8Array(cur.data.buffer.slice(offset, offsetFinish))]
   let line = ''
 
-  // Printing the address
+  // Address representation
   if (opt.showAddress) {
     const lineNumber = Math.round(offset / opt.lineLength) * opt.lineLength
     line += `${lineNumber.toString(opt.base).padStart(8, '0')} ${opt.separator} `
   }
 
-  // Printing the HEX value of the binary array
-  for (const value of buf) {
-    line += value.toString(opt.base).padStart(2, '0') + ' '
+  // Binary content representation
+  line += buf.map(x => x.toString(opt.base).padStart(2, '0')).join(' ').padEnd(3 * opt.lineLength)
+
+  // Content in ASCII representation
+  if (opt.showAsciiRepresentation) {
+    line += ` ${opt.separator} ${buf.map(x => hexToAscii(x, opt)).join('')}`
   }
 
-  if (opt.showAsciiRepresentation) {
-    line += `${opt.separator} ${buf.map(x => hexToAscii(x, opt)).join('')}`
-  }
   return line
 }
 
