@@ -1,13 +1,11 @@
-import { type PropertyType } from './decorators/primitive'
-import { type Condition, ConditionSymbol } from './decorators/condition'
-import { type Controller, ControllerSymbol } from './decorators/controller'
-import { type Transformer, TransformerSymbol } from './decorators/transformer'
-import { type Validator, ValidatorSymbol } from './decorators/validator'
-import { type BitField, BitFieldSymbol } from './decorators/bitfield'
-import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from './decorators/prepost'
-import { type DecoratorMetadataObject } from './types'
-
-import './symbol-polyfill'
+import { type PropertyType } from '../decorators/primitive'
+import { type Condition, ConditionSymbol } from '../decorators/condition'
+import { type Controller, ControllerSymbol } from '../decorators/controller'
+import { type Transformer, TransformerSymbol } from '../decorators/transformer'
+import { type Validator, ValidatorSymbol } from '../decorators/validator'
+import { type BitField, BitFieldSymbol } from '../decorators/bitfield'
+import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from '../decorators/prepost'
+import { type DecoratorMetadataObject } from '../types'
 
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
