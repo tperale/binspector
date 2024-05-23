@@ -4,6 +4,7 @@ interface HexdumpOptions {
   lineLength: number
   base: number
   showAddress: boolean
+  addressMinPadding: number
   showAsciiRepresentation: boolean
   zeroAsciiCharRepresentation: string
   nonAsciiCharRepresentation: string
@@ -14,6 +15,7 @@ const defaultHexdumpOptions: HexdumpOptions = {
   lineLength: 16,
   base: 16,
   showAddress: true,
+  addressMinPadding: 8,
   showAsciiRepresentation: true,
   zeroAsciiCharRepresentation: '.',
   nonAsciiCharRepresentation: '·',
@@ -37,8 +39,9 @@ export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOpti
 
   // Address representation
   if (opt.showAddress) {
-    const lineNumber = Math.round(offset / opt.lineLength) * opt.lineLength
-    line += `${lineNumber.toString(opt.base).padStart(8, '0')} ${opt.separator} `
+    const lineAddressStr = (Math.round(offset / opt.lineLength) * opt.lineLength).toString(opt.base)
+    const addressPadding = Math.max(lineAddressStr.length, opt.addressMinPadding)
+    line += `${lineAddressStr.padStart(addressPadding, '0')} ${opt.separator} `
   }
 
   // Binary content representation
