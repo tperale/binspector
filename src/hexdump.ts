@@ -5,6 +5,7 @@ interface HexdumpOptions {
   base: number
   showAddress: boolean
   showAsciiRepresentation: boolean
+  zeroAsciiCharRepresentation: string
   nonAsciiCharRepresentation: string
   separator: string
 }
@@ -14,13 +15,16 @@ const defaultHexdumpOptions: HexdumpOptions = {
   base: 16,
   showAddress: true,
   showAsciiRepresentation: true,
-  nonAsciiCharRepresentation: '.',
+  zeroAsciiCharRepresentation: '.',
+  nonAsciiCharRepresentation: '·',
   separator: '|'
 }
 
 function hexToAscii (value: number, opt: HexdumpOptions): string {
   if (value >= 0x20 && value <= 0x7e) {
     return String.fromCharCode(value)
+  } else if (value === 0x00) {
+    return opt.zeroAsciiCharRepresentation
   } else {
     return opt.nonAsciiCharRepresentation
   }
