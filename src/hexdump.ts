@@ -9,6 +9,7 @@ interface HexdumpOptions {
   zeroAsciiCharRepresentation: string
   nonAsciiCharRepresentation: string
   separator: string
+  bufferOffsetPadding: number
 }
 
 const defaultHexdumpOptions: HexdumpOptions = {
@@ -19,7 +20,8 @@ const defaultHexdumpOptions: HexdumpOptions = {
   showAsciiRepresentation: true,
   zeroAsciiCharRepresentation: '.',
   nonAsciiCharRepresentation: '·',
-  separator: '|'
+  separator: '|',
+  bufferOffsetPadding: 3
 }
 
 function hexToAscii (value: number, opt: HexdumpOptions): string {
@@ -55,16 +57,43 @@ export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOpti
   return line
 }
 
-export function hexDump (cur: BinaryCursor, opt?: Partial<HexdumpOptions>): string {
+export function hexDump (cur: BinaryCursor, addrOffset: number = 0, opt?: Partial<HexdumpOptions>): string {
   const options = { ...defaultHexdumpOptions, ...opt }
 
-  // TODO offset based on line length to start printing the hexdump
+  if (addrOffset > cur.length()) {
+    throw new Error('Start Offset bigger than the buffer length')
+  }
+
   let content = ''
-  let offset = 0
-  while (offset < cur.length()) {
+  const fixedAddrOffset = addrOffset - (addrOffset % options.base)
+  const startOffset = Math.max(fixedAddrOffset - (options.bufferOffsetPadding * options.lineLength), 0)
+  const endOffset = addrOffset > 0
+    ? Math.min(fixedAddrOffset + (options.bufferOffsetPadding * options.lineLength), cur.length())
+    : cur.length()
+  let offset = startOffset
+  while (offset < endOffset) {
     content += hexDumpLine(cur, offset, options)
     content += '\n'
     offset += options.lineLength
   }
   return content
+}
+
+export class BinDump {
+  _cursor: BinaryCursor
+  _opt: HexdumpOptions
+
+  show (): string {
+    return hexDump(this._cursor, 0, this._opt)
+  }
+
+  at (offset: number): string {
+    return hexDump(this._cursor, offset, this._opt)
+  }
+
+  constructor (cur: BinaryCursor, opt?: Partial<HexdumpOptions>) {
+    const options = { ...defaultHexdumpOptions, ...opt }
+    this._opt = options
+    this._cursor = cur
+  }
 }
