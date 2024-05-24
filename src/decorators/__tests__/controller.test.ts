@@ -46,7 +46,7 @@ function testControllerCursor (TargetClass: new () => any, field: string, reader
 }
 
 describe('@Controller: functions', () => {
-  it('should read 3 time the field property', () => {
+  it('@Count: read 3 time', () => {
     class TestClass {
       @Count(3, { primitiveCheck: false })
       field: number
@@ -54,7 +54,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1, 1], (x) => { x.field = 1 })
   })
-  it('should read 2 time the field property based on the runtime value of property of TestClass using recursiveGet', () => {
+  it('@Count: read 2 time based on value retrieved at runtime using recursiveGet', () => {
     class TestClass {
       count = 1
 
@@ -64,7 +64,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1], (x) => { x.count = 2 })
   })
-  it('should use recursiveGet to get child property', () => {
+  it('@Count: recursiveGet should retrieve child properties', () => {
     class TestClass {
       child = { count: 2 }
 
@@ -74,7 +74,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1])
   })
-  it('should read 3 using a function defined by while decorator', () => {
+  it('@While: read 3 time', () => {
     class TestClass {
       @While((_: any, i: number) => i < 3, { primitiveCheck: false })
       field: number
@@ -82,7 +82,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1, 1])
   })
-  it('should read the field based on the other field value', () => {
+  it('@Until: read until \0 is met', () => {
     class TestClass {
       @Until('\0', { targetType: String, primitiveCheck: false })
       field: string
@@ -91,7 +91,7 @@ describe('@Controller: functions', () => {
     const iterator = testReader(['h', 'e', 'l', 'l', 'o', '\0'])
     testController(TestClass, 'field', () => iterator.next().value, 'hello\0')
   })
-  it('should read the field based until it receive a number 3', () => {
+  it('@Until: read until 3 is met', () => {
     class TestClass {
       @Until(3, { primitiveCheck: false })
       field: number
@@ -103,7 +103,7 @@ describe('@Controller: functions', () => {
 })
 
 describe('@Controller: functions w/ cursor', () => {
-  it('should read 2 bytes and move the cursor to be aligned to 4 bytes', () => {
+  it('@Count: read 2 bytes with 4 bytes alignment', () => {
     class TestClass {
       @Count(2, { primitiveCheck: false, alignment: 4 })
       field: number
@@ -116,7 +116,7 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(5)
   })
-  it('should read 4 bytes and move the cursor to be aligned to 4 bytes', () => {
+  it('@Count: read 4 bytes with 4 bytes alignment', () => {
     class TestClass {
       @Count(4, { primitiveCheck: false, alignment: 4 })
       field: number
@@ -129,9 +129,9 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(5)
   })
-  it('should read the field until receive a number 5 and then move the cursor back to the previous position before reading it', () => {
+  it('@Until: read using "peek" to move back the cursor', () => {
     class TestClass {
-      @While((x: any) => x !== 5, { primitiveCheck: false, peek: true })
+      @Until(0x05, { primitiveCheck: false, peek: true })
       field: number
 
       next: number
@@ -144,7 +144,7 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(3)
   })
-  it('should not move the Cursor if Count(0) is used', () => {
+  it('@Count: should not move the cursor', () => {
     class TestClass {
       @Count(0, { primitiveCheck: false })
       field: number
