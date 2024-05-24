@@ -387,7 +387,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
    * @param {object} currStateObject
    * @returns {boolean}
    */
-  function countFactory (
+  function countController (
     currStateObject: any,
     cursor: Cursor,
     read: ControllerReader,
@@ -409,7 +409,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
     return []
   }
 
-  return controllerDecoratorFactory('count', countFactory, opt)
+  return controllerDecoratorFactory('count', countController, opt)
 }
 
 /**
@@ -423,27 +423,24 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
  * @category Decorators
  */
 export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
-  /**
-   * countCheck.
-   *
-   * @param {number | string} arg
-   */
-  function countCheck (arg: number | string) {
-    return (_: any, i: number, currStateObject: object): boolean => {
-      // TODO this is not optimal since you will execute the recursiveGet for each iteration
-      const count =
-        typeof arg === 'string'
-          ? recursiveGet(currStateObject, arg)
-          : arg
+  function matrixController (
+    currStateObject: any,
+    cursor: Cursor,
+    read: ControllerReader,
+    opt: ControllerOptions
+  ): any {
+    const getArg = (x: number | string): number => typeof x === 'string'
+      ? recursiveGet(currStateObject, x)
+      : x
+    const finalWidth = getArg(width)
+    const finalHeight = getArg(height)
 
-      return i < count
+    if (typeof finalWidth !== 'number' || typeof finalHeight !== 'number') {
+      throw Error('End type should be a number')
     }
-  }
 
-  function matrixController (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions): any {
-    const lineRead = (): any => whileFunctionFactory(countCheck(width))(currStateObject, cursor, read, opt)
-
-    return whileFunctionFactory(countCheck(height))(currStateObject, cursor, lineRead, opt)
+    const lineRead = (): any => whileFunctionFactory((_, i: number) => i < finalWidth)(currStateObject, cursor, read, opt)
+    return whileFunctionFactory((_, i: number) => i < finalHeight)(currStateObject, cursor, lineRead, opt)
   }
 
   return controllerDecoratorFactory('matrix', matrixController, opt)
