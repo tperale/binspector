@@ -1,7 +1,9 @@
 import { describe, expect } from '@jest/globals'
 import { Count, While, Until, Matrix, useController, ControllerReader } from '../controller'
 import { Cursor, BinaryCursor } from '../../cursor'
-import { PrimitiveSymbol } from '../../types'
+import { PrimitiveSymbol, EOF } from '../../types'
+import { EOFError } from '../../error'
+import { RelationNotDefinedError } from '../primitive'
 import Meta from '../../metadatas'
 
 class TestCursor extends Cursor {
@@ -144,8 +146,6 @@ describe('@Controller: functions w/ cursor', () => {
     class TestClass {
       @Until(0x05, { primitiveCheck: false, peek: true })
       field: number
-
-      next: number
     }
 
     const cur = new BinaryCursor(new Uint8Array([0x03, 0x01, 0x05]).buffer)
@@ -155,6 +155,16 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(3)
   })
+  it('@Until: read using "peek" to move back the cursor', () => {
+    class TestClass {
+      @Until(EOF, { primitiveCheck: false, peek: true })
+      field: number
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 3, 4], cur)
+  })
+
   it('@Count: should not move the cursor', () => {
     class TestClass {
       @Count(0, { primitiveCheck: false })
@@ -196,6 +206,16 @@ describe('@Controller: errors', () => {
         @Until(3)
         field: number
       }
-    }).toThrow()
+    }).toThrow(RelationNotDefinedError)
+  })
+  it('@Count: should throw EOFError', () => {
+    expect(() => {
+      class TestClass {
+        @Count(1, { primitiveCheck: false })
+        field: number
+      }
+      const cur = new BinaryCursor(new Uint8Array([]).buffer)
+      testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], cur)
+    }).toThrow(EOFError)
   })
 })
