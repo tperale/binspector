@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF } from '../../src'
+import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, Size, EOF } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -39,6 +39,14 @@ class DTBHeader {
 
   @Relation(PrimitiveSymbol.u32)
   size_dt_struct: number
+}
+
+class DTBReservedMap {
+  @Relation(PrimitiveSymbol.u64)
+  address: number
+
+  @Relation(PrimitiveSymbol.u64)
+  size: number
 }
 
 class FDTBeginNode {
@@ -160,6 +168,11 @@ function asObjectDtb (structs: DTBStructBlock[]): object {
 export class DTB {
   @Relation(DTBHeader)
   header: DTBHeader
+
+  @Offset('header.off_mem_rsvmap')
+  @While((rsv) => rsv.address && rsv.size, { peek: true })
+  @Relation(DTBReservedMap)
+  rsvmap: DTBReservedMap[]
 
   @Offset('header.off_dt_struct')
   @While((struct) => struct.fdttype !== DTBStructureBlockToken.FDT_END)
