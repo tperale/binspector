@@ -119,14 +119,14 @@ function isString (bytes: number[]) {
   ))
 }
 
-function asObjectDtb (structs: DTBStructBlock[]) {
+function asObjectDtb (structs: DTBStructBlock[]): object {
   function setObject (o: object, current: string[], key: string, value: any) {
     const currentObj = current.reduce((obj, k) => obj[k], o)
 
     currentObj[key] = value
   }
   
-  const current = []
+  const current: string[] = []
   const result = {}
   for (const struct of structs) {
     if (struct.fdttype === DTBStructureBlockToken.FDT_END) {
@@ -136,22 +136,25 @@ function asObjectDtb (structs: DTBStructBlock[]) {
     } else if (struct.fdttype === DTBStructureBlockToken.FDT_END_NODE) {
       current.pop()
     } else if (struct.fdttype === DTBStructureBlockToken.FDT_BEGIN_NODE) {
-      const propName = struct.body.name
-      setObject(result, current, propName, {})
-      current.push(propName)
+      const node = struct.body as FDTBeginNode
+      setObject(result, current, node.name, {})
+      current.push(node.name)
     } else if (struct.fdttype === DTBStructureBlockToken.FDT_PROP) {
-      const propKey = struct.body.property
-      const arrayStr = bytesToArray(struct.body.name) 
+      const prop = struct.body as FDTProp
+      const propKey = prop.property
+      const arrayStr = bytesToArray(prop.name) 
       const propValue = arrayStr.length === 0
-        ? struct.body.name
-        : isString(struct.body.name)
+        ? prop.name
+        : isString(prop.name)
           ? arrayStr.length === 1
             ? String.fromCharCode(...arrayStr[0])
             : arrayStr.map(x => String.fromCharCode(...x))
-          : struct.body.name
+          : prop.name
       setObject(result, current, propKey, propValue)
     }
   }
+
+  return result
 }
 
 export class DTB {
