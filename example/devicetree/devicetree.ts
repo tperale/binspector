@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset } from '../../src'
+import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -165,6 +165,12 @@ export class DTB {
   @While((struct) => struct.fdttype !== DTBStructureBlockToken.FDT_END)
   @Relation(DTBStructBlock, (cur) => [cur.header.off_dt_strings])
   structs: DTBStructBlock[]
+
+  @Offset('header.off_dt_strings')
+  @Until(EOF)
+  @NullTerminatedString()
+  @Relation(PrimitiveSymbol.char)
+  strings: string[]
 
   asObject (): Object {
     return asObjectDtb(this.structs)[""]

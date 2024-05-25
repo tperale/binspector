@@ -143,10 +143,20 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
     // object. It's probably one for the condition that check the inner object property.
     while (true) {
       const beforeReadOffset = cursor.offset()
-      const ret = read()
-      // TODO If we reach EOF there is no way to notify the program the condition was not met.
-      //   - One option could be to throw the value. The only case we want to compare to EOF
-      //     is `@Until(EOF)` which I could move to another decorator `@EOF` that catch that value.
+      let ret
+      try {
+        ret = read()
+      } catch (error) {
+        // In the case of chained controller the inner reader would reach EOF first
+        // and throw an EOFError but the actual value we want to send to the outer
+        // controller is the one built over the inner controller.
+        if (error instanceof EOFError) {
+          ret = EOF
+        } else {
+          throw error
+        }
+      }
+
       if (ret === EOF) {
         // If you attempt to read a primitive but reached the EOF.
         // EOF might be the only value we don't want to put inside the result array.
@@ -449,13 +459,20 @@ export function Matrix (width: number | string, height: number | string, opt?: P
 /**
  * useController.
  *
- * @param {Controller} controller `Controller` decorator metadata.
+ * @param {Controller} controllers `Controller` decorator metadata.
  * @param {T} targetInstance Current state of the object the `Controller` is defined in, that will be passed to the `Controller` function.
  * @param {ControllerReader} reader Function defining how to read the next chunk of data.
  * @returns {any}
  *
  * @category Advanced Use
  */
-export function useController (controller: Controller, targetInstance: any, cursor: Cursor, reader: ControllerReader): any {
-  return controller.controller(targetInstance, cursor, reader)
+export function useController (controllers: Controller[], targetInstance: any, cursor: Cursor, reader: ControllerReader): any {
+  const chainedControllers = controllers.reduce((x, cont) => {
+    if (x === null) {
+      return () => cont.controller(targetInstance, cursor, reader)
+    }
+    return () => cont.controller(targetInstance, cursor, x)
+  }, null)
+
+  return chainedControllers !== null ? chainedControllers() : []
 }

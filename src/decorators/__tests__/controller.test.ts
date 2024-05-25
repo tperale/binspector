@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Count, While, Until, Matrix, useController, ControllerReader } from '../controller'
+import { Count, While, Until, Matrix, useController, ControllerReader, NullTerminatedString } from '../controller'
 import { Cursor, BinaryCursor } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
 import { EOFError } from '../../error'
@@ -33,9 +33,9 @@ function testControllerGeneric (TargetClass: new () => any, field: string, curso
     preFunc(instance)
   }
 
-  const controller = Meta.getController(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
-  if (controller !== undefined) {
-    expect(useController(controller, instance, cursor, reader)).toStrictEqual(equal)
+  const controllers = Meta.getControllers(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
+  if (controllers !== undefined) {
+    expect(useController(controllers, instance, cursor, reader)).toStrictEqual(equal)
   }
 }
 
@@ -113,6 +113,18 @@ describe('@Controller: functions', () => {
       [1, 1, 1, 1],
     ])
   })
+  it('@Matrix: recreate the Matrix decorator using Controller chaining', () => {
+    class TestClass {
+      @Count(2, { primitiveCheck: false })
+      @Count(4, { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', () => 1, [
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+    ])
+  })
 })
 
 describe('@Controller: functions w/ cursor', () => {
@@ -155,16 +167,15 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
     expect(cur.offset()).toStrictEqual(3)
   })
-  it('@Until: read using "peek" to move back the cursor', () => {
+  it('@Until: read until the end of the cursor', () => {
     class TestClass {
-      @Until(EOF, { primitiveCheck: false, peek: true })
+      @Until(EOF, { primitiveCheck: false })
       field: number
     }
 
     const cur = new BinaryCursor(new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 3, 4], cur)
   })
-
   it('@Count: should not move the cursor', () => {
     class TestClass {
       @Count(0, { primitiveCheck: false })
@@ -196,6 +207,33 @@ describe('@Controller: functions w/ cursor', () => {
     ], cur)
 
     expect(cur.offset()).toStrictEqual(12)
+  })
+  it('@NullTerminatedString: read null terminated string', () => {
+    class TestClass {
+      @NullTerminatedString({ primitiveCheck: false })
+      field: string
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([
+      0x68, 0x65, 0x6C, 0x6C,
+      0x6F, 0x00, 0x77, 0x6F,
+      0x72, 0x6C, 0x64, 0x00,
+    ]).buffer)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.char), 'hello', cur)
+  })
+  it('@NullTerminatedString: create array of null terminated string', () => {
+    class TestClass {
+      @Until(EOF, { primitiveCheck: false })
+      @NullTerminatedString({ primitiveCheck: false })
+      field: string
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([
+      0x68, 0x65, 0x6C, 0x6C,
+      0x6F, 0x00, 0x77, 0x6F,
+      0x72, 0x6C, 0x64, 0x00,
+    ]).buffer)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.char), ['hello', 'world'], cur)
   })
 })
 

@@ -98,13 +98,13 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
   Meta.getFields(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject).forEach((field) => {
     usePrePost(Meta.getPre(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), instance, content)
 
-    const controller = Meta.getController(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
-      const value = controller !== undefined
-        ? useController(controller, instance, content, propertyReader)
+      const controllers = Meta.getControllers(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
+      const value = controllers.length > 0
+        ? useController(controllers, instance, content, propertyReader)
         : propertyReader()
 
       if (value === EOF) {

@@ -91,24 +91,29 @@ function setCondition (
   return setMetadata(metadata, propertyKey, ConditionSymbol, condition)
 }
 
-function getController (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller | undefined {
-  // return Reflect.getMetadata(ControllerSymbol, target as object, propertyKey as string)
-  if (typeof metadata[ControllerSymbol] === 'object') {
-    return metadata[ControllerSymbol][propertyKey]
-  }
-  return undefined
+function getControllers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller[] {
+  // if (typeof metadata[ControllerSymbol] === 'object') {
+  //   return metadata[ControllerSymbol][propertyKey]
+  // }
+  // return undefined
+  return getMetadata(
+    metadata,
+    propertyKey,
+    ControllerSymbol
+  )
 }
 
 function setController (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
   controller: Controller
-): Controller {
-  if (typeof metadata[ControllerSymbol] !== 'object') {
-    metadata[ControllerSymbol] = {}
-  }
-  metadata[ControllerSymbol][propertyKey] = controller
-  return controller
+): Controller[] {
+  // if (typeof metadata[ControllerSymbol] !== 'object') {
+  //   metadata[ControllerSymbol] = {}
+  // }
+  // metadata[ControllerSymbol][propertyKey] = controller
+  // return controller
+  return setMetadata(metadata, propertyKey, ControllerSymbol, controller)
 }
 
 function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Transformer[] {
@@ -190,7 +195,7 @@ export default {
   setPre,
   getConditions,
   setCondition,
-  getController,
+  getControllers,
   setController,
   getTransformers,
   setTransformer,
