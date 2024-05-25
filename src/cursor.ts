@@ -116,13 +116,51 @@ export class BinaryCursor extends Cursor {
     }
   }
 
+  write (primitive: PrimitiveSymbol, value: number | string): void {
+    const size = this.getPrimitiveSize(primitive)
+
+    switch (primitive) {
+      case PrimitiveSymbol.u8:
+        this.data.setUint8(this.index, value as number)
+        break
+      case PrimitiveSymbol.u16:
+        this.data.setUint16(this.index, value as number, this.endianness === BinaryCursorEndianness.LittleEndian)
+        break
+      case PrimitiveSymbol.u32:
+        this.data.setUint32(this.index, value as number, this.endianness === BinaryCursorEndianness.LittleEndian)
+        break
+      // case .u64:
+      //   return [1, this.data.getBigUint64(this.index)];
+      case PrimitiveSymbol.i8:
+        this.data.setInt8(this.index, value as number)
+        break
+      case PrimitiveSymbol.i16:
+        this.data.setInt16(this.index, value as number, this.endianness === BinaryCursorEndianness.LittleEndian)
+        break
+      case PrimitiveSymbol.i32:
+        this.data.setInt32(this.index, value as number, this.endianness === BinaryCursorEndianness.LittleEndian)
+        break
+      // case .i64:
+      //   return [1, this.data.getBigInt64(this.index)];
+      case PrimitiveSymbol.char:
+        this.data.getUint8(String(value).charCodeAt(0))
+        break
+    }
+
+    this.forward(size)
+  }
+
   length (): number {
     return this.data.byteLength
   }
 
-  constructor (array: ArrayBuffer, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+  constructor (array?: ArrayBuffer, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
     super()
-    this.data = new DataView(array)
+    if (array !== undefined) {
+      this.data = new DataView(array)
+    } else {
+      this.data = new DataView(new ArrayBuffer(32))
+    }
     this.endianness = endian
   }
 }
