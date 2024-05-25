@@ -113,7 +113,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
 /**
  * ControllerWhileFunction.
  */
-export type ControllerWhileFunction = (curr: any, count: number, targetInstance: any) => boolean
+export type ControllerWhileFunction = (curr: any, count: number, targetInstance: any, offset: number, startOffset: number) => boolean
 
 /**
  * whileFunctionFactory.
@@ -165,7 +165,7 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
         throw new EOFError(currValue)
       }
       result.push(ret)
-      if (!cond(ret, result.length, currStateObject)) {
+      if (!cond(ret, result.length, currStateObject, cursor.offset(), startOffset)) {
         if (opt.peek) {
           result.pop()
           cursor.move(beforeReadOffset)
@@ -339,19 +339,19 @@ export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorTyp
  * @category Decorators
  */
 export function NullTerminatedString (opt?: Partial<ControllerOptions>): DecoratorType {
- return controllerDecoratorFactory('nullterminatedstring', (
-      currStateObject: any,
-      cursor: Cursor,
-      read: ControllerReader,
-      opt: ControllerOptions
-    ) => {
-      const stringOpt = {
-        ...opt,
-        targetType: String
-      }
-      const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, cursor, read, stringOpt)
-      return result.slice(0, -1)
-    }, opt)
+  return controllerDecoratorFactory('nullterminatedstring', (
+    currStateObject: any,
+    cursor: Cursor,
+    read: ControllerReader,
+    opt: ControllerOptions
+  ) => {
+    const stringOpt = {
+      ...opt,
+      targetType: String
+    }
+    const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, cursor, read, stringOpt)
+    return result.slice(0, -1)
+  }, opt)
 }
 
 /**
@@ -454,6 +454,28 @@ export function Matrix (width: number | string, height: number | string, opt?: P
   }
 
   return controllerDecoratorFactory('matrix', matrixController, opt)
+}
+
+/**
+ * `@Size` decorator read until the size if met.
+ *
+ * @param {number | string} size
+ * @param {Partial} opt
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
+export function Size (size: number, opt?: Partial<ControllerOptions>): DecoratorType {
+  return controllerDecoratorFactory(
+    'size',
+    (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
+      const finalSize: number = typeof size === 'string'
+        ? recursiveGet(currStateObject, size)
+        : size
+      return whileFunctionFactory((_1, _2, _3, offset, startOffset) => (offset - startOffset) < finalSize)(currStateObject, cursor, read, opt)
+    },
+    opt
+  )
 }
 
 /**

@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Count, While, Until, Matrix, useController, ControllerReader, NullTerminatedString } from '../controller'
+import { Count, While, Until, Matrix, useController, ControllerReader, NullTerminatedString, Size } from '../controller'
 import { Cursor, BinaryCursor } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
 import { EOFError } from '../../error'
@@ -234,6 +234,17 @@ describe('@Controller: functions w/ cursor', () => {
       0x72, 0x6C, 0x64, 0x00,
     ]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.char), ['hello', 'world'], cur)
+  })
+  it('@Size: create an array of 3 byte size', () => {
+    class TestClass {
+      @Size(3, { primitiveCheck: false })
+      field: number
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([
+      0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    ]).buffer)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 3], cur)
   })
 })
 
