@@ -1,7 +1,7 @@
 /**
- * Module definition of {@link PrimitiveType} decorators.
+ * Module definition of {@link Primitive} decorators.
  *
- * {@link PrimitiveType} decorators should always be the first decorator defined over the
+ * {@link Primitive} decorators should always be the first decorator defined over the
  * property definition. These decorators are used to tell the parser the type of the
  * properties to read.
  *
@@ -66,7 +66,7 @@ export interface PrimitiveTypeProperty extends MetaDescriptor {
  * @param {metadata} metadata
  * @param {keyof T} propertyKey
  * @param {PrimitiveSymbol} primitive
- * @returns {PrimitiveType<T>}
+ * @returns {PrimitiveTypeProperty}
  *
  * @category Advanced Use
  */
@@ -103,7 +103,7 @@ const RelationTypePropertySymbol = Symbol('relation-type-property-symbol')
 /**
  * isRelation. Check if the field is a relation type field.
  *
- * @param {RelationType | PrimitiveType} field
+ * @param {PropertyType} field
  * @returns {field is RelationType}
  *
  * @category Type guard
@@ -223,8 +223,8 @@ export type PropertyType = RelationTypeProperty | PrimitiveTypeProperty | Unknow
  *
  * Verifiy the existance of a primitive in the metadata or throw an error.
  *
- * @param {metadata} metadata
- * @param {context} decorator context
+ * @param {metadata} metadata The Class metadata object.
+ * @param {context} context The decorator context object.
  * @returns {void}
  *
  * @category Advanced Use

@@ -31,11 +31,11 @@ export type ConditionFunction = (targetInstance: any) => boolean
  */
 export interface Condition extends MetaDescriptor {
   /**
-   * @type {ControllerFunction} Function to control the flow of execution of the parser/writter
+   * Function to control the flow of execution of the parser/writter.
    */
   condition: ConditionFunction
   /**
-   * @type {PrimitiveType | RelationType<K> | undefined}
+   * Relation to set if the condition pass.
    */
   relation: PrimitiveTypeProperty | RelationTypeProperty | undefined // TODO Rename this to something like FinalPrimitive
 }
@@ -169,7 +169,7 @@ export function Else (then?: Primitive, args?: (curr: any) => any[]): DecoratorT
  * to the constructor of 'Data' on creation. Notice that relation you want to pass
  * arguments requires to be defined inside of an array of two member.
  *
- * ```typescipt
+ * ```typescript
  * class Data {
  *   _length: number
  *
@@ -210,7 +210,7 @@ export function Else (then?: Primitive, args?: (curr: any) => any[]): DecoratorT
  * Or functions if you want to perform some operation on the data before passing them to the
  * constructor.
  *
- * ```typescipt
+ * ```typescript
  * class BinProtocol {
  *   @Relation(PrimitiveSymbol.u32)
  *   length: number
@@ -231,7 +231,7 @@ export function Else (then?: Primitive, args?: (curr: any) => any[]): DecoratorT
  * following example the value of the property 'length' will be passed to every relation
  * on creation.
  *
- * ```typescipt
+ * ```typescript
  * class BinProtocol {
  *   @Relation(PrimitiveSymbol.u32)
  *   length: number

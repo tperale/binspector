@@ -19,7 +19,7 @@ export const BitFieldSymbol = Symbol('bitfield')
  */
 export interface BitFieldOptions {
   /**
-   * @type {boolean} Verify there is no relation defined in the target object.
+   * Verify there is no relation defined in the target object.
    */
   primitiveCheck: boolean
 }

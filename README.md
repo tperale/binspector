@@ -70,12 +70,12 @@ class Protocol {
 
 ## Installation
 
-```txt
+```text
 > npm install binspector
 ```
 
 Generate the documentation with the following command.
 
-```txt
+```text
 > npx typedoc --options typedoc.json
 ```

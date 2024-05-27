@@ -28,19 +28,19 @@ export type ControllerReader = () => any
  */
 export interface ControllerOptions {
   /**
-   * @type {boolean} Verify a relation already exist before the definition of the controller
+   * Verify a relation already exist before the definition of the controller
    */
   primitiveCheck: boolean
   /**
-   * @type {InstantiableObject | undefined} Define the target type for the controller to apply transformation.
+   * Define the target type for the controller to apply transformation.
    */
   targetType: InstantiableObject | undefined
   /**
-   * @type {number} Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
+   * Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
    */
   alignment: number
   /**
-   * @type {boolean} Move the cursor back to its previous position when the controller condition is met.
+   * Move the cursor back to its previous position when the controller condition is met.
    */
   peek: boolean
 }
@@ -65,12 +65,12 @@ export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor,
  */
 export interface Controller extends MetaDescriptor {
   /**
-   * @type {ControllerOptions<unknown>} Options for controller decorator
+   * Options for controller decorator
    */
   options: ControllerOptions
 
   /**
-   * @type {ControllerFunction} Function to control the flow of execution of the binary reader
+   * Function to control the flow of execution of the binary reader
    */
   controller: OptionlessControllerFunction // TODO property primitive could be passed directly by checking the metadata api when applying the controller function.
 }

@@ -20,11 +20,11 @@ export const TransformerSymbol = Symbol('transformer')
  */
 export interface TransformerOptions {
   /**
-   * @type {boolean}
+   * Verify a relation already exist before the definition of the controller
    */
   primitiveCheck: boolean
   /**
-   * @type {boolean}
+   * If the value to apply the transformer to is an array the transformer will be applied to every member.
    */
   each: boolean
 }
@@ -47,7 +47,7 @@ export type TransformerFunction = (value: any, targetInstance: any) => any
 export interface Transformer extends MetaDescriptor {
   options: TransformerOptions
   /**
-   * @type {TransformerFunction<T>} The transformer function taking the value in input and return the transformed value.
+   * The transformer function taking the value in input and return the transformed value.
    */
   transformer: TransformerFunction
 }

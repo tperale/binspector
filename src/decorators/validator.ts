@@ -1,6 +1,5 @@
 /**
- *   ReadOnly
- * Validator decorators definition
+ * Module definition of {@link Validator} decorators.
  *
  * @module Validator
  */
@@ -24,13 +23,15 @@ interface ValidatorErrorArguments extends MetaDescriptor {
 
 export interface ValidatorOptions {
   /**
-   * @type {boolean} Specifies if validated value is an array and each of its item must be validated.
+   * Specifies if validated value is an array and each of its item must be validated.
    */
   each: boolean
+  /**
+   * Verify a relation already exist before the definition of the controller
+   */
   primitiveCheck: boolean
   /**
-   * @type {string} Validation error message to be shown if validator function
-   * return false.
+   * Validation error message to be shown if validator function return false.
    */
   message: string // TODO | ((args: ValidatorErrorArguments) => string);
 }
@@ -55,7 +56,7 @@ export interface Validator extends MetaDescriptor {
   options: ValidatorOptions
 
   /**
-   * @type {ValidatorFunction}
+   *
    */
   validator: ValidatorFunction
 }

@@ -12,7 +12,7 @@
 import { type MetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type DecoratorType, type Context } from '../types'
-import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor'
+import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
 
 export const PreFunctionSymbol = Symbol('pre-function')
@@ -25,7 +25,7 @@ export type PrePostFunction = (instance: any, cursor: Cursor) => any
  */
 export interface PrePostOptions {
   /**
-   * @type {boolean} Verify a relation already exist before the definition of the PrePost function
+   * Verify a relation already exist before the definition of the PrePost function
    */
   primitiveCheck: boolean
 }
@@ -41,12 +41,12 @@ export const PrePostOptionsDefault = {
  */
 export interface PrePost extends MetaDescriptor {
   /**
-   * @type {PrePostOptions} Options for prepost decorator
+   * Options for prepost decorator
    */
   options: PrePostOptions
 
   /**
-   * @type {PrePostFunction} Function that will be executed before or after the Controller, Validator and Transformer decorator.
+   * Function that will be executed before or after the Controller, Validator and Transformer decorator.
    */
   func: PrePostFunction
 }
