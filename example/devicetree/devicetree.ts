@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, Size, EOF } from '../../src'
+import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
