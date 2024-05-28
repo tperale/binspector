@@ -86,11 +86,11 @@ class DTBStructBlock {
   fdttype: DTBStructureBlockToken
 
   @Choice('fdttype', {
-    1: FDTBeginNode,
-    2: undefined,
-    3: [FDTProp, '_string_off'],
-    4: undefined,
-    9: undefined
+    [DTBStructureBlockToken.FDT_BEGIN_NODE]: FDTBeginNode,
+    [DTBStructureBlockToken.FDT_END_NODE]: undefined,
+    [DTBStructureBlockToken.FDT_PROP]: [FDTProp, '_string_off'],
+    [DTBStructureBlockToken.FDT_NOP]: undefined,
+    [DTBStructureBlockToken.FDT_END]: undefined
   })
   body: FDTBeginNode | FDTProp | undefined
 
