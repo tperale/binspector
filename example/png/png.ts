@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, IfThen } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice } from '../../src'
 
 enum PNGTypes {
   IHDR = 'IHDR',
@@ -128,13 +128,15 @@ class PNGChunk {
   @Relation(PrimitiveSymbol.char)
   type: PNGTypes
 
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IHDR, PNGChunkIHDR)
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.PLTE, PNGChunkPLTE, (curr: PNGChunk) => [curr.length])
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.bKGD, PNGChunkbKGD)
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.pHYs, PNGChunkpHYs)
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.tIME, PNGChunktIME)
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IDAT, PNGChunkIDAT, (curr: PNGChunk) => [curr.length])
-  @IfThen((curr: PNGChunk) => curr.type === PNGTypes.IEND)
+  @Choice('type', {
+    [PNGTypes.IHDR]: PNGChunkIHDR,
+    [PNGTypes.PLTE]: [PNGChunkPLTE, 'length'],
+    [PNGTypes.bKGD]: PNGChunkbKGD,
+    [PNGTypes.pHYs]: PNGChunkpHYs,
+    [PNGTypes.tIME]: PNGChunktIME,
+    [PNGTypes.IDAT]: [PNGChunkIDAT, 'length'],
+    [PNGTypes.IEND]: undefined,
+  })
   data: PNGChunkIDAT | PNGChunkPLTE | PNGChunkbKGD | PNGChunkpHYs | PNGChunktIME | PNGChunkIHDR
 
   // @Crc(u32)
