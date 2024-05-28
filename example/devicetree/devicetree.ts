@@ -176,7 +176,7 @@ export class DTB {
 
   @Offset('header.off_dt_struct')
   @While((struct) => struct.fdttype !== DTBStructureBlockToken.FDT_END)
-  @Relation(DTBStructBlock, (cur) => [cur.header.off_dt_strings])
+  @Relation(DTBStructBlock, 'header.off_dt_strings')
   structs: DTBStructBlock[]
 
   @Offset('header.off_dt_strings')
