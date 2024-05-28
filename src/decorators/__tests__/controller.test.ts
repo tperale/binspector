@@ -76,6 +76,47 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1])
   })
+  it('@Count: recursiveGet should support simple arithmetic', () => {
+    class TestClass {
+      child = { offsetStart: 2, offsetEnd: 5 }
+
+      @Count('child.offsetEnd - child.offsetStart', { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', () => 1, [1, 1, 1])
+  })
+   it('@Count: recursiveGet should support simple arithmetic with number', () => {
+    class TestClass {
+      child = { count: 2 }
+
+      @Count('child.count + 1', { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', () => 1, [1, 1, 1])
+  })
+  it('@Count: recursiveGet should support simple arithmetic with number', () => {
+    class TestClass {
+      child = { count: 2 }
+
+      @Count('2 - 1', { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', () => 1, [1])
+  })
+ it('@Count: recursiveGet should support simple arithmetic', () => {
+    class TestClass {
+      child = { offsetStart: 2, offsetEnd: 5 }
+
+      @Count('child.offsetEnd - child.offsetStart', { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', () => 1, [1, 1, 1])
+  })
+
   it('@While: read 3 time', () => {
     class TestClass {
       @While((_: any, i: number) => i < 3, { primitiveCheck: false })
@@ -266,5 +307,29 @@ describe('@Controller: errors', () => {
       const cur = new BinaryCursor(new Uint8Array([]).buffer)
       testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], cur)
     }).toThrow(EOFError)
+  })
+  it('@Count: recursiveGet should throw an error for non existing property', () => {
+    expect(() => {
+      class TestClass {
+        child = { count: 2 }
+
+        @Count('child.x', { primitiveCheck: false })
+        field: number
+      }
+
+      testController(TestClass, 'field', () => 1, [1, 1])
+    }).toThrow(ReferenceError)
+  })
+  it('@Count: recursiveGet should throw an error when referencing a string in an arithmetic expression', () => {
+    expect(() => {
+      class TestClass {
+        child = { count: 'hello' }
+
+        @Count('child.count - 2', { primitiveCheck: false })
+        field: number
+      }
+
+      testController(TestClass, 'field', () => 1, [1])
+    }).toThrow(ReferenceError)
   })
 })

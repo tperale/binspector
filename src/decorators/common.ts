@@ -47,12 +47,26 @@ export function recursiveGet (obj: any, expr: string): any {
     return acc[key]
   }, obj)
 
-  const elem = expr.split (' ').map(x => _isOperation(x)
-    ? null // TODO Support operation
-    : _get(x)
-  )
+  const elem = expr.split(' ')
 
-  return elem[0]
+  if (elem.length === 1) {
+    return _get(elem[0])
+  } else {
+    return eval(elem.map(x => {
+      if (_isOperation(x)) {
+        return x
+      } else if (Number.isFinite(+x)) {
+        return x
+      } else {
+        const prop = _get(x)
+        if (typeof prop === 'number') {
+          return prop
+        } else {
+          throw new ReferenceError('Only number are supported in arithmetic expression')
+        }
+      }
+    }).join(' '))
+  }
 }
 
 export function commaSeparetedRecursiveGet (obj: any, args: string): any[] {

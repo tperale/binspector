@@ -68,7 +68,7 @@ class FDTProp {
   @Relation(PrimitiveSymbol.u8)
   name: number[]
 
-  @Peek((curr) => curr._string_off + curr.nameoff)
+  @Peek('_string_off + nameoff')
   @NullTerminatedString()
   @Relation(PrimitiveSymbol.char)
   property: string
