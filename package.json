@@ -13,8 +13,7 @@
     "build": "npm run clean && webpack --mode=production",
     "test": "jest",
     "lint": "eslint --ignore-path .eslintignore --ext .js,.ts .",
-    "jsdoc": "jsdoc -a all -c jsdoc.json -r -R README.md index.js -d docs/jsdoc",
-    "jsdoc2md": "jsdoc2md --files index.js > docs/API.md"
+    "doc": "typedoc --options typedoc.json"
   },
   "author": "thomperale",
   "license": "MIT",
@@ -33,7 +32,6 @@
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-tsdoc": "^0.2.17",
     "jest": "^29.7.0",
-    "jsdoc": "^4.0.2",
     "ts-loader": "^9.5.1",
     "typedoc": "^0.25.13",
     "typescript": "^5.2.2",
