@@ -6,6 +6,8 @@
     "./src/decorators/validator.ts",
     "./src/decorators/transformer.ts",
     "./src/decorators/condition.ts",
+    "./src/decorators/prepost.ts",
+    "./src/decorators/bitfield.ts",
     "./src/decorators/primitive.ts"
   ],
   "out": "docs",
