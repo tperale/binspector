@@ -4,8 +4,18 @@ import { Relation } from '../primitive'
 import Meta from '../../metadatas'
 import { BinaryCursor } from '../../cursor'
 
-describe('Testing the usage of the bitfield decorator', () => {
-  it('should return a bitfield populated', () => {
+function testBitfield (TargetClass: new () => any, content: number[], match: any) {
+  const instance = new TargetClass()
+
+  const bitfields = Meta.getBitFields(TargetClass[Symbol.metadata] as DecoratorMetadataObject)
+
+  const cur = new BinaryCursor(new Uint8Array(content).buffer)
+
+  expect(useBitField(bitfields, instance, cur)).toMatchObject(match)
+}
+
+describe('@Bitfield: basic functions', () => {
+  it('@Bitfield: should parse an uint8', () => {
     class TestBitField {
       // The 1st and 2nd bits are set in this field
       @Bitfield(2)
@@ -16,16 +26,29 @@ describe('Testing the usage of the bitfield decorator', () => {
       field2: number
     }
 
-    const instance = new TestBitField()
-
-    const bitfields = Meta.getBitFields(TestBitField[Symbol.metadata] as DecoratorMetadataObject)
-
-    const buf = new Uint8Array([0b00100101]).buffer
-    const cur = new BinaryCursor(buf)
-
-    expect(useBitField(bitfields, instance, cur)).toMatchObject({ field1: 1, field2: 9 })
+    testBitfield(TestBitField, [0b00100101], { field1: 1, field2: 9 })
   })
-  it('', () => {
+  it('@Bitfield: should parse an uncomplete uint16', () => {
+    class TestBitField {
+      @Bitfield(4)
+      zero1: number
+
+      @Bitfield(3)
+      flag1: number
+
+      @Bitfield(3)
+      flag2: number
+
+      @Bitfield(4)
+      flag3: number
+    }
+
+    testBitfield(TestBitField, [0b00100101, 0b01010000], { flag1: 0b101, zero1: 0, flag2: 0b010, flag3: 0b1001, })
+  })
+})
+
+describe('@Bitfield: errors', () => {
+  it('@Bitfield: can\'t be defined in the same class as a @Relation', () => {
     expect(() => {
       class TestBitField {
         @Relation(Number)
