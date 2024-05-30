@@ -1,9 +1,53 @@
 /**
  * Module definition of {@link BitField} decorators.
  *
- * {@link BitField} type decorators define bitfields type object.
- * Use this type of decorator when you need to define a data structure
- * made from group of bit within a byte.
+ * {@link BitField} type decorators define bitfields data-structure.
+ * This type of decorator is used to define an object
+ * that has fixed-bit fields with a granularity smaller than a byte.
+ *
+ * In a bitfield class definition the topmost `@Bitfield` decorated
+ * property match the least significant bit being read.
+ *
+ * @example
+ *
+ * ```typescript
+ * class StatusRegister {
+ *   @Bitfield(1)
+ *   carry_flag: number
+ *
+ *   @Bitfield(1)
+ *   zero_flag: number
+ *
+ *   @Bitfield(1)
+ *   interrupt_disable_flag: number
+ *
+ *   @Bitfield(1)
+ *   decimal_flag: number
+ *
+ *   @Bitfield(1)
+ *   break_flag: number
+ *
+ *   @Bitfield(1)
+ *   _: number
+ *
+ *   @Bitfield(1)
+ *   overflow_flag: number
+ * }
+ *
+ * class Header {
+ *   @Relation(StatusRegister)
+ *   bitfield: StatusRegister
+ * }
+ * ```
+ *
+ * @remark
+ *
+ * {@link BitField} type decorator can't be used inside class
+ * definition that also contains {@link Relation} definition.
+ * To create a {@link BitField} object create an independant
+ * class solely made for this definition.
+ *
+ * @see {@link Bitfield}
  *
  * @module Bitfield
  */
@@ -50,6 +94,7 @@ export function bitFieldDecoratorFactory (name: string, len: number, opt: Partia
     if (options.primitiveCheck) {
       if (Meta.getFields(context.metadata).length > 0) {
         // TODO Create new Error
+        // TODO This will not fail if the Relation is at the end of the class.
         throw new Error('Can\'t define bitfield inside an instance with relations')
       }
     }
@@ -95,6 +140,10 @@ export function bitFieldDecoratorFactory (name: string, len: number, opt: Partia
  * This decorator must be only used inside class definition that only includes
  * bitfield decorators.
  *
+ * @remark
+ *
+ * The sum of all the the `@Bitfield` decorator of a class can be not aligned to 8 bit.
+ *
  * @param {number} len The bitlength of the property it decorate.
  * @returns {DecoratorType}
  *
@@ -104,7 +153,10 @@ export function Bitfield (len: number): DecoratorType {
   return bitFieldDecoratorFactory('bitfield', len)
 }
 
-export function useBitField (bitfields: Array<BitField>, targetInstance: any, cursor: Cursor): any {
+/**
+ * @category Advanced Use
+ */
+export function useBitField (bitfields: BitField[], targetInstance: any, cursor: Cursor): any {
   const getPrimitive = (length: number): PrimitiveSymbol => {
     const remainToAlign = (8 - (length % 8)) % 8
     switch ((length + remainToAlign) / 8) {
