@@ -122,8 +122,11 @@ function isString (bytes: number[]) {
   const array = bytesToArray(bytes)
 
   return array.every(byteStr => byteStr.every((x) => 
-    (x >= 0x2c && x <= 0x3B)
-    || (x >= 0x40 && x <= 0x7a)
+    (x >= 0x30 && x <= 0x39) // 0-9
+    || (x >= 0x41 && x <= 0x5A) // A-Z
+    || (x >= 0x61 && x <= 0x7A) // a-z
+    || (x >= 0x2B && x <= 0x2E) // + , - .
+    || (x == 0x5F) // _
   ))
 }
 
