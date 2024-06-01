@@ -1,20 +1,5 @@
 import { EOF, PrimitiveSymbol } from './types'
 
-interface CursorHistoryPrimitive {
-  index: number
-  primtive: PrimitiveSymbol
-  value: any
-}
-
-interface CursorHistoryRelation {
-  index: number
-  name: string
-}
-
-interface CursorHistoryOperation {
-  name: string
-}
-
 /**
  * Cursor
  */
