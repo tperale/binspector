@@ -6,7 +6,7 @@ import { EOF, PrimitiveSymbol } from './types'
 export abstract class Cursor {
   abstract offset (): number
   abstract move (address: number): number
-  abstract read (primitive: PrimitiveSymbol): string | number | typeof EOF
+  abstract read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF
 
   forward (x: number): number {
     return this.move(this.offset() + x)
@@ -41,7 +41,7 @@ export class BinaryCursor extends Cursor {
     this.endianness = endian
   }
 
-  getPrimitiveSize (primType: PrimitiveSymbol): number {
+  _getPrimitiveSize (primType: PrimitiveSymbol): number {
     switch (primType) {
       case PrimitiveSymbol.char:
       case PrimitiveSymbol.u8:
@@ -53,48 +53,43 @@ export class BinaryCursor extends Cursor {
       case PrimitiveSymbol.u32:
       case PrimitiveSymbol.i32:
         return 4
-      // case .u64:
-      // case .i64:
-      //   return 8
+      case PrimitiveSymbol.u64:
+      case PrimitiveSymbol.i64:
+        return 8
       default:
         return 0
     }
   }
 
-  getPrimitive (primType: PrimitiveSymbol): [number, string | number] {
-    const size = this.getPrimitiveSize(primType)
-    if (size === 0) {
-      return [0, 0]
-    }
-
+  _readPrimitive (primType: PrimitiveSymbol): string | number | bigint {
     switch (primType) {
       case PrimitiveSymbol.u8:
-        return [size, this.data.getUint8(this.index)]
+        return this.data.getUint8(this.index)
       case PrimitiveSymbol.u16:
-        return [size, this.data.getUint16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
+        return this.data.getUint16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
       case PrimitiveSymbol.u32:
-        return [size, this.data.getUint32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
-      // case .u64:
-      //   return [1, this.data.getBigUint64(this.index)];
+        return this.data.getUint32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+      case PrimitiveSymbol.u64:
+        return this.data.getBigUint64(this.index)
       case PrimitiveSymbol.i8:
-        return [size, this.data.getInt8(this.index)]
+        return this.data.getInt8(this.index)
       case PrimitiveSymbol.i16:
-        return [size, this.data.getInt16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
+        return this.data.getInt16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
       case PrimitiveSymbol.i32:
-        return [size, this.data.getInt32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)]
-      // case .i64:
-      //   return [1, this.data.getBigInt64(this.index)];
+        return this.data.getInt32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+      case PrimitiveSymbol.i64:
+        return this.data.getBigInt64(this.index)
       case PrimitiveSymbol.char:
-        return [size, String.fromCharCode(this.data.getUint8(this.index))]
+        return String.fromCharCode(this.data.getUint8(this.index))
+      default:
+        return 0
     }
-    return [0, 0]
   }
 
-  read (primitive: PrimitiveSymbol): string | number | typeof EOF {
-    // TODO Throw an error when out of bound ?
+  read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF {
     try {
-      const [len, value] = this.getPrimitive(primitive)
-      this.forward(len)
+      const value = this._readPrimitive(primitive)
+      this.forward(this._getPrimitiveSize(primitive))
       return value
     } catch {
       return EOF
