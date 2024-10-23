@@ -465,7 +465,7 @@ export function Matrix (width: number | string, height: number | string, opt?: P
  *
  * @category Decorators
  */
-export function Size (size: number, opt?: Partial<ControllerOptions>): DecoratorType {
+export function Size (size: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
   return controllerDecoratorFactory(
     'size',
     (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {

@@ -287,6 +287,21 @@ describe('@Controller: functions w/ cursor', () => {
     ]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 3], cur)
   })
+
+  it('@Size: create an array of 2 byte size based on another field value', () => {
+    class TestClass {
+      count = 2
+
+      @Size('count', { primitiveCheck: false })
+      field: number
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([
+      0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    ]).buffer)
+    cur.move(2)
+    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [3, 4], cur)
+  })
 })
 
 describe('@Controller: errors', () => {
