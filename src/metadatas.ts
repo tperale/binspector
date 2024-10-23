@@ -170,6 +170,9 @@ function getBitField (metadata: DecoratorMetadataObject, propertyKey: string | s
 }
 
 function getBitFields (metadata: DecoratorMetadataObject): BitField[] {
+  if (metadata[BitFieldSymbol] === undefined) {
+    metadata[BitFieldSymbol] = []
+  }
   const bitfields = metadata[BitFieldSymbol]
   return Array.isArray(bitfields) ? bitfields : []
 }
@@ -179,7 +182,6 @@ function setBitField (
   bitfield: BitField
 ): BitField[] {
   const bitfields = [...getBitFields(metadata), bitfield]
-  // Reflect.defineMetadata(BitFieldSymbol, bitfields, target as object)
   metadata[BitFieldSymbol] = bitfields
   return bitfields
 }
