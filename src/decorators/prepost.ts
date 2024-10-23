@@ -154,18 +154,21 @@ export function Offset (offset: number | string | PrePostFunction, opt?: Partial
  *
  * @category Decorators
  */
-export function Peek (offset: number | string | PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
+export function Peek (offset?: number | string | PrePostFunction, opt?: Partial<PrePostOptions>): DecoratorType {
   return (_: any, context: Context) => {
     preFunctionDecoratorFactory('pre-peek', (targetInstance, cursor) => {
       const preOff = cursor.offset()
       postFunctionDecoratorFactory('post-peek', (_, cursor) => {
         cursor.move(preOff)
       }, opt)(_, context)
-      const offCompute = typeof offset === 'string'
-        ? recursiveGet(targetInstance, offset)
+      const offCompute =
+        (offset === null || offset === undefined)
+          ? preOff
         : typeof offset === 'number'
           ? offset
-          : offset(targetInstance, cursor) as number
+        : typeof offset === 'string'
+          ? Number(recursiveGet(targetInstance, offset))
+          : Number(offset(targetInstance, cursor))
       cursor.move(offCompute)
     }, opt)(_, context)
   }

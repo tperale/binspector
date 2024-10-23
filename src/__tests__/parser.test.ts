@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian } from '../decorators'
+import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek } from '../decorators'
 import { EOF, PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
 import { BinaryCursor, BinaryCursorEndianness } from '../cursor'
@@ -448,6 +448,37 @@ describe('Reading binary definition with PrePost decorators', () => {
       value_3: 0x0506
     })
   })
+
+  it('should peek the cursor to the mentionned address', () => {
+    class Protocol {
+      @Peek(2)
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+    }
+
+    const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
+    const curr = new BinaryCursor(header)
+    expect(binread(curr, Protocol)).toMatchObject({
+      value: 0x03
+    })
+    expect(curr.offset()).toStrictEqual(0)
+  })
+
+  it('should peek the cursor to the next address', () => {
+    class Protocol {
+      @Peek()
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+    }
+
+    const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
+    const curr = new BinaryCursor(header)
+    expect(binread(curr, Protocol)).toMatchObject({
+      value: 0x01
+    })
+    expect(curr.offset()).toStrictEqual(0)
+  })
+
 })
 
 describe('Reading self refering binary definition', () => {
