@@ -300,7 +300,7 @@ export function Choice (cmp: string | ((targetInstance: any) => any), match: Rec
  * @category Advanced Use
  */
 export function useConditions (conditions: Condition[], targetInstance: any): PrimitiveTypeProperty | RelationTypeProperty | undefined {
-  const cond = conditions.reverse().find(cond => cond.condition(targetInstance))
+  const cond = conditions.find(cond => cond.condition(targetInstance))
   if (cond === undefined) {
     // TODO Improve the error handling
     // - cursor backtrace to show the position in the file

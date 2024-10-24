@@ -26,10 +26,11 @@ function setMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
   metadataKey: symbol,
-  newValue: any
+  newValue: any,
+  reverse = false
 ): T[] {
   const metas = getMetadata(metadata, propertyKey, metadataKey)
-  const newMetas = [...metas, newValue]
+  const newMetas = reverse ? [newValue, ...metas] : [...metas, newValue]
   metadata[metadataKey][propertyKey] = newMetas
   return newMetas
 }
@@ -88,7 +89,7 @@ function setCondition (
   propertyKey: string | symbol,
   condition: Condition
 ): Condition[] {
-  return setMetadata(metadata, propertyKey, ConditionSymbol, condition)
+  return setMetadata(metadata, propertyKey, ConditionSymbol, condition, true)
 }
 
 function getControllers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller[] {

@@ -36,6 +36,18 @@ describe('@Condition: basic testing', () => {
 
     testCondition (TestClass, String)
   })
+  it('@IfThen: return a "Number" relation everytime the condition are checked', () => {
+    class TestClass {
+      @IfThen((_) => true, Number)
+      @Else(String)
+      field: number
+    }
+
+    testCondition (TestClass, Number)
+    // A bug used to be present that would mix the order of the conditions
+    // everytime they were called
+    testCondition (TestClass, Number)
+  })
   it('@Choice: return a "Number" relation by matching "testField" value', () => {
     class TestClass {
       testField: number = 1
