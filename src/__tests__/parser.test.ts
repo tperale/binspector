@@ -491,3 +491,20 @@ describe('Reading self refering binary definition', () => {
     }).toThrow()
   })
 })
+
+describe('Reading a relation to an empty definition', () => {
+  it('should throw an error', () => {
+    expect(() => {
+      class Header {
+      }
+
+      class Protocol {
+        @Relation(Header)
+        header: Header
+      }
+
+      const curr = new BinaryCursor(new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer)
+      binread(curr, Protocol)
+    }).toThrow()
+  })
+})

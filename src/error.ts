@@ -20,6 +20,12 @@ export class SelfReferringFieldError extends Error {
   }
 }
 
+export class ReferringToEmptyClassError extends Error {
+  constructor (classname: string) {
+    super(`The relation '@Relation(${classname})' can't reference the empty '${classname}' class not containing any '@Relation' or '@Bitfield'.`)
+  }
+}
+
 export class NoConditionMatched extends Error {
   constructor () {
     // TODO Pass the field name and the condition ?
