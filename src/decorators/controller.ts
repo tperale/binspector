@@ -21,7 +21,7 @@ export const ControllerSymbol = Symbol('controller')
 /**
  * ControllerReader
  */
-export type ControllerReader = () => any
+export type ControllerReader = (arg: any) => any
 
 /**
  * ControllerOptions.
@@ -177,6 +177,39 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
     if (opt.alignment > 0) {
       cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
     }
+    return opt.targetType === String ? result.join('') : result
+  }
+}
+
+/**
+ * mapFunctionFactory.
+ *
+ * @param {} array
+ * @returns {any}
+ *
+ * @category Advanced Use
+ */
+function mapFunctionFactory (array: any[]): ControllerFunction {
+  return function (
+    _: any,
+    cursor: Cursor,
+    read: ControllerReader,
+    opt: ControllerOptions
+  ): any {
+    const startOffset = cursor.offset()
+
+    const result = array.map(read)
+
+    const endOffset = cursor.offset()
+
+    if (opt.alignment > 0) {
+      cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
+    }
+
+    if (opt.peek) {
+      cursor.move(startOffset)
+    }
+
     return opt.targetType === String ? result.join('') : result
   }
 }
@@ -473,6 +506,57 @@ export function Size (size: number | string, opt?: Partial<ControllerOptions>): 
         ? recursiveGet(currStateObject, size)
         : size
       return whileFunctionFactory((_1, _2, _3, offset, startOffset) => (offset - startOffset) < finalSize)(currStateObject, cursor, read, opt)
+    },
+    opt
+  )
+}
+
+/**
+ * `@MapTo` decorator map each array value to a child relation constructor.
+ *
+ * @example
+ *
+ * ```typescript
+ * class SubClass {
+ *   _size: number
+ *
+ *   @Count('_size')
+ *   @Relation(PrimitiveSymbol.u8)
+ *   data: number[]
+ *
+ *   constructor(size: number) {
+ *     this._size = size
+ *   }
+ * }
+ *
+ * class TestClass {
+ *   @MapTo([1, 2])
+ *   @Relation(SubClass)
+ *   field: number
+ * }
+ * ```
+ *
+ * @param {number | string} arr
+ * @param {Partial} opt
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
+export function MapTo (arr: any, opt?: Partial<ControllerOptions>): DecoratorType {
+  return controllerDecoratorFactory(
+    'map',
+    (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
+      const finalArray: number =
+        typeof arr === 'string'
+          ? recursiveGet(currStateObject, arr)
+        : typeof arr === 'function'
+          ? arr(currStateObject)
+        : arr
+
+      if (!Array.isArray(finalArray)) {
+        throw new Error('Wrong map type')
+      }
+      return mapFunctionFactory(finalArray)(currStateObject, cursor, read, opt)
     },
     opt
   )
