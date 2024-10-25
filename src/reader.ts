@@ -6,7 +6,7 @@
  * @module reader
  */
 import { type Cursor } from './cursor'
-import { SelfReferringFieldError, EOFError, UnknownPropertyType } from './error'
+import { SelfReferringFieldError, EOFError, UnknownPropertyType, ReferringToEmptyClassError } from './error'
 import Meta from './metadatas'
 import {
   isRelation,
@@ -90,19 +90,25 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
 
   const instance = new ObjectDefinition(...args)
 
-  const bitfields = Meta.getBitFields(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject)
+  const metadata = ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject
+
+  if (metadata === undefined) {
+    throw new ReferringToEmptyClassError(instance.constructor.name)
+  }
+
+  const bitfields = Meta.getBitFields(metadata)
   if (bitfields.length > 0) {
     return useBitField(bitfields, instance, content)
   }
 
-  Meta.getFields(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject).forEach((field) => {
-    usePrePost(Meta.getPre(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), instance, content)
+  Meta.getFields(metadata).forEach((field) => {
+    usePrePost(Meta.getPre(metadata, field.propertyName), instance, content)
 
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
       const propertyReader = getBinReader(finalRelationField, instance)
-      const controllers = Meta.getControllers(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
+      const controllers = Meta.getControllers(metadata, field.propertyName)
       const value = controllers.length > 0
         ? useController(controllers, instance, content, propertyReader)
         : propertyReader()
@@ -114,17 +120,17 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
         throw new EOFError()
       }
 
-      const transformers = Meta.getTransformers(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName)
+      const transformers = Meta.getTransformers(metadata, field.propertyName)
       const transformedValue = useTransformer(transformers, value, instance)
         transformers.reduce((res, transformer) => {
         return transformer.transformer(res, instance)
       }, value)
 
-      useValidators(Meta.getValidators(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), transformedValue, instance, content)
+      useValidators(Meta.getValidators(metadata, field.propertyName), transformedValue, instance, content)
 
       instance[field.propertyName] = transformedValue
 
-      usePrePost(Meta.getPost(ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject, field.propertyName), instance, content)
+      usePrePost(Meta.getPost(metadata, field.propertyName), instance, content)
     }
   })
 
