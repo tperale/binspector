@@ -26,13 +26,10 @@ describe('@Bitfield: basic functions', () => {
       field2: number
     }
 
-    testBitfield(TestBitField, [0b00100101], { field1: 1, field2: 9 })
+    testBitfield(TestBitField, [0b00001001], { field1: 0, field2: 9 })
   })
   it('@Bitfield: should parse an uncomplete uint16', () => {
     class TestBitField {
-      @Bitfield(4)
-      zero1: number
-
       @Bitfield(3)
       flag1: number
 
@@ -41,9 +38,12 @@ describe('@Bitfield: basic functions', () => {
 
       @Bitfield(4)
       flag3: number
+
+      @Bitfield(4)
+      flag4: number
     }
 
-    testBitfield(TestBitField, [0b00100101, 0b01010000], { flag1: 0b101, zero1: 0, flag2: 0b010, flag3: 0b1001, })
+    testBitfield(TestBitField, [0b00100101, 0b01010000], { flag1: 0b001, flag2: 0b001, flag3: 0b0101, flag4: 0b0100 })
   })
 })
 

@@ -409,8 +409,8 @@ describe('Reading binary with bitfields', () => {
     const header = new Uint8Array([0x11]).buffer
     expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       bf: {
-        field1: 1,
-        field2: 0,
+        field1: 0,
+        field2: 1,
         field3: 1
       }
     })
@@ -437,9 +437,9 @@ describe('Reading binary with bitfields', () => {
     const header = new Uint8Array([0x30, 0x01, 0x05]).buffer
     expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       bf: {
-        field1: 1,
-        field2: 0,
-        field3: 3
+        field1: 0,
+        field2: 0b1100000000,
+        field3: 0
       },
       field: 5
     })

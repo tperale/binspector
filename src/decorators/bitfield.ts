@@ -176,9 +176,11 @@ export function useBitField (bitfields: BitField[], targetInstance: any, cursor:
   const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
   const value = cursor.read(getPrimitive(totalBitLength)) as number
   bitfields.reduce((offset: number, bf: BitField) => {
-    targetInstance[bf.propertyName] = (value >> offset) & ((0x1 << bf.bitlength) - 1)
-    return offset + bf.bitlength
-  }, 0)
+    const OFFSET = offset - bf.bitlength
+    const MASK = ((1 << bf.bitlength) - 1)
+    targetInstance[bf.propertyName] = (value >> OFFSET) & MASK
+    return OFFSET
+  }, (Math.ceil(totalBitLength / 8) * 8))
 
   return targetInstance
 }
