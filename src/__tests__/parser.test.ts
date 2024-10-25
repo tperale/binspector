@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek } from '../decorators'
 import { EOF, PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
 import { BinaryCursor, BinaryCursorEndianness } from '../cursor'
@@ -171,6 +171,38 @@ describe('Reading binary with controller', () => {
     expect(binread(new BinaryCursor(header), Header)).toMatchObject({
       something: 0x03,
       array: [0x01, 0x02, 0x03]
+    })
+  })
+  it('should work with "map" controllers', () => {
+    class SubClass {
+      _size: number
+
+      @Count('_size')
+      @Relation(PrimitiveSymbol.u8)
+      data: number[]
+
+      constructor(size: number) {
+        this._size = size
+      }
+    }
+
+    class TestClass {
+      @MapTo([1, 2])
+      @Relation(SubClass)
+      field: number
+    }
+
+    const cur = new BinaryCursor(new Uint8Array([
+      0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7,
+    ]).buffer)
+    expect(binread(cur, TestClass)).toMatchObject({
+      "field": [{
+        "_size": 1,
+        "data": [1]
+      }, {
+        "_size": 2,
+        "data": [2, 3]
+      }]
     })
   })
 })

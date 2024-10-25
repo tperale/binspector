@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Count, While, Until, Matrix, useController, ControllerReader, NullTerminatedString, Size } from '../controller'
+import { Count, While, Until, MapTo, Matrix, useController, ControllerReader, NullTerminatedString, Size } from '../controller'
 import { Cursor, BinaryCursor } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
 import { EOFError } from '../../error'
@@ -165,6 +165,14 @@ describe('@Controller: functions', () => {
       [1, 1, 1, 1],
       [1, 1, 1, 1],
     ])
+  })
+  it('@MapTo: pass the array to the reader function', () => {
+    class TestClass {
+      @MapTo([1, 2, 3, 4], { primitiveCheck: false })
+      field: number
+    }
+
+    testController(TestClass, 'field', x => x, [1, 2, 3, 4])
   })
 })
 

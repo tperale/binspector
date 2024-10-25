@@ -57,12 +57,12 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
         throw new SelfReferringFieldError()
       }
       // TODO No need to do the check inside the function.
-      const readerFunc = () => {
+      const readerFunc = (readerArgs?: any[]) => {
         try {
           if (field.args !== undefined) {
             return binread(content, field.relation, ...field.args(instance))
           } else {
-            return binread(content, field.relation)
+            return binread(content, field.relation, readerArgs)
           }
         } catch (error) {
           // We need to catch the EOF error because the binread function
