@@ -26,6 +26,12 @@ export class ReferringToEmptyClassError extends Error {
   }
 }
 
+export class WrongArgumentReturnType extends Error {
+  constructor (classname: string, property: string) {
+    super(`The argument retrieval function invoked in the decorator of '${classname}:${property}' must return an array of argument to pass to the child relation.`)
+  }
+}
+
 export class NoConditionMatched extends Error {
   constructor () {
     // TODO Pass the field name and the condition ?

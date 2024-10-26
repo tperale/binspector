@@ -168,7 +168,10 @@ export interface RelationTypeProperty extends MetaDescriptor {
  * @category Advanced Use
  */
 export function createRelationTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string | symbol, relation: InstantiableObject, args?: RelationParameters): RelationTypeProperty {
-  const argsFunc = typeof args === 'string' ? (targetInstance: any) => commaSeparetedRecursiveGet(targetInstance, args) : args as ((targetInstance: any) => any[]) | undefined
+  const argsFunc = typeof args === 'string'
+    ? (targetInstance: any) => commaSeparetedRecursiveGet(targetInstance, args)
+    : args as ((targetInstance: any) => any[]) | undefined
+
   return {
     ...createMetaDescriptor(RelationTypePropertySymbol, 'relation', metadata, propertyKey),
     relation,

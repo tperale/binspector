@@ -6,7 +6,7 @@
  * @module reader
  */
 import { type Cursor } from './cursor'
-import { SelfReferringFieldError, EOFError, UnknownPropertyType, ReferringToEmptyClassError } from './error'
+import { SelfReferringFieldError, EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error'
 import Meta from './metadatas'
 import {
   isRelation,
@@ -58,12 +58,16 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
       }
       // TODO No need to do the check inside the function.
       const readerFunc = (readerArgs?: any[]) => {
+        const finalArgs = field.args !== undefined
+          ? field.args(instance)
+          : [readerArgs]
+
+        if (!Array.isArray(finalArgs)) {
+          throw new WrongArgumentReturnType(instance.constructor.name, field.propertyName)
+        }
+
         try {
-          if (field.args !== undefined) {
-            return binread(content, field.relation, ...field.args(instance))
-          } else {
-            return binread(content, field.relation, readerArgs)
-          }
+          return binread(content, field.relation, ...finalArgs)
         } catch (error) {
           // We need to catch the EOF error because the binread function
           // can't return it so it just throw it EOFError.

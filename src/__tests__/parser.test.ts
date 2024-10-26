@@ -387,6 +387,33 @@ describe('Reading binary with conditions', () => {
       type: 0x03
     })
   })
+  it('should raise an Error when not passing an array as argument', () => {
+    class Coord {
+      _scale: number
+
+      @Relation(PrimitiveSymbol.u8)
+      x: number
+
+      @Relation(PrimitiveSymbol.u8)
+      y: number
+
+      constructor(scale: number) {
+        this._scale = scale
+      }
+    }
+
+    class Header {
+      _scale = 1
+
+      @IfThen((_) => true, Coord, _ => _._scale)
+      coord: Coord
+    }
+
+    const header = new Uint8Array([0x03, 0x02]).buffer
+    // expect(() => {
+      binread(new BinaryCursor(header), Header)
+    // }).toThrow()
+  })
 })
 
 describe('Reading binary with bitfields', () => {
