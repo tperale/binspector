@@ -410,9 +410,9 @@ describe('Reading binary with conditions', () => {
     }
 
     const header = new Uint8Array([0x03, 0x02]).buffer
-    // expect(() => {
+    expect(() => {
       binread(new BinaryCursor(header), Header)
-    // }).toThrow()
+    }).toThrow()
   })
 })
 
