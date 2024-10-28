@@ -12,14 +12,6 @@ export class EOFError extends Error {
   }
 }
 
-export class SelfReferringFieldError extends Error {
-  constructor () {
-    super('Self Referring Error')
-    // TODO Do something with the history
-    // this.history = history
-  }
-}
-
 export class ReferringToEmptyClassError extends Error {
   constructor (classname: string) {
     super(`The relation '@Relation(${classname})' can't reference the empty '${classname}' class not containing any '@Relation' or '@Bitfield'.`)

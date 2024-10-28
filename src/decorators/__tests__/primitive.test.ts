@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation } from '../primitive'
+import { Relation, RelationAlreadyDefinedError } from '../primitive'
 import { PrimitiveSymbol, type DecoratorMetadataObject } from '../../types'
 import Meta from '../../metadatas'
 
@@ -23,6 +23,7 @@ describe('Testing the usage of decorator to create metadata about property', () 
       'field'
     ])
   })
+
   it('should throw an error when defined more than once', () => {
     expect(() => {
       class Protocol {
@@ -30,6 +31,15 @@ describe('Testing the usage of decorator to create metadata about property', () 
         @Relation(PrimitiveSymbol.u8)
         test: number
       }
-    }).toThrowError()
+    }).toThrow(RelationAlreadyDefinedError)
+  })
+
+  it('should throw an error when defined as a relation', () => {
+    expect(() => {
+      class Header {
+        @Relation(Header)
+        header: Header
+      }
+    }).toThrow(ReferenceError)
   })
 })

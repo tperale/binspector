@@ -6,7 +6,7 @@
  * @module reader
  */
 import { type Cursor } from './cursor'
-import { SelfReferringFieldError, EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error'
+import { EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error'
 import Meta from './metadatas'
 import {
   isRelation,
@@ -50,12 +50,6 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
       const readerFunc = () => content.read(field.primitive)
       return readerFunc
     } else if (isRelation(field)) {
-      if (field.relation === ObjectDefinition) {
-        // TODO Improve error handling
-        //   - backtrace
-        //   - current object referenced
-        throw new SelfReferringFieldError()
-      }
       // TODO No need to do the check inside the function.
       const readerFunc = (readerArgs?: any[]) => {
         const finalArgs = field.args !== undefined
