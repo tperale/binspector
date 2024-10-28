@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation } from '../decorators'
+import { Relation, Bitfield } from '../decorators'
 import { PrimitiveSymbol } from '../types'
 import { binread } from '../reader'
 import { BinaryCursor } from '../cursor'
@@ -30,5 +30,29 @@ describe('Reading binary content into js object', () => {
     const header = new Uint8Array([0x09, 0x20, 0x10, 0x21]).buffer
     const obj = binread(new BinaryCursor(header), Header)
     expect(jsonify(obj)).toStrictEqual({ fstCoord: { x: 9, y: 32 }, sndCoord: { x: 16, y: 33 } })
+  })
+  it('should work with bitfield nested object', () => {
+    class BitField {
+      @Bitfield(1)
+      field1: number
+
+      @Bitfield(3)
+      field2: number
+
+      @Bitfield(4)
+      field3: number
+    }
+
+    class Header {
+      @Relation(PrimitiveSymbol.u8)
+      foo: number
+
+      @Relation(BitField)
+      bar: BitField
+    }
+
+    const header = new Uint8Array([0x09, 0x20]).buffer
+    const obj = binread(new BinaryCursor(header), Header)
+    expect(jsonify(obj)).toStrictEqual({ foo: 0x09, bar: { field1: 0, field2: 2, field3: 0 } })
   })
 }) 
