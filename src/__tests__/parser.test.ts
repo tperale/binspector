@@ -471,6 +471,35 @@ describe('Reading binary with bitfields', () => {
       field: 5
     })
   })
+  it('should work with LittleEndian bitfield', () => {
+    class BitField {
+      @Bitfield(2)
+      field1: number
+
+      @Bitfield(10)
+      field2: number
+
+      @Bitfield(3)
+      field3: number
+    }
+    class Header {
+      @Relation(BitField)
+      bf: BitField
+
+      @Relation(PrimitiveSymbol.u8)
+      field: number
+    }
+
+    const header = new Uint8Array([0x30, 0x41, 0x05]).buffer
+    expect(binread(new BinaryCursor(header, BinaryCursorEndianness.LittleEndian), Header)).toMatchObject({
+      bf: {
+        field1: 1,
+        field2: 0b0000010011,
+        field3: 0
+      },
+      field: 5
+    })
+  })
 })
 
 describe('Reading binary definition with PrePost decorators', () => {
