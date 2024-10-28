@@ -2,15 +2,13 @@
  * @module reader
  */
 import Meta from './metadatas'
-import {
-  isPrimitiveRelation,
-} from './decorators/primitive'
+import { isPrimitiveRelation } from './decorators/primitive'
 
 /**
  * JSONify
  */
 export function jsonify (instance: any): any {
-  const result = {}
+  const result: Record<string | symbol, any> = {}
 
   const metadata = instance.constructor[Symbol.metadata] as DecoratorMetadataObject
 

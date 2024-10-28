@@ -63,7 +63,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
           : [readerArgs]
 
         if (!Array.isArray(finalArgs)) {
-          throw new WrongArgumentReturnType(instance.constructor.name, field.propertyName)
+          throw new WrongArgumentReturnType(String(instance.constructor.name), String(field.propertyName))
         }
 
         try {
