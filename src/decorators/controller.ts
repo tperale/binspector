@@ -55,7 +55,7 @@ export const ControllerOptionsDefault = {
 /**
  * ControllerFunction.
  */
-export type ControllerFunction = (targetInstance: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => any
+export type ControllerFunction<This> = (targetInstance: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => any
 export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor, read: ControllerReader) => any
 
 /**
@@ -84,7 +84,7 @@ export interface Controller extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function controllerDecoratorFactory (name: string, func: ControllerFunction, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType {
+export function controllerDecoratorFactory<This, Value> (name: string, func: ControllerFunction<This>, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType<This, Value> {
   // TODO The targetType should be set using reflection if TypeScript ever support that feature.
   const targetType: InstantiableObject | undefined = opt.targetType
   const options = {
@@ -93,7 +93,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
     ...{ targetType }
   }
 
-  return function (_: any, context: Context) {
+  return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
@@ -104,7 +104,7 @@ export function controllerDecoratorFactory (name: string, func: ControllerFuncti
       metadata: context.metadata,
       propertyName: context.name,
       options,
-      controller: (curr, cursor, read) => func(curr, cursor, read, options)
+      controller: (curr: This, cursor, read) => func(curr, cursor, read, options)
     }
     Meta.setController(context.metadata, context.name, controller)
   }
@@ -123,9 +123,9 @@ export type ControllerWhileFunction = (curr: any, count: number, targetInstance:
  *
  * @category Advanced Use
  */
-function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunction {
+function whileFunctionFactory<This, Value> (cond: ControllerWhileFunction): ControllerFunction<This> {
   return function (
-    currStateObject: any,
+    currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions
@@ -189,7 +189,7 @@ function whileFunctionFactory (cond: ControllerWhileFunction): ControllerFunctio
  *
  * @category Advanced Use
  */
-function mapFunctionFactory (array: any[]): ControllerFunction {
+function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
   return function (
     _: any,
     cursor: Cursor,
@@ -273,7 +273,7 @@ function mapFunctionFactory (array: any[]): ControllerFunction {
  *
  * @category Decorators
  */
-export function While (func: ControllerWhileFunction, opt?: Partial<ControllerOptions>): DecoratorType {
+export function While<This, Value> (func: ControllerWhileFunction, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   // TODO Verify you don't expect to compare something to EOF
   return controllerDecoratorFactory('while', whileFunctionFactory(func), opt)
 }
@@ -330,11 +330,11 @@ export function While (func: ControllerWhileFunction, opt?: Partial<ControllerOp
  *
  * @category Decorators
  */
-export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorType {
-  function untilEofController (): ControllerFunction {
+export function Until<This, Value> (arg: any, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+  function untilEofController (): ControllerFunction<This> {
     const wrap = whileFunctionFactory(() => true)
     return function (
-      currStateObject: any,
+      currStateObject: This,
       cursor: Cursor,
       read: ControllerReader,
       opt: ControllerOptions
@@ -371,9 +371,9 @@ export function Until (arg: any, opt?: Partial<ControllerOptions>): DecoratorTyp
  *
  * @category Decorators
  */
-export function NullTerminatedString (opt?: Partial<ControllerOptions>): DecoratorType {
+export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   return controllerDecoratorFactory('nullterminatedstring', (
-    currStateObject: any,
+    currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions
@@ -421,7 +421,7 @@ export function NullTerminatedString (opt?: Partial<ControllerOptions>): Decorat
  *
  * @category Decorators
  */
-export function Count (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
+export function Count<This, Value> (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   /**
    * countFactory
    *
@@ -431,7 +431,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
    * @returns {boolean}
    */
   function countController (
-    currStateObject: any,
+    currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions
@@ -446,7 +446,7 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
     }
 
     if (count > 0) {
-      return whileFunctionFactory((_: any, i: number) => i < count)(currStateObject, cursor, read, opt)
+      return whileFunctionFactory((_: This, i: number) => i < count)(currStateObject, cursor, read, opt)
     }
 
     return []
@@ -465,9 +465,9 @@ export function Count (arg: number | string, opt?: Partial<ControllerOptions>): 
  *
  * @category Decorators
  */
-export function Matrix (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
+export function Matrix<This, Value> (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   function matrixController (
-    currStateObject: any,
+    currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions
@@ -498,10 +498,10 @@ export function Matrix (width: number | string, height: number | string, opt?: P
  *
  * @category Decorators
  */
-export function Size (size: number | string, opt?: Partial<ControllerOptions>): DecoratorType {
+export function Size<This, Value> (size: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   return controllerDecoratorFactory(
     'size',
-    (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
+    (currStateObject: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
       const finalSize: number = typeof size === 'string'
         ? recursiveGet(currStateObject, size)
         : size
@@ -542,10 +542,10 @@ export function Size (size: number | string, opt?: Partial<ControllerOptions>): 
  *
  * @category Decorators
  */
-export function MapTo (arr: any, opt?: Partial<ControllerOptions>): DecoratorType {
+export function MapTo<This, Value> (arr: string | any[] | ((_: This) => any[]), opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   return controllerDecoratorFactory(
     'map',
-    (currStateObject: any, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
+    (currStateObject: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
       const finalArray: number =
         typeof arr === 'string'
           ? recursiveGet(currStateObject, arr)

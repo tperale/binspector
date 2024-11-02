@@ -60,7 +60,7 @@ function isFieldDecorated (metadata: DecoratorMetadataObject, propertyKey: strin
   return getField(metadata, propertyKey) !== undefined
 }
 
-function getPre (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PrePost[] {
+function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<PrePost<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -68,15 +68,15 @@ function getPre (metadata: DecoratorMetadataObject, propertyKey: string | symbol
   )
 }
 
-function setPre (
+function setPre<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: string,
-  pre: PrePost
-): PrePost[] {
+  pre: PrePost<This>
+): Array<PrePost<This>> {
   return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
 }
 
-function getConditions (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Condition[] {
+function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Condition<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -84,19 +84,15 @@ function getConditions (metadata: DecoratorMetadataObject, propertyKey: string |
   )
 }
 
-function setCondition (
+function setCondition<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  condition: Condition
-): Condition[] {
+  condition: Condition<This>
+): Array<Condition<This>> {
   return setMetadata(metadata, propertyKey, ConditionSymbol, condition, true)
 }
 
 function getControllers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller[] {
-  // if (typeof metadata[ControllerSymbol] === 'object') {
-  //   return metadata[ControllerSymbol][propertyKey]
-  // }
-  // return undefined
   return getMetadata(
     metadata,
     propertyKey,
@@ -109,15 +105,10 @@ function setController (
   propertyKey: string | symbol,
   controller: Controller
 ): Controller[] {
-  // if (typeof metadata[ControllerSymbol] !== 'object') {
-  //   metadata[ControllerSymbol] = {}
-  // }
-  // metadata[ControllerSymbol][propertyKey] = controller
-  // return controller
   return setMetadata(metadata, propertyKey, ControllerSymbol, controller)
 }
 
-function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Transformer[] {
+function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Transformer<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -125,15 +116,15 @@ function getTransformers (metadata: DecoratorMetadataObject, propertyKey: string
   )
 }
 
-function setTransformer (
+function setTransformer<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  transformer: Transformer
-): Transformer[] {
+  transformer: Transformer<This>
+): Array<Transformer<This>> {
   return setMetadata(metadata, propertyKey, TransformerSymbol, transformer)
 }
 
-function getValidators (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Validator[] {
+function getValidators<This, Value> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Validator<This, Value>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -141,15 +132,15 @@ function getValidators (metadata: DecoratorMetadataObject, propertyKey: string |
   )
 }
 
-function setValidator (
+function setValidator<This, Value> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  validator: Validator
-): Validator[] {
+  validator: Validator<This, Value>
+): Array<Validator<This, Value>> {
   return setMetadata(metadata, propertyKey, validator.type, validator)
 }
 
-function getPost (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PrePost[] {
+function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<PrePost<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -157,11 +148,11 @@ function getPost (metadata: DecoratorMetadataObject, propertyKey: string | symbo
   )
 }
 
-function setPost (
+function setPost<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  post: PrePost
-): PrePost[] {
+  post: PrePost<This>
+): Array<PrePost<This>> {
   return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
 }
 

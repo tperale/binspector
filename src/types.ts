@@ -31,15 +31,15 @@ export type DecoratorMetadataObject = Record<PropertyKey, any>
 /**
  * Context
  */
-export type Context =
-    | ClassAccessorDecoratorContext
-    | ClassGetterDecoratorContext
-    | ClassFieldDecoratorContext
+export type Context<This, Value> =
+    | ClassAccessorDecoratorContext<This, Value>
+    | ClassGetterDecoratorContext<This, Value>
+    | ClassFieldDecoratorContext<This, Value>
 
 /**
  * DecoratorType.
  */
-export type DecoratorType = (target: any, context: Context) => void
+export type DecoratorType<This, Value> = (target: undefined, context: Context<This, Value>) => void
 
 /**
  * InstantiableObject.

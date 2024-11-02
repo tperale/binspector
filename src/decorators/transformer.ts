@@ -37,19 +37,19 @@ export const TransformerOptionsDefault = {
 /**
  * TransformerFunction.
  */
-export type TransformerFunction = (value: any, targetInstance: any) => any
+export type TransformerFunction<This> = (value: any, targetInstance: This) => any
 
 /**
  * Transformer.
  *
  * @extends {MetaDescriptor<T>}
  */
-export interface Transformer extends MetaDescriptor {
+export interface Transformer<This> extends MetaDescriptor {
   options: TransformerOptions
   /**
    * The transformer function taking the value in input and return the transformed value.
    */
-  transformer: TransformerFunction
+  transformer: TransformerFunction<This>
 }
 
 /**
@@ -62,15 +62,15 @@ export interface Transformer extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function transformerDecoratorFactory (name: string, func: TransformerFunction, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType {
+export function transformerDecoratorFactory<This, Value> (name: string, func: TransformerFunction<This>, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType<This, Value> {
   const options = { ...TransformerOptionsDefault, ...opt }
 
-  return function (_: any, context: Context) {
+  return function (_: any, context: Context<This, Value>) {
     if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
 
-    const transformer: Transformer = {
+    const transformer: Transformer<This> = {
       type: TransformerSymbol,
       name,
       metadata: context.metadata,
@@ -91,7 +91,7 @@ export function transformerDecoratorFactory (name: string, func: TransformerFunc
  *
  * @category Decorators
  */
-export function Transform (transformFunction: TransformerFunction, opt?: Partial<TransformerOptions>): DecoratorType {
+export function Transform<This, Value> (transformFunction: TransformerFunction<This>, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return transformerDecoratorFactory('transform', transformFunction, opt)
 }
 
@@ -105,7 +105,7 @@ export function Transform (transformFunction: TransformerFunction, opt?: Partial
  *
  * @category Advanced Use
  */
-export function useTransformer (transformers: Transformer[], propertyValue: any, targetInstance: any): any {
+export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
     if (Array.isArray(transformedTmpValue) && transformer.options.each) {
       return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))

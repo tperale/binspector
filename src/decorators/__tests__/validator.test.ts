@@ -56,7 +56,7 @@ describe('Testing validator decorator functions', () => {
   it('should work with array passed as @Match argument and field with a value', () => {
     class TestClass {
       @Match(['a', 'b', 'c'], { primitiveCheck: false })
-      field: string
+      field: string[]
     }
 
     testValidator(TestClass, 'field', (x) => {

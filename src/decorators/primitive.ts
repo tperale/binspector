@@ -141,7 +141,7 @@ export function isRelation (field: PropertyType): field is RelationTypeProperty 
  *
  * The `RelationParameters` definition to pass the property `type` and `size` to the `Chunk` constructor is the following `(targetInstance: Protocol) => [targetInstance.type, targetInstance.size]`
  */
-export type RelationParameters = ((targetInstance: any) => any[]) | string
+export type RelationParameters<This> = ((targetInstance: This) => any[]) | string
 
 /**
  * RelationType.
@@ -167,7 +167,7 @@ export interface RelationTypeProperty extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function createRelationTypeProperty (metadata: DecoratorMetadataObject, propertyKey: string | symbol, relation: InstantiableObject, args?: RelationParameters): RelationTypeProperty {
+export function createRelationTypeProperty<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol, relation: InstantiableObject, args?: RelationParameters<This>): RelationTypeProperty {
   const argsFunc = typeof args === 'string'
     ? (targetInstance: any) => commaSeparetedRecursiveGet(targetInstance, args)
     : args as ((targetInstance: any) => any[]) | undefined
@@ -203,14 +203,14 @@ export function createRelationTypeProperty (metadata: DecoratorMetadataObject, p
  *
  * @category Decorators
  */
-export function Relation (relation?: InstantiableObject | PrimitiveSymbol, args?: RelationParameters): DecoratorType {
-  return function (_: any, context: Context): void {
+export function Relation<This, Value> (relation?: InstantiableObject | PrimitiveSymbol, args?: RelationParameters<This>): DecoratorType<This, Value> {
+  return function (_: undefined, context: Context<This, Value>): void {
     const field = Meta.getField(context.metadata, context.name)
     if (field !== undefined) {
       throw new RelationAlreadyDefinedError(field, String(context.name))
     }
     if (relation === undefined) {
-      Meta.setField(context.metadata, createMetaDescriptor(UnknownTypePropertySymbol, 'unknown', context.metadata, context.name) as UnknownTypeProperty)
+      Meta.setField(context.metadata, createMetaDescriptor(UnknownTypePropertySymbol, 'unknown', context.metadata, context.name))
     } else if (isPrimitiveSymbol(relation)) {
       Meta.setField(context.metadata, createPrimitiveTypeProperty(context.metadata, context.name, relation))
     } else {
@@ -232,24 +232,8 @@ export type PropertyType = RelationTypeProperty | PrimitiveTypeProperty | Unknow
  *
  * @category Advanced Use
  */
-export function relationExistOrThrow (metadata: DecoratorMetadataObject, context: Context): void {
+export function relationExistOrThrow<This, Value> (metadata: DecoratorMetadataObject, context: Context<This, Value>): void {
   if (Meta.getField(metadata, context.name) === undefined) {
     throw new RelationNotDefinedError(context.name)
-  }
-}
-
-/**
- * withRelation.
- *
- * @param {symbol} relation
- * @param {DecoratorType} decorator
- * @returns {DecoratorType} The property decorator function ran at runtime
- *
- * @category Advanced Use
- */
-export function withRelation (relation: InstantiableObject | PrimitiveSymbol, decorator: DecoratorType): DecoratorType {
-  return function <T>(target: T, context: Context) {
-    Relation(relation)(target, context)
-    decorator(target, context)
   }
 }

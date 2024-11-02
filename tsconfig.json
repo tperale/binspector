@@ -11,8 +11,6 @@
     "strictNullChecks": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "emitDecoratorMetadata": false,
-    "experimentalDecorators": false,
     "lib": ["es2022", "esnext.decorators", "dom"]
   },
   "include": [

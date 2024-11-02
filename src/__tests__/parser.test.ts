@@ -9,7 +9,7 @@ function expectReadTest (buffer: Array<number>, ObjectDefinition: InstantiableOb
 }
 
 function expectReadTestToThrow (buffer: Array<number>, ObjectDefinition: InstantiableObject) {
-  return expect(() => binread(new BinaryCursor(new Uint8Array(buffer).buffer, endian), ObjectDefinition)).toThrow()
+  return expect(() => binread(new BinaryCursor(new Uint8Array(buffer).buffer), ObjectDefinition)).toThrow()
 }
 
 describe('Reading binary content into js object', () => {
@@ -73,7 +73,7 @@ describe('Reading binary content into js object', () => {
       @Relation(PrimitiveSymbol.u8)
       size: number
 
-      @Relation(Header, (cur: Protocol) => [cur.size])
+      @Relation(Header, _ => [_.size])
       relation: Header
     }
 
@@ -101,7 +101,7 @@ describe('Reading binary with validator', () => {
       @Match([0x01, 0x02])
       @Count(2)
       @Relation(PrimitiveSymbol.u8)
-      field: number
+      field: number[]
     }
 
     expectReadTest([0x01, 0x02], Protocol).toMatchObject({
@@ -335,8 +335,8 @@ describe('Reading binary with conditions', () => {
       @Relation(PrimitiveSymbol.u8)
       type: number
 
-      @IfThen((instance: Data) => instance.type === 0x01, PrimitiveSymbol.u8)
-      @IfThen((instance: Data) => instance.type === 0x02)
+      @IfThen(_ => _.type === 0x01, PrimitiveSymbol.u8)
+      @IfThen(_ => _.type === 0x02)
       payload: number | undefined
     }
 
@@ -360,7 +360,7 @@ describe('Reading binary with conditions', () => {
       @Relation(PrimitiveSymbol.u8)
       type: number
 
-      @Choice((instance: Header) => instance.type, {
+      @Choice(_ => _.type, {
         0x01: PrimitiveSymbol.u8,
         0x02: PrimitiveSymbol.u16,
         0x03: undefined
@@ -395,6 +395,7 @@ describe('Reading binary with conditions', () => {
     class Header {
       _scale = 1
 
+      // @ts-expect-error we are testing this case
       @IfThen((_) => true, Coord, _ => _._scale)
       coord: Coord
     }

@@ -47,11 +47,10 @@ import { useBitField } from './decorators/bitfield'
 export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): any {
   function getBinReader (field: PropertyType, instance: any): ControllerReader {
     if (isPrimitiveRelation(field)) {
-      const readerFunc = () => content.read(field.primitive)
-      return readerFunc
+      return () => content.read(field.primitive)
     } else if (isRelation(field)) {
       // TODO No need to do the check inside the function.
-      const readerFunc = (readerArgs?: any[]) => {
+      return (readerArgs?: any[]) => {
         const finalArgs = field.args !== undefined
           ? field.args(instance)
           : [readerArgs]
@@ -79,7 +78,6 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
           }
         }
       }
-      return readerFunc
     } else {
       throw new UnknownPropertyType(field)
     }
@@ -88,10 +86,10 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
 
   const instance = new ObjectDefinition(...args)
 
-  const metadata = ObjectDefinition[Symbol.metadata] as DecoratorMetadataObject
+  const metadata = ObjectDefinition[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
 
   if (metadata === undefined) {
-    throw new ReferringToEmptyClassError(instance.constructor.name)
+    throw new ReferringToEmptyClassError(String(instance.constructor.name))
   }
 
   const bitfields = Meta.getBitFields(metadata)

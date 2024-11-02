@@ -14,13 +14,6 @@ import Meta from '../metadatas'
  */
 export const ValidatorSymbol = Symbol('validator')
 
-/**
-interface ValidatorErrorArguments extends MetaDescriptor {
-  value: any
-  args: any[]
-}
- */
-
 export interface ValidatorOptions {
   /**
    * Specifies if validated value is an array and each of its item must be validated.
@@ -45,20 +38,20 @@ export const ValidatorOptionsDefault = {
 /**
  * ValidatorFunction.
  */
-export type ValidatorFunction = (value: any, targetInstance: any) => boolean
+export type ValidatorFunction<This, Value> = (value: Value, targetInstance: This) => boolean
 
 /**
  * Validator.
  *
  * @extends {MetaDescriptor}
  */
-export interface Validator extends MetaDescriptor {
+export interface Validator<This, Value> extends MetaDescriptor {
   options: ValidatorOptions
 
   /**
    *
    */
-  validator: ValidatorFunction
+  validator: ValidatorFunction<This, Value>
 }
 
 /**
@@ -71,15 +64,15 @@ export interface Validator extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function validatorDecoratorFactory (name: string, func: ValidatorFunction, opt: Partial<ValidatorOptions> = ValidatorOptionsDefault): DecoratorType {
+export function validatorDecoratorFactory<This, Value> (name: string, func: ValidatorFunction<This, Value>, opt: Partial<ValidatorOptions> = ValidatorOptionsDefault): DecoratorType<This, Value> {
   const options = { ...ValidatorOptionsDefault, ...opt }
 
-  return function (_: any, context: Context) {
+  return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
 
-    const validator: Validator = {
+    const validator: Validator<This, Value> = {
       type: ValidatorSymbol,
       name,
       metadata: context.metadata,
@@ -100,7 +93,7 @@ export function validatorDecoratorFactory (name: string, func: ValidatorFunction
  *
  * @category Decorators
  */
-export function Validate (validatingFunction: ValidatorFunction, opt?: Partial<ValidatorOptions>): DecoratorType {
+export function Validate<This, Value> (validatingFunction: ValidatorFunction<This, Value>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
   return validatorDecoratorFactory('validate', validatingFunction, opt)
 }
 
@@ -160,7 +153,7 @@ export function Validate (validatingFunction: ValidatorFunction, opt?: Partial<V
  *
  * @category Decorators
  */
-export function Match (matchingValue: any, opt?: Partial<ValidatorOptions>): DecoratorType {
+export function Match<This, Value> (matchingValue: Value, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
   /**
    * matchValidatorFactory.
    *
@@ -227,7 +220,7 @@ export function Match (matchingValue: any, opt?: Partial<ValidatorOptions>): Dec
  *
  * @category Decorators
  */
-export function Enum (enumeration: Record<string, string | number>, opt?: Partial<ValidatorOptions>): DecoratorType {
+export function Enum<This, Value> (enumeration: Record<string, string | number>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
   function enumerationValidator (value: any, _: any): boolean {
     return Object.prototype.hasOwnProperty.call(enumeration, value)
   }
@@ -265,10 +258,10 @@ export function Enum (enumeration: Record<string, string | number>, opt?: Partia
  *
  * @category Advanced Use
  */
-export function useValidators (validators: Array<Validator>, value: any, targetInstance: any, cursor?: Cursor): void {
-  validators.forEach((validator: Validator) => {
-    if (validator.options.each) {
-      value.forEach((x: any) => {
+export function useValidators<This, Value> (validators: Array<Validator<This, Value>>, value: Value, targetInstance: This, cursor?: Cursor): void {
+  validators.forEach((validator) => {
+    if (validator.options.each && Array.isArray(value)) {
+      value.forEach((x: Value) => {
         if (!validator.validator(x, targetInstance)) {
           throw new ValidationTestFailed(validator.name, String(validator.propertyName), x, validator.options.message, cursor)
         }

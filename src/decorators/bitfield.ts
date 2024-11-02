@@ -87,10 +87,10 @@ export interface BitField extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function bitFieldDecoratorFactory (name: string, len: number, opt: Partial<BitFieldOptions> = BitFieldOptionsDefault): DecoratorType {
+export function bitFieldDecoratorFactory<This, Value> (name: string, len: number, opt: Partial<BitFieldOptions> = BitFieldOptionsDefault): DecoratorType<This, Value> {
   const options = { ...BitFieldOptionsDefault, ...opt }
 
-  return function (_: any, context: Context) {
+  return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
       if (Meta.getFields(context.metadata).length > 0) {
         // TODO Create new Error
@@ -149,7 +149,7 @@ export function bitFieldDecoratorFactory (name: string, len: number, opt: Partia
  *
  * @category Decorators
  */
-export function Bitfield (len: number): DecoratorType {
+export function Bitfield<This, Value> (len: number): DecoratorType<This, Value> {
   return bitFieldDecoratorFactory('bitfield', len)
 }
 
