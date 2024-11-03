@@ -113,7 +113,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
 /**
  * ControllerWhileFunction.
  */
-export type ControllerWhileFunction = (curr: any, count: number, targetInstance: any, offset: number, startOffset: number) => boolean
+export type ControllerWhileFunction<This> = (curr: any, count: number, targetInstance: This, offset: number, startOffset: number) => boolean
 
 /**
  * whileFunctionFactory.
@@ -123,7 +123,7 @@ export type ControllerWhileFunction = (curr: any, count: number, targetInstance:
  *
  * @category Advanced Use
  */
-function whileFunctionFactory<This, Value> (cond: ControllerWhileFunction): ControllerFunction<This> {
+function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): ControllerFunction<This> {
   return function (
     currStateObject: This,
     cursor: Cursor,
@@ -273,7 +273,7 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  *
  * @category Decorators
  */
-export function While<This, Value> (func: ControllerWhileFunction, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   // TODO Verify you don't expect to compare something to EOF
   return controllerDecoratorFactory('while', whileFunctionFactory(func), opt)
 }
@@ -320,7 +320,7 @@ export function While<This, Value> (func: ControllerWhileFunction, opt?: Partial
  * }
  * ```
  *
- * @param {any} arg Continue reading/writting the binary file until the argument is reached.
+ * @param {any} cmp Continue reading/writting the binary file until the argument is reached.
  * @param {ControllerOptions} opt
  * @returns {DecoratorType} The property decorator function ran at runtime
  *
@@ -330,7 +330,7 @@ export function While<This, Value> (func: ControllerWhileFunction, opt?: Partial
  *
  * @category Decorators
  */
-export function Until<This, Value> (arg: any, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   function untilEofController (): ControllerFunction<This> {
     const wrap = whileFunctionFactory(() => true)
     return function (
@@ -351,10 +351,10 @@ export function Until<This, Value> (arg: any, opt?: Partial<ControllerOptions>):
     }
   }
 
-  if (arg === EOF) {
+  if (cmp === EOF) {
     return controllerDecoratorFactory('until', untilEofController(), opt)
   } else {
-    return controllerDecoratorFactory('until', whileFunctionFactory((x: number | string | symbol) => x !== arg), opt)
+    return controllerDecoratorFactory('until', whileFunctionFactory((x: number | string | typeof EOF) => x !== cmp), opt)
   }
 }
 
