@@ -53,14 +53,16 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
       return (readerArgs?: any[]) => {
         const finalArgs = field.args !== undefined
           ? field.args(instance)
-          : [readerArgs]
+          : readerArgs !== undefined
+            ? [readerArgs]
+            : []
 
         if (!Array.isArray(finalArgs)) {
           throw new WrongArgumentReturnType(String(instance.constructor.name), String(field.propertyName))
         }
 
         try {
-          return binread(content, field.relation, ...finalArgs)
+          return binread(content, field.relation, ...[...finalArgs, instance])
         } catch (error) {
           // We need to catch the EOF error because the binread function
           // can't return it so it just throw it EOFError.
