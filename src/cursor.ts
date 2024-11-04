@@ -52,9 +52,11 @@ export class BinaryCursor extends Cursor {
         return 2
       case PrimitiveSymbol.u32:
       case PrimitiveSymbol.i32:
+      case PrimitiveSymbol.float32:
         return 4
       case PrimitiveSymbol.u64:
       case PrimitiveSymbol.i64:
+      case PrimitiveSymbol.float64:
         return 8
       default:
         return 0
@@ -79,6 +81,10 @@ export class BinaryCursor extends Cursor {
         return this.data.getInt32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
       case PrimitiveSymbol.i64:
         return this.data.getBigInt64(this.index)
+      case PrimitiveSymbol.float32:
+        return this.data.getFloat32(this.index)
+      case PrimitiveSymbol.float64:
+        return this.data.getFloat64(this.index)
       case PrimitiveSymbol.char:
         return String.fromCharCode(this.data.getUint8(this.index))
       default:
