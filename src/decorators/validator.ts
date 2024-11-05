@@ -20,6 +20,10 @@ export interface ValidatorOptions {
    */
   each: boolean
   /**
+   * Do not throw an error if the validation doesn't match
+   */
+  optional: boolean
+  /**
    * Verify a relation already exist before the definition of the controller
    */
   primitiveCheck: boolean
@@ -32,6 +36,7 @@ export interface ValidatorOptions {
 export const ValidatorOptionsDefault = {
   each: false,
   primitiveCheck: true,
+  optional: false,
   message: ''
 }
 
@@ -262,12 +267,12 @@ export function useValidators<This, Value> (validators: Array<Validator<This, Va
   validators.forEach((validator) => {
     if (validator.options.each && Array.isArray(value)) {
       value.forEach((x: Value) => {
-        if (!validator.validator(x, targetInstance)) {
+        if (!validator.validator(x, targetInstance) && !validator.options.optional) {
           throw new ValidationTestFailed(validator.name, String(validator.propertyName), x, validator.options.message, cursor)
         }
       })
     } else {
-      if (!validator.validator(value, targetInstance)) {
+      if (!validator.validator(value, targetInstance) && !validator.options.optional) {
         throw new ValidationTestFailed(validator.name, String(validator.propertyName), value, validator.options.message, cursor)
       }
     }
