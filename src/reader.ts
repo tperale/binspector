@@ -127,9 +127,8 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
       useValidators(Meta.getValidators(metadata, field.propertyName), transformedValue, instance, content)
 
       instance[field.propertyName] = transformedValue
-
-      usePrePost(Meta.getPost(metadata, field.propertyName), instance, content)
     }
+    usePrePost(Meta.getPost(metadata, field.propertyName), instance, content)
   })
 
   return instance
