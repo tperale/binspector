@@ -220,8 +220,8 @@ export function Match<This, Value> (matchingValue: Value, opt?: Partial<Validato
  *
  * @category Decorators
  */
-export function Enum<This, Value> (enumeration: Record<string, string | number>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
-  function enumerationValidator (value: any, _: any): boolean {
+export function Enum<This, Value> (enumeration: Record<string, Value>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
+  function enumerationValidator (value: Value, _: This): boolean {
     return Object.prototype.hasOwnProperty.call(enumeration, value)
   }
 
