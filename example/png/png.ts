@@ -153,5 +153,5 @@ export class PNG {
   @Validate((chunks: PNGChunk[]) => chunks[0].type === PNGTypes.IHDR)
   @While((chunk: PNGChunk) => chunk.type !== PNGTypes.IEND)
   @Relation(PNGChunk)
-  chunks: PNGChunk
+  chunks: PNGChunk[]
 }
