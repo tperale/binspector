@@ -50,7 +50,7 @@ export type ValidatorFunction<This, Value> = (value: Value, targetInstance: This
  *
  * @extends {MetaDescriptor}
  */
-export interface Validator<This, Value> extends MetaDescriptor {
+export interface Validator<This, Value> extends MetaDescriptor<This> {
   options: ValidatorOptions
 
   /**
@@ -81,7 +81,7 @@ export function validatorDecoratorFactory<This, Value> (name: string, func: Vali
       type: ValidatorSymbol,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName: context.name as keyof This,
       options,
       validator: func
     }

@@ -34,7 +34,7 @@ export interface ControllerOptions {
   /**
    * Define the target type for the controller to apply transformation.
    */
-  targetType: InstantiableObject | undefined
+  targetType: InstantiableObject<unknown> | undefined
   /**
    * Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
    */
@@ -63,7 +63,7 @@ export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor,
  *
  * @extends {MetaDescriptor}
  */
-export interface Controller extends MetaDescriptor {
+export interface Controller<This> extends MetaDescriptor<This> {
   /**
    * Options for controller decorator
    */
@@ -86,7 +86,7 @@ export interface Controller extends MetaDescriptor {
  */
 export function controllerDecoratorFactory<This, Value> (name: string, func: ControllerFunction<This>, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType<This, Value> {
   // TODO The targetType should be set using reflection if TypeScript ever support that feature.
-  const targetType: InstantiableObject | undefined = opt.targetType
+  const targetType: InstantiableObject<unknown> | undefined = opt.targetType
   const options = {
     ...ControllerOptionsDefault,
     ...opt,
@@ -98,15 +98,16 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
       relationExistOrThrow(context.metadata, context)
     }
 
-    const controller: Controller = {
+    const propertyName = context.name as keyof This
+    const controller: Controller<This> = {
       type: ControllerSymbol,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName,
       options,
       controller: (curr: This, cursor, read) => func(curr, cursor, read, options)
     }
-    Meta.setController(context.metadata, context.name, controller)
+    Meta.setController(context.metadata, propertyName, controller)
   }
 }
 
@@ -572,7 +573,7 @@ export function MapTo<This, Value> (arr: string | any[] | ((_: This) => any[]), 
  *
  * @category Advanced Use
  */
-export function useController (controllers: Controller[], targetInstance: any, cursor: Cursor, reader: ControllerReader): any {
+export function useController<This> (controllers: Array<Controller<This>>, targetInstance: This, cursor: Cursor, reader: ControllerReader): any {
   const chainedControllers = controllers.reduce((x, cont) => {
     if (x === null) {
       return () => cont.controller(targetInstance, cursor, reader)

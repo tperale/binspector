@@ -5,11 +5,11 @@ import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
 import { BinaryCursor, BinaryCursorEndianness } from '../cursor'
 
-function expectReadTest (buffer: Array<number>, ObjectDefinition: InstantiableObject, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
   return expect(binread(new BinaryCursor(new Uint8Array(buffer).buffer, endian), ObjectDefinition))
 }
 
-function expectReadTestToThrow (buffer: Array<number>, ObjectDefinition: InstantiableObject) {
+function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
   return expect(() => binread(new BinaryCursor(new Uint8Array(buffer).buffer), ObjectDefinition)).toThrow()
 }
 

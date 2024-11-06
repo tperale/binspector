@@ -20,7 +20,7 @@ export const PostFunctionSymbol = Symbol('post-function')
 
 export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
-type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: string | symbol, pre: PrePost<This>) => Array<PrePost<This>>
+type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>) => Array<PrePost<This>>
 
 /**
  * PrePostOptions.
@@ -41,7 +41,7 @@ export const PrePostOptionsDefault = {
  *
  * @extends {MetaDescriptor}
  */
-export interface PrePost<This> extends MetaDescriptor {
+export interface PrePost<This> extends MetaDescriptor<This> {
   /**
    * Options for prepost decorator
    */
@@ -61,16 +61,17 @@ function prePostFunctionDecoratorFactory<This, Value> (name: string, typeSym: sy
       relationExistOrThrow(context.metadata, context)
     }
 
+    const propertyName = context.name as keyof This
     const preFunction: PrePost<This> = {
       type: typeSym,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName,
       options,
       func
     }
 
-    metaSetter(context.metadata, context.name, preFunction)
+    metaSetter(context.metadata, propertyName, preFunction)
   }
 }
 

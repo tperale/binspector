@@ -44,8 +44,9 @@ import { useBitField } from './decorators/bitfield'
  * `ObjectDefinition` passed in param.
  * You can create self refering field by using conditionnal decorator.
  */
-export function binread (content: Cursor, ObjectDefinition: InstantiableObject, ...args: any[]): any {
-  function getBinReader (field: PropertyType, instance: any): ControllerReader {
+export function binread<Target> (content: Cursor, ObjectDefinition: InstantiableObject<Target>, ...args: any[]): Target {
+  const ObjectDefinitionName = ObjectDefinition.name
+  function getBinReader (field: PropertyType<Target>, instance: Target): ControllerReader {
     if (isPrimitiveRelation(field)) {
       return () => content.read(field.primitive)
     } else if (isRelation(field)) {
@@ -58,7 +59,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
             : []
 
         if (!Array.isArray(finalArgs)) {
-          throw new WrongArgumentReturnType(String(instance.constructor.name), String(field.propertyName))
+          throw new WrongArgumentReturnType(ObjectDefinitionName, String(field.propertyName))
         }
 
         try {
@@ -86,12 +87,12 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
   }
   // TODO [Cursor] Enter a new 'namespace' that will be used for the debugging history
 
-  const instance = new ObjectDefinition(...args)
+  const instance: Target = new ObjectDefinition(...args)
 
   const metadata = ObjectDefinition[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
 
   if (metadata === undefined) {
-    throw new ReferringToEmptyClassError(String(instance.constructor.name))
+    throw new ReferringToEmptyClassError(ObjectDefinitionName)
   }
 
   const bitfields = Meta.getBitFields(metadata)
@@ -99,7 +100,7 @@ export function binread (content: Cursor, ObjectDefinition: InstantiableObject, 
     return useBitField(bitfields, instance, content)
   }
 
-  Meta.getFields(metadata).forEach((field) => {
+  Meta.getFields<Target>(metadata).forEach((field) => {
     usePrePost(Meta.getPre(metadata, field.propertyName), instance, content)
 
     // TODO [Cursor] Pass the field name information to add to the namespace

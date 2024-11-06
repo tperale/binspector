@@ -72,7 +72,7 @@ export const BitFieldOptionsDefault = {
   primitiveCheck: true
 }
 
-export interface BitField extends MetaDescriptor {
+export interface BitField<This> extends MetaDescriptor<This> {
   options: BitFieldOptions
   bitlength: number
 }
@@ -99,11 +99,11 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
       }
     }
 
-    const bitfield: BitField = {
+    const bitfield: BitField<This> = {
       type: BitFieldSymbol,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName: context.name as keyof This,
       options,
       bitlength: len
     }
@@ -156,7 +156,7 @@ export function Bitfield<This, Value> (len: number): DecoratorType<This, Value> 
 /**
  * @category Advanced Use
  */
-export function useBitField (bitfields: BitField[], targetInstance: any, cursor: Cursor): any {
+export function useBitField<This> (bitfields: Array<BitField<This>>, targetInstance: This, cursor: Cursor): This {
   const getPrimitive = (length: number): PrimitiveSymbol => {
     const remainToAlign = (8 - (length % 8)) % 8
     switch ((length + remainToAlign) / 8) {
@@ -175,9 +175,10 @@ export function useBitField (bitfields: BitField[], targetInstance: any, cursor:
 
   const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
   const value = cursor.read(getPrimitive(totalBitLength)) as number
-  bitfields.reduce((offset: number, bf: BitField) => {
+  bitfields.reduce((offset: number, bf: BitField<This>) => {
     const OFFSET = offset - bf.bitlength
     const MASK = ((1 << bf.bitlength) - 1)
+    // @ts-expect-error Mandatory to set number
     targetInstance[bf.propertyName] = (value >> OFFSET) & MASK
     return OFFSET
   }, (Math.ceil(totalBitLength / 8) * 8))

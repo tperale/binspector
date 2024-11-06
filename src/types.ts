@@ -42,6 +42,6 @@ export type DecoratorType<This, Value> = (target: undefined, context: Context<Th
 /**
  * InstantiableObject.
  */
-export type InstantiableObject = (new (...args: any[]) => any)
+export type InstantiableObject<Target> = (new (...args: any[]) => Target)
 
-export type Primitive = InstantiableObject | PrimitiveSymbol
+export type Primitive<Target> = InstantiableObject<Target> | PrimitiveSymbol

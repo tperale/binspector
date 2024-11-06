@@ -5,7 +5,7 @@
  */
 /**
  */
-export interface MetaDescriptor {
+export interface MetaDescriptor<This> {
   /**
    * Validator name.
    */
@@ -24,7 +24,7 @@ export interface MetaDescriptor {
   /**
    * Property name of the object the decorator is applied.
    */
-  propertyName: string | symbol
+  propertyName: keyof This
 }
 
 /**

@@ -11,7 +11,7 @@ import './symbol-polyfill'
 
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string | symbol,
+  propertyKey: string | number | symbol,
   metadataKey: symbol
 ): T[] {
   // TODO Can be optionnal since its set on the set metadata
@@ -24,7 +24,7 @@ function getMetadata<T> (
 
 function setMetadata<T> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string | symbol,
+  propertyKey: string | symbol | number,
   metadataKey: symbol,
   newValue: any,
   reverse = false
@@ -37,30 +37,30 @@ function setMetadata<T> (
 
 const FieldSymbol = Symbol('field-symbol')
 
-function getFields (metadata: DecoratorMetadataObject): PropertyType[] {
+function getFields<This> (metadata: DecoratorMetadataObject): Array<PropertyType<This>> {
   const fields = metadata[FieldSymbol]
   return Array.isArray(fields) ? fields : []
 }
 
-function getField (metadata: DecoratorMetadataObject, propertyKey: string | symbol): PropertyType | undefined {
+function getField<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): PropertyType<This> | undefined {
   const fields = getFields(metadata)
   return fields.find(x => x.propertyName === propertyKey)
 }
 
-function setField (
+function setField<This> (
   metadata: DecoratorMetadataObject,
-  field: PropertyType
-): PropertyType[] {
+  field: PropertyType<This>
+): Array<PropertyType<This>> {
   const fields = [...getFields(metadata), field]
   metadata[FieldSymbol] = fields
   return fields
 }
 
-function isFieldDecorated (metadata: DecoratorMetadataObject, propertyKey: string | symbol): boolean {
+function isFieldDecorated<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): boolean {
   return getField(metadata, propertyKey) !== undefined
 }
 
-function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<PrePost<This>> {
+function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<PrePost<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -70,13 +70,13 @@ function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: string | 
 
 function setPre<This> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string,
+  propertyKey: keyof This,
   pre: PrePost<This>
 ): Array<PrePost<This>> {
   return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
 }
 
-function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Condition<This>> {
+function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Condition<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -86,13 +86,13 @@ function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: st
 
 function setCondition<This> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string | symbol,
+  propertyKey: keyof This,
   condition: Condition<This>
 ): Array<Condition<This>> {
   return setMetadata(metadata, propertyKey, ConditionSymbol, condition, true)
 }
 
-function getControllers (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Controller[] {
+function getControllers<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Controller<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -100,15 +100,15 @@ function getControllers (metadata: DecoratorMetadataObject, propertyKey: string 
   )
 }
 
-function setController (
+function setController<This> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string | symbol,
-  controller: Controller
-): Controller[] {
+  propertyKey: keyof This,
+  controller: Controller<This>
+): Array<Controller<This>> {
   return setMetadata(metadata, propertyKey, ControllerSymbol, controller)
 }
 
-function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Transformer<This>> {
+function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Transformer<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -124,7 +124,7 @@ function setTransformer<This> (
   return setMetadata(metadata, propertyKey, TransformerSymbol, transformer)
 }
 
-function getValidators<This, Value> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<Validator<This, Value>> {
+function getValidators<This, Value> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Validator<This, Value>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -140,7 +140,7 @@ function setValidator<This, Value> (
   return setMetadata(metadata, propertyKey, validator.type, validator)
 }
 
-function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: string | symbol): Array<PrePost<This>> {
+function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<PrePost<This>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -150,18 +150,18 @@ function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: string |
 
 function setPost<This> (
   metadata: DecoratorMetadataObject,
-  propertyKey: string | symbol,
+  propertyKey: keyof This,
   post: PrePost<This>
 ): Array<PrePost<This>> {
   return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
 }
 
-function getBitField (metadata: DecoratorMetadataObject, propertyKey: string | symbol): BitField | undefined {
+function getBitField<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): BitField<This> | undefined {
   const bitfields = getBitFields(metadata)
   return bitfields.find(x => x.propertyName === propertyKey)
 }
 
-function getBitFields (metadata: DecoratorMetadataObject): BitField[] {
+function getBitFields<This> (metadata: DecoratorMetadataObject): Array<BitField<This>> {
   if (metadata[BitFieldSymbol] === undefined) {
     metadata[BitFieldSymbol] = []
   }
@@ -169,10 +169,10 @@ function getBitFields (metadata: DecoratorMetadataObject): BitField[] {
   return Array.isArray(bitfields) ? bitfields : []
 }
 
-function setBitField (
+function setBitField<This> (
   metadata: DecoratorMetadataObject,
-  bitfield: BitField
-): BitField[] {
+  bitfield: BitField<This>
+): Array<BitField<This>> {
   const bitfields = [...getBitFields(metadata), bitfield]
   metadata[BitFieldSymbol] = bitfields
   return bitfields

@@ -44,7 +44,7 @@ export type TransformerFunction<This> = (value: any, targetInstance: This) => an
  *
  * @extends {MetaDescriptor<T>}
  */
-export interface Transformer<This> extends MetaDescriptor {
+export interface Transformer<This> extends MetaDescriptor<This> {
   options: TransformerOptions
   /**
    * The transformer function taking the value in input and return the transformed value.
@@ -74,7 +74,7 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
       type: TransformerSymbol,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName: context.name as keyof This,
       options,
       transformer: func
     }

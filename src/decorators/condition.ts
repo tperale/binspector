@@ -17,27 +17,30 @@ import { NoConditionMatched } from '../error'
 import Meta from '../metadatas'
 
 export const ConditionSymbol = Symbol('condition-symbol')
+export const DynamicConditionSymbol = Symbol('dynamic-condition-symbol')
 
 /**
  * ConditionFunction type are the function passed to the {@link Condition} decorators.
  * It receive the instance of the non finalized object in its current state and return a boolean.
  */
 export type ConditionFunction<This> = (targetInstance: This) => boolean
+export type DynamicGetterFunction<This, Value> = (targetInstance: This) => Primitive<Value>
+export type DynamicConditionFunction<This, Value> = (targetInstance: This) => PrimitiveTypeProperty<This> | RelationTypeProperty<This, Value>
 
 /**
  * Condition.
  *
  * @extends {MetaDescriptor<T>}
  */
-export interface Condition<This> extends MetaDescriptor {
+export interface Condition<This> extends MetaDescriptor<This> {
   /**
    * Function to control the flow of execution of the parser/writter.
    */
-  condition: ConditionFunction<This>
+  condition: ConditionFunction<This> | DynamicConditionFunction<This, any>
   /**
    * Relation to set if the condition pass.
    */
-  relation: PrimitiveTypeProperty | RelationTypeProperty | undefined // TODO Rename this to something like FinalPrimitive
+  relation: PrimitiveTypeProperty<This> | RelationTypeProperty<This, any> | undefined // TODO Rename this to something like FinalPrimitive
 }
 
 /**
@@ -49,17 +52,18 @@ export interface Condition<This> extends MetaDescriptor {
  *
  * @category Advanced Use
  */
-export function conditionDecoratorFactory<This, Value> (name: string, func: ConditionFunction<This>, then?: Primitive, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function conditionDecoratorFactory<This, Target, Value> (name: string, func: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>) {
-    function createRelation (relationOrPrimitive: Primitive): PrimitiveTypeProperty | RelationTypeProperty {
+    const propertyName = context.name as keyof This
+    function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
       if (isPrimitiveSymbol(relationOrPrimitive)) {
-        return createPrimitiveTypeProperty(context.metadata, context.name, relationOrPrimitive)
+        return createPrimitiveTypeProperty(context.metadata, propertyName, relationOrPrimitive)
       } else { // Check has constructor
-        return createRelationTypeProperty(context.metadata, context.name, relationOrPrimitive, args)
+        return createRelationTypeProperty(context.metadata, propertyName, relationOrPrimitive, args)
       }
     }
 
-    if (!Meta.isFieldDecorated(context.metadata, context.name)) {
+    if (!Meta.isFieldDecorated(context.metadata, propertyName)) {
       Relation()(_, context)
     }
 
@@ -67,12 +71,49 @@ export function conditionDecoratorFactory<This, Value> (name: string, func: Cond
       type: ConditionSymbol,
       name,
       metadata: context.metadata,
-      propertyName: context.name,
+      propertyName,
       condition: func,
       relation: then !== undefined ? createRelation(then) : undefined
     }
 
-    Meta.setCondition(context.metadata, context.name, condition)
+    Meta.setCondition(context.metadata, propertyName, condition)
+  }
+}
+
+/**
+ * dynamicConditionDecoratorFactory.
+ *
+ * @param {string} name Name of the controller decorator.
+ * @param {ConditionFunction} func Condition to control the relation to read.
+ * @returns {DecoratorType} The property decorator function ran at runtime
+ *
+ * @category Advanced Use
+ */
+export function dynamicConditionDecoratorFactory<This, Target, Value> (name: string, func: DynamicGetterFunction<This, Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+  return function (_: undefined, context: Context<This, Value>) {
+    const propertyName = context.name as keyof This
+    function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
+      if (isPrimitiveSymbol(relationOrPrimitive)) {
+        return createPrimitiveTypeProperty(context.metadata, propertyName, relationOrPrimitive)
+      } else { // Check has constructor
+        return createRelationTypeProperty(context.metadata, propertyName, relationOrPrimitive, args)
+      }
+    }
+
+    if (!Meta.isFieldDecorated(context.metadata, propertyName)) {
+      Relation()(_, context)
+    }
+
+    const condition: Condition<This> = {
+      type: DynamicConditionSymbol,
+      name,
+      metadata: context.metadata,
+      propertyName,
+      condition: (targetInstance: This) => createRelation(func(targetInstance)),
+      relation: undefined
+    }
+
+    Meta.setCondition(context.metadata, propertyName, condition)
   }
 }
 
@@ -86,7 +127,7 @@ export function conditionDecoratorFactory<This, Value> (name: string, func: Cond
  *
  * @category Decorators
  */
-export function IfThen<This, Value> (func: ConditionFunction<This>, then?: Primitive, args?: (curr: This) => any[]): DecoratorType<This, Value> {
+export function IfThen<This, Target, Value> (func: ConditionFunction<This>, then?: Primitive<Target>, args?: (curr: This) => any[]): DecoratorType<This, Value> {
   return conditionDecoratorFactory('ifthen', func, then, args)
 }
 
@@ -114,7 +155,7 @@ export function IfThen<This, Value> (func: ConditionFunction<This>, then?: Primi
  *
  * @category Decorators
  */
-export function Else<This, Value> (then?: Primitive, args?: (curr: This) => any[]): DecoratorType<This, Value> {
+export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (curr: This) => any[]): DecoratorType<This, Value> {
   return conditionDecoratorFactory('else', () => true, then, args)
 }
 
@@ -272,13 +313,13 @@ export function Else<This, Value> (then?: Primitive, args?: (curr: This) => any[
  *
  * @category Decorators
  */
-export function Choice<This, Value> (cmp: string | ((targetInstance: This) => any), match: Record<any, Primitive | [Primitive, RelationParameters<This>] | undefined>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function Choice<This, Value> (cmp: string | ((targetInstance: This) => any), match: Record<any, Primitive<any> | [Primitive<any>, RelationParameters<This>] | undefined>, args?: RelationParameters<This>): DecoratorType<This, Value> {
   const valueToCompare = typeof cmp === 'string' ? (targetInstance: This) => recursiveGet(targetInstance, cmp) : cmp
   // Mandatory to cast to String because the key is always a string even though you declare it as a number
   const decorators = Object.keys(match).map((key: keyof typeof match) => {
     const matchValue = match[key]
     const [primValue, primArgs] = Array.isArray(matchValue) ? [matchValue[0], matchValue[1]] : [matchValue, args]
-    return conditionDecoratorFactory<This, Value>('choice', (targetInstance: This) => key === String(valueToCompare(targetInstance)), primValue, primArgs)
+    return conditionDecoratorFactory('choice', (targetInstance: This) => key === String(valueToCompare(targetInstance)), primValue, primArgs)
   })
 
   return function (_: undefined, context: Context<This, Value>) {
@@ -286,6 +327,10 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
       decorator(_, context)
     })
   }
+}
+
+export function Select<This, Value> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This>): DecoratorType<This, Value> {
+  return dynamicConditionDecoratorFactory('select', getter, args)
 }
 
 /**
@@ -299,15 +344,21 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
  *
  * @category Advanced Use
  */
-export function useConditions<This> (conditions: Array<Condition<This>>, targetInstance: any): PrimitiveTypeProperty | RelationTypeProperty | undefined {
-  const cond = conditions.find(cond => cond.condition(targetInstance))
-  if (cond === undefined) {
-    // TODO Improve the error handling
-    // - cursor backtrace to show the position in the file
-    // - current instance to print. The condition are mostly done on the current instance
-    // - If creating a `@Choice` it's probably more easy to debug.
-    throw new NoConditionMatched()
-  }
+export function useConditions<This, Value> (conditions: Array<Condition<This>>, targetInstance: This): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Value> | undefined {
+  const isDynamic = conditions.find(cond => cond.type === DynamicConditionSymbol)
+  if (isDynamic !== undefined) {
+    const getter = isDynamic.condition as DynamicConditionFunction<This, Value>
+    return getter(targetInstance)
+  } else {
+    const cond = conditions.find(cond => cond.condition(targetInstance))
+    if (cond === undefined) {
+      // TODO Improve the error handling
+      // - cursor backtrace to show the position in the file
+      // - current instance to print. The condition are mostly done on the current instance
+      // - If creating a `@Choice` it's probably more easy to debug.
+      throw new NoConditionMatched()
+    }
 
-  return cond.relation
+    return cond.relation
+  }
 }
