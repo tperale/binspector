@@ -31,7 +31,7 @@ class BitmapFileHeader {
   @Enum(BitmapHeaderTypes)
   @Count(2, { targetType: String })
   @Relation(PrimitiveSymbol.char)
-  type: string
+  type: BitmapHeaderTypes
 
   /* Size in bytes of the BMP file */
   @Relation(PrimitiveSymbol.u32)
