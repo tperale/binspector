@@ -17,6 +17,7 @@ import {
 import { type InstantiableObject } from './types'
 import { usePrePost } from './decorators/prepost'
 import { useConditions } from './decorators/condition'
+import { useTransformer, TransformerExecutionScope } from './decorators/transformer'
 import { writeBitField } from './decorators/bitfield'
 
 /**
@@ -29,7 +30,7 @@ import { writeBitField } from './decorators/bitfield'
  *
  */
 export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): void {
-  function getBinWriter (field: PropertyType<Target>, instance: any): () => void {
+  function getBinWriter (field: PropertyType<Target>, instance: any, value: any): () => void {
     const strToArray = (x: any): any => (typeof x === 'string' && x.length > 1) ? x.split('') : x
 
     const write = (field: PropertyType<Target>, value: any): void => {
@@ -42,14 +43,14 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       }
     }
 
-    const value = strToArray(instance[field.propertyName])
+    const _value = strToArray(value)
     return () => {
-      if (Array.isArray(value)) {
-        value.flat(Infinity).flatMap(strToArray).forEach(x => {
+      if (Array.isArray(_value)) {
+        _value.flat(Infinity).flatMap(strToArray).forEach(x => {
           write(field, x)
         })
       } else {
-        write(field, value)
+        write(field, _value)
       }
     }
   }
@@ -71,14 +72,16 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
       // Condition don't need to be used since the object are already in here.
-      const propertyWriter = getBinWriter(finalRelationField, instance)
+      const transformers = Meta.getTransformers(metadata, field.propertyName)
+      transformers.reverse()
+      const transformedValue = useTransformer(transformers, instance[field.propertyName], instance, TransformerExecutionScope.OnWrite)
+
+      const propertyWriter = getBinWriter(finalRelationField, instance, transformedValue)
 
       // TODO Some controller should include instruction on how to normalize the data
       // For instance matrix should normalize the data into a single array
       // NullString should add back the \0
       // targetType sin
-
-      // TODO Transformer should do the thing in reverse
 
       propertyWriter()
     }

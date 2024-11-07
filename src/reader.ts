@@ -121,9 +121,6 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
 
       const transformers = Meta.getTransformers(metadata, field.propertyName)
       const transformedValue = useTransformer(transformers, value, instance)
-        transformers.reduce((res, transformer) => {
-        return transformer.transformer(res, instance)
-      }, value)
 
       useValidators(Meta.getValidators(metadata, field.propertyName), transformedValue, instance, content)
 
