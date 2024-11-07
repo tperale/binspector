@@ -1,7 +1,7 @@
 # 🕵️ binspector, your binary file assistant
 
 A _truly_ declarative library for binary file and protocol definition
-written in typescript. Read binary files based on class
+written in typescript. Read & Write binary files based on class
 definition and decorators directly on your webapp.
 
 ```typescript
@@ -57,7 +57,7 @@ class Protocol {
   content from the definition.
 * The binary file definition is re-used for typescript type checking.
 * Extensible. Binary readers based on DSL are hard to extend.
-* Support parsing (and serialisation in the future) of the binary file.
+* Support parsing and serialisation of binary file definition.
 * It works on the browser. You can create binary file decoder and encoder on
   your webapp frontend without depending on other library on your server.
 * Support the common operation done on binary files.
