@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { BinaryReader } from '../cursor'
+import { BinaryReader, BinaryWriter } from '../cursor'
 import { EOF, PrimitiveSymbol } from '../types'
 
 describe('Tests on DataFrame through the Cursor object', () => {
@@ -21,5 +21,19 @@ describe('Tests on DataFrame through the Cursor object', () => {
     const cur = new BinaryReader(arr)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(9)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(EOF)
+  })
+})
+
+describe('Tests BinaryWriter', () => {
+  it('should create a basic buffer', () => {
+    const bw = new BinaryWriter()
+    bw.write(PrimitiveSymbol.u8, 1)
+    bw.write(PrimitiveSymbol.u8, 2)
+
+    expect(bw.length).toStrictEqual(2)
+    const buf = new Uint8Array(bw.buffer())
+    
+    expect(buf[0]).toStrictEqual(1)
+    expect(buf[1]).toStrictEqual(2)
   })
 })

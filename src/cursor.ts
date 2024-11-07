@@ -7,6 +7,7 @@ export abstract class Cursor {
   abstract offset (): number
   abstract move (address: number): number
   abstract read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF
+  abstract write (primitive: PrimitiveSymbol, value: number | string): void;
 
   forward (x: number): number {
     return this.move(this.offset() + x)
@@ -98,6 +99,10 @@ export class BinaryReader extends BinaryCursor {
     }
   }
 
+  write (_: PrimitiveSymbol, _2: number | string): void {
+    throw new Error('Shouldn\'t call "write" method on a BinaryReader object')
+  }
+
   read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF {
     try {
       const value = this._readPrimitive(primitive)
@@ -113,5 +118,67 @@ export class BinaryReader extends BinaryCursor {
     this.data = new DataView(array)
     this.endianness = endian
     this.length = this.data.byteLength
+  }
+}
+
+export class BinaryWriter extends BinaryCursor {
+  data: Array<[number, PrimitiveSymbol, number, BinaryCursorEndianness]> = []
+
+  write (primitive: PrimitiveSymbol, value: number | string): void {
+    const size = this._getPrimitiveSize(primitive)
+    const index = this.offset()
+    const endian = this.getEndian()
+
+    if (primitive === PrimitiveSymbol.char || typeof value === 'string') {
+      this.data.push([String(value).charCodeAt(0), PrimitiveSymbol.u8, index, endian])
+    } else {
+      this.data.push([value, primitive, index, endian])
+    }
+
+    this.forward(size)
+  }
+
+  read (_: PrimitiveSymbol): string | number | bigint | typeof EOF {
+    throw new Error('Shouldn\'t call "read" method on a BinaryWriter object')
+  }
+
+  buffer (): ArrayBuffer {
+    const buf = new DataView(new ArrayBuffer(this.length))
+
+    this.data.forEach(([value, primitive, index, endian]) => {
+      switch (primitive) {
+        case PrimitiveSymbol.u8:
+          buf.setUint8(index, value)
+          break
+        case PrimitiveSymbol.u16:
+          buf.setUint16(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          break
+        case PrimitiveSymbol.u32:
+          buf.setUint32(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          break
+        // case .u64:
+        //   return [1, this.data.getBigUint64(this.index)];
+        case PrimitiveSymbol.i8:
+          buf.setInt8(index, value)
+          break
+        case PrimitiveSymbol.i16:
+          buf.setInt16(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          break
+        case PrimitiveSymbol.i32:
+          buf.setInt32(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          break
+        // case .i64:
+        //   return [1, this.data.getBigInt64(this.index)];
+      }
+
+      return index + this._getPrimitiveSize(primitive)
+    }, 0)
+
+    return buf.buffer
+  }
+
+  constructor (endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+    super()
+    this.endianness = endian
   }
 }
