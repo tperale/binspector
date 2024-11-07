@@ -3,14 +3,14 @@ import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
-import { BinaryCursor, BinaryCursorEndianness } from '../cursor'
+import { BinaryReader, BinaryCursorEndianness } from '../cursor'
 
 function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-  return expect(binread(new BinaryCursor(new Uint8Array(buffer).buffer, endian), ObjectDefinition))
+  return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition))
 }
 
 function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
-  return expect(() => binread(new BinaryCursor(new Uint8Array(buffer).buffer), ObjectDefinition)).toThrow()
+  return expect(() => binread(new BinaryReader(new Uint8Array(buffer).buffer), ObjectDefinition)).toThrow()
 }
 
 describe('Reading binary content into js object', () => {
@@ -210,7 +210,7 @@ describe('Reading binary with controller', () => {
     class TestClass {
       @MapTo([1, 2])
       @Relation(SubClass)
-      field: number
+      field: SubClass[]
     }
 
     expectReadTest([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7], TestClass).toMatchObject({
@@ -553,7 +553,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
-    const curr = new BinaryCursor(header)
+    const curr = new BinaryReader(header)
     expect(binread(curr, Protocol)).toMatchObject({
       value: 0x03
     })
@@ -568,7 +568,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
-    const curr = new BinaryCursor(header)
+    const curr = new BinaryReader(header)
     expect(binread(curr, Protocol)).toMatchObject({
       value: 0x01
     })

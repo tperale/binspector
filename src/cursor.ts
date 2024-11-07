@@ -18,19 +18,21 @@ export enum BinaryCursorEndianness {
   LittleEndian = 1,
 }
 
-export class BinaryCursor extends Cursor {
-  endian: boolean = false
-  data: DataView
+export abstract class BinaryCursor extends Cursor {
   index: number = 0
+  length: number = 0
   endianness: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian
-
-  offset (): number {
-    return this.index
-  }
 
   move (offset: number): number {
     this.index = offset
+    if (this.index > this.length) {
+      this.length = this.index
+    }
     return offset
+  }
+
+  offset (): number {
+    return this.index
   }
 
   getEndian (): BinaryCursorEndianness {
@@ -62,6 +64,10 @@ export class BinaryCursor extends Cursor {
         return 0
     }
   }
+}
+
+export class BinaryReader extends BinaryCursor {
+  data: DataView
 
   _readPrimitive (primType: PrimitiveSymbol): string | number | bigint {
     switch (primType) {
@@ -102,13 +108,10 @@ export class BinaryCursor extends Cursor {
     }
   }
 
-  length (): number {
-    return this.data.byteLength
-  }
-
   constructor (array: ArrayBuffer, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
     super()
     this.data = new DataView(array)
     this.endianness = endian
+    this.length = this.data.byteLength
   }
 }

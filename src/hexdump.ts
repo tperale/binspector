@@ -1,4 +1,4 @@
-import { type BinaryCursor } from './cursor'
+import { type BinaryReader } from './cursor'
 
 interface HexdumpOptions {
   lineLength: number
@@ -34,8 +34,8 @@ function hexToAscii (value: number, opt: HexdumpOptions): string {
   }
 }
 
-export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOptions): string {
-  const offsetFinish = Math.min(offset + opt.lineLength, cur.length())
+export function hexDumpLine (cur: BinaryReader, offset: number, opt: HexdumpOptions): string {
+  const offsetFinish = Math.min(offset + opt.lineLength, cur.length)
   const buf = [...new Uint8Array(cur.data.buffer.slice(offset, offsetFinish))]
   let line = ''
 
@@ -57,10 +57,10 @@ export function hexDumpLine (cur: BinaryCursor, offset: number, opt: HexdumpOpti
   return line
 }
 
-export function hexDump (cur: BinaryCursor, addrOffset: number = 0, opt?: Partial<HexdumpOptions>): string {
+export function hexDump (cur: BinaryReader, addrOffset: number = 0, opt?: Partial<HexdumpOptions>): string {
   const options = { ...defaultHexdumpOptions, ...opt }
 
-  if (addrOffset > cur.length()) {
+  if (addrOffset > cur.length) {
     throw new Error('Start Offset bigger than the buffer length')
   }
 
@@ -68,8 +68,8 @@ export function hexDump (cur: BinaryCursor, addrOffset: number = 0, opt?: Partia
   const fixedAddrOffset = addrOffset - (addrOffset % options.base)
   const startOffset = Math.max(fixedAddrOffset - (options.bufferOffsetPadding * options.lineLength), 0)
   const endOffset = addrOffset > 0
-    ? Math.min(fixedAddrOffset + (options.bufferOffsetPadding * options.lineLength), cur.length())
-    : cur.length()
+    ? Math.min(fixedAddrOffset + (options.bufferOffsetPadding * options.lineLength), cur.length)
+    : cur.length
   let offset = startOffset
   while (offset < endOffset) {
     content += hexDumpLine(cur, offset, options)
@@ -80,7 +80,7 @@ export function hexDump (cur: BinaryCursor, addrOffset: number = 0, opt?: Partia
 }
 
 export class BinDump {
-  _cursor: BinaryCursor
+  _cursor: BinaryReader
   _opt: HexdumpOptions
 
   show (): string {
@@ -91,7 +91,7 @@ export class BinDump {
     return hexDump(this._cursor, offset, this._opt)
   }
 
-  constructor (cur: BinaryCursor, opt?: Partial<HexdumpOptions>) {
+  constructor (cur: BinaryReader, opt?: Partial<HexdumpOptions>) {
     const options = { ...defaultHexdumpOptions, ...opt }
     this._opt = options
     this._cursor = cur

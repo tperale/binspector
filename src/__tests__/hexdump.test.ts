@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { BinDump } from '../hexdump'
-import { BinaryCursor } from '../cursor'
+import { BinaryReader } from '../cursor'
 
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -14,13 +14,13 @@ describe('Using the hexdump', () => {
       0x1F, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
       0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32
     ]).buffer
-    const curr = new BinaryCursor(arr)
+    const curr = new BinaryReader(arr)
     console.log(new BinDump(curr).show())
     expect(true).toBe(true)
   })
   it('should display the binary', async () => {
     const data = await fs.readFile(path.join(__dirname, '../../example/devicetree/am335x-bone.dtb'))
-    const curr = new BinaryCursor(data.buffer)
+    const curr = new BinaryReader(data.buffer)
     const bd = new BinDump(curr)
     console.log(bd.at(0x154A))
     console.log(bd.at(0x10450))
