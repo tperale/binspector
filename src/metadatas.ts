@@ -31,7 +31,7 @@ function removeMetadata<T> (
   const metas = getMetadata(metadata, propertyKey, metadataKey)
   const newMetas = metas.filter((x: any) => x.id !== rmValue.id)
   metadata[metadataKey][propertyKey] = newMetas
-  return newMetas
+  return metadata[metadataKey][propertyKey]
 }
 
 function setMetadata<T> (
