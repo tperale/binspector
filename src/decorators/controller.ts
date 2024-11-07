@@ -9,7 +9,7 @@
  *
  * @module Controller
  */
-import { type MetaDescriptor, recursiveGet } from './common'
+import { createMetaDescriptor, type MetaDescriptor, recursiveGet } from './common'
 import { type Cursor } from '../cursor'
 import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
@@ -100,10 +100,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
 
     const propertyName = context.name as keyof This
     const controller: Controller<This> = {
-      type: ControllerSymbol,
-      name,
-      metadata: context.metadata,
-      propertyName,
+      ...createMetaDescriptor(ControllerSymbol, name, context.metadata, propertyName),
       options,
       controller: (curr: This, cursor, read) => func(curr, cursor, read, options)
     }

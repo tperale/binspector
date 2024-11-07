@@ -7,7 +7,7 @@
  *
  * @module Primitive
  */
-import { type MetaDescriptor, commaSeparetedRecursiveGet } from './common'
+import { type MetaDescriptor, createMetaDescriptor, commaSeparetedRecursiveGet } from './common'
 import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
 import Meta from '../metadatas'
 
@@ -20,15 +20,6 @@ export class RelationNotDefinedError extends Error {
 export class RelationAlreadyDefinedError extends Error {
   constructor (propertyType: PropertyType<any>, propertyKey: string) {
     super(`The relation '${JSON.stringify(propertyType)}' already exist for the property '${propertyKey}'`)
-  }
-}
-
-function createMetaDescriptor<This> (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: keyof This): MetaDescriptor<This> {
-  return {
-    type,
-    name,
-    metadata,
-    propertyName
   }
 }
 

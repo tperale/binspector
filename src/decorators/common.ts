@@ -7,7 +7,11 @@
  */
 export interface MetaDescriptor<This> {
   /**
-   * Validator name.
+   * Unique ID
+   */
+  id: number
+  /**
+   * Type symbol
    */
   type: symbol
 
@@ -25,6 +29,23 @@ export interface MetaDescriptor<This> {
    * Property name of the object the decorator is applied.
    */
   propertyName: keyof This
+}
+
+const uid = (function () {
+  let id = 0
+  return function () {
+    return id++
+  }
+})()
+
+export function createMetaDescriptor<This> (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: keyof This): MetaDescriptor<This> {
+  return {
+    id: uid(),
+    type,
+    name,
+    metadata,
+    propertyName
+  }
 }
 
 /**

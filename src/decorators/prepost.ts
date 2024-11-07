@@ -9,7 +9,7 @@
  *
  * @module PrePost
  */
-import { type MetaDescriptor, recursiveGet } from './common'
+import { type MetaDescriptor, createMetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type DecoratorType, type Context } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
@@ -20,7 +20,7 @@ export const PostFunctionSymbol = Symbol('post-function')
 
 export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
-type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>) => Array<PrePost<This>>
+type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>, remove?: boolean) => Array<PrePost<This>>
 
 /**
  * PrePostOptions.
@@ -30,10 +30,15 @@ export interface PrePostOptions {
    * Verify a relation already exist before the definition of the PrePost function
    */
   primitiveCheck: boolean
+  /**
+   * Remove the Decorator from the metadata once its function has been ran.
+   */
+  once: boolean
 }
 
 export const PrePostOptionsDefault = {
-  primitiveCheck: true
+  primitiveCheck: true,
+  once: false
 }
 
 /**
@@ -63,12 +68,16 @@ function prePostFunctionDecoratorFactory<This, Value> (name: string, typeSym: sy
 
     const propertyName = context.name as keyof This
     const preFunction: PrePost<This> = {
-      type: typeSym,
-      name,
-      metadata: context.metadata,
-      propertyName,
+      ...createMetaDescriptor(typeSym, name, context.metadata, propertyName),
       options,
       func
+    }
+
+    if (options.once) {
+      preFunction.func = (instance: This, cursor: Cursor) => {
+        func(instance, cursor)
+        metaSetter(context.metadata, propertyName, preFunction, true)
+      }
     }
 
     metaSetter(context.metadata, propertyName, preFunction)
@@ -164,7 +173,7 @@ export function Peek<This, Value> (offset?: number | string | ((instance: This, 
       const preOff = cursor.offset()
       postFunctionDecoratorFactory<This, Value>('post-peek', (_, cursor) => {
         cursor.move(preOff)
-      }, opt)(_, context)
+      }, { ...opt, once: true })(_, context)
       const offCompute =
         (offset === null || offset === undefined)
           ? preOff
@@ -196,7 +205,7 @@ export function Endian<This, Value> (endianness: BinaryCursorEndianness, opt?: P
 
         postFunctionDecoratorFactory('postEndian', () => {
           cursor.setEndian(currentEndian)
-        }, opt)(_, context)
+        }, { ...opt, once: true })(_, context)
       }
     }, opt)(_, context)
   }

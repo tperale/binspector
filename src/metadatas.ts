@@ -22,6 +22,18 @@ function getMetadata<T> (
   return Array.isArray(meta) ? meta : []
 }
 
+function removeMetadata<T> (
+  metadata: DecoratorMetadataObject,
+  propertyKey: string | symbol | number,
+  metadataKey: symbol,
+  rmValue: any
+): T[] {
+  const metas = getMetadata(metadata, propertyKey, metadataKey)
+  const newMetas = metas.filter((x: any) => x.id !== rmValue.id)
+  metadata[metadataKey][propertyKey] = newMetas
+  return newMetas
+}
+
 function setMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol | number,
@@ -71,9 +83,14 @@ function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: keyof Thi
 function setPre<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
-  pre: PrePost<This>
+  pre: PrePost<This>,
+  remove = false
 ): Array<PrePost<This>> {
-  return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
+  if (remove) {
+    return removeMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
+  } else {
+    return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
+  }
 }
 
 function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Condition<This>> {
@@ -151,9 +168,14 @@ function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: keyof Th
 function setPost<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
-  post: PrePost<This>
+  post: PrePost<This>,
+  remove = false
 ): Array<PrePost<This>> {
-  return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
+  if (remove) {
+    return removeMetadata(metadata, propertyKey, PostFunctionSymbol, post)
+  } else {
+    return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
+  }
 }
 
 function getBitField<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): BitField<This> | undefined {

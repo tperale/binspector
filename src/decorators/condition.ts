@@ -10,7 +10,7 @@
  *
  * @module Condition
  */
-import { recursiveGet, type MetaDescriptor } from './common'
+import { recursiveGet, type MetaDescriptor, createMetaDescriptor } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
 import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types'
 import { NoConditionMatched } from '../error'
@@ -68,10 +68,7 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, fu
     }
 
     const condition: Condition<This> = {
-      type: ConditionSymbol,
-      name,
-      metadata: context.metadata,
-      propertyName,
+      ...createMetaDescriptor(ConditionSymbol, name, context.metadata, propertyName),
       condition: func,
       relation: then !== undefined ? createRelation(then) : undefined
     }
@@ -105,10 +102,7 @@ export function dynamicConditionDecoratorFactory<This, Target, Value> (name: str
     }
 
     const condition: Condition<This> = {
-      type: DynamicConditionSymbol,
-      name,
-      metadata: context.metadata,
-      propertyName,
+      ...createMetaDescriptor(DynamicConditionSymbol, name, context.metadata, propertyName),
       condition: (targetInstance: This) => createRelation(func(targetInstance)),
       relation: undefined
     }
