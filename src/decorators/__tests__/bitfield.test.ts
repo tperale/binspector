@@ -2,14 +2,14 @@ import { describe, expect } from '@jest/globals'
 import { useBitField, Bitfield } from '../bitfield'
 import { Relation } from '../primitive'
 import Meta from '../../metadatas'
-import { BinaryCursor } from '../../cursor'
+import { BinaryReader } from '../../cursor'
 
 function testBitfield (TargetClass: new () => any, content: number[], match: any) {
   const instance = new TargetClass()
 
   const bitfields = Meta.getBitFields(TargetClass[Symbol.metadata] as DecoratorMetadataObject)
 
-  const cur = new BinaryCursor(new Uint8Array(content).buffer)
+  const cur = new BinaryReader(new Uint8Array(content).buffer)
 
   expect(useBitField(bitfields, instance, cur)).toMatchObject(match)
 }
