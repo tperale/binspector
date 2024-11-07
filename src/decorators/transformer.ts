@@ -15,6 +15,12 @@ import Meta from '../metadatas'
  */
 export const TransformerSymbol = Symbol('transformer')
 
+export enum TransformerExecutionScope {
+  OnRead = 0x01,
+  OnWrite = 0x02,
+  OnBoth = 0x03,
+}
+
 /**
  * TransformerOptions.
  */
@@ -27,11 +33,16 @@ export interface TransformerOptions {
    * If the value to apply the transformer to is an array the transformer will be applied to every member.
    */
   each: boolean
+  /**
+   * Whether that Transformer function must be executed during the read process or the write process (or both).
+   */
+  scope: TransformerExecutionScope
 }
 
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
-  each: false
+  each: false,
+  scope: TransformerExecutionScope.OnRead
 }
 
 /**
@@ -93,6 +104,38 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
 }
 
 /**
+ * TransformScale
+ *
+ * @param {number} scale
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
+export function TransformScale<This, Value> (scale: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
+  return function (_: any, context: Context<This, Value>) {
+    transformerDecoratorFactory('transform-scale', (x) => x * scale, opt)(_, context)
+    transformerDecoratorFactory('transform-scale', (x) => x / scale, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+  }
+}
+
+/**
+ * TransformOffset
+ *
+ * @param {number} offset
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
+export function TransformOffset<This, Value> (off: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
+  return function (_: any, context: Context<This, Value>) {
+    transformerDecoratorFactory('transform-offset', (x) => x + off, opt)(_, context)
+    transformerDecoratorFactory('transform-offset', (x) => x - off, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+  }
+}
+
+
+
+/**
  * useTransformer.
  *
  * @param {Array} transformers
@@ -102,12 +145,15 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
  *
  * @category Advanced Use
  */
-export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This): any {
+export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = TransformerExecutionScope.OnRead): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
-    if (Array.isArray(transformedTmpValue) && transformer.options.each) {
-      return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
-    } else {
-      return transformer.transformer(transformedTmpValue, targetInstance)
+    if ((transformer.options.scope & scope) > 0) {
+      if (Array.isArray(transformedTmpValue) && transformer.options.each) {
+        return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
+      } else {
+        return transformer.transformer(transformedTmpValue, targetInstance)
+      }
     }
+    return transformedTmpValue
   }, propertyValue)
 }

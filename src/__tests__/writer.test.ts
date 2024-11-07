@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset } from '../decorators'
 import { InstantiableObject, PrimitiveSymbol } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -270,6 +270,33 @@ describe('Writing binary definition with PrePost decorators', () => {
     }
 
     decodeEncodeTest(Protocol, [0x01, 0x00, 0x03])
+  })
+})
+
+describe('Writing binary definition with Transformer decorators', () => {
+  it('should work with TransformScale decorator', () => {
+    class Protocol {
+      @TransformScale(2)
+      @Relation(PrimitiveSymbol.u8)
+      data: number
+    }
+
+    decodeEncodeTest(Protocol, [0x02])
+  })
+  it('should work with TransformScale & TransformOffset decorator', () => {
+    class Protocol {
+      @TransformOffset(-1)
+      @TransformScale(2)
+      @Relation(PrimitiveSymbol.u8)
+      data: number
+
+      @TransformScale(2)
+      @TransformOffset(-1)
+      @Relation(PrimitiveSymbol.u8)
+      data2: number
+    }
+
+    decodeEncodeTest(Protocol, [0x02, 0x01])
   })
 })
 
