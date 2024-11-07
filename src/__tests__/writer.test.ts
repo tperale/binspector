@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Count, Matrix, Peek, Offset, Endian, NullTerminatedString } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString } from '../decorators'
 import { InstantiableObject, PrimitiveSymbol } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -20,7 +20,7 @@ function areArrayBufferEqual (buf1: ArrayBuffer, buf2: ArrayBuffer) {
 
 function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
   const writtenBuf = new BinaryWriter(endian)
-  binwrite(ObjectDefinition, instance, writtenBuf)
+  binwrite(writtenBuf, ObjectDefinition, instance)
   expect(areArrayBufferEqual(writtenBuf.buffer(), Uint8Array.from(buf))).toEqual(true)
 }
 
@@ -270,5 +270,23 @@ describe('Writing binary definition with PrePost decorators', () => {
     }
 
     decodeEncodeTest(Protocol, [0x01, 0x00, 0x03])
+  })
+})
+
+describe('Writing binary definition with Condition decorators', () => {
+  it('should work with choice decorator', () => {
+    class Protocol {
+      @Relation(PrimitiveSymbol.u8)
+      type: number
+
+      @Choice(_ => _.type, {
+        0x01: PrimitiveSymbol.u8,
+        0x02: PrimitiveSymbol.u16,
+        0x03: undefined
+      })
+      payload: number
+    }
+
+    decodeEncodeTest(Protocol, [0x02, 0x00, 0x03])
   })
 })
