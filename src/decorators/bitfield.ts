@@ -53,7 +53,7 @@
  */
 import { type MetaDescriptor } from './common'
 import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
-import { type Cursor } from '../cursor'
+import { type Cursor, type BinaryWriter } from '../cursor'
 import Meta from '../metadatas'
 
 export const BitFieldSymbol = Symbol('bitfield')
@@ -184,4 +184,39 @@ export function useBitField<This> (bitfields: Array<BitField<This>>, targetInsta
   }, (Math.ceil(totalBitLength / 8) * 8))
 
   return targetInstance
+}
+
+/**
+ * @category Advanced Use
+ */
+export function writeBitField<This> (bitfields: Array<BitField<This>>, targetInstance: This, cursor: BinaryWriter): void {
+  const getPrimitive = (length: number): PrimitiveSymbol => {
+    const remainToAlign = (8 - (length % 8)) % 8
+    switch ((length + remainToAlign) / 8) {
+      case 1:
+        return PrimitiveSymbol.u8
+      case 2:
+        return PrimitiveSymbol.u16
+      // TODO Support u24
+      case 4:
+        return PrimitiveSymbol.u32
+      default:
+        // TODO Throw
+        return PrimitiveSymbol.u8
+    }
+  }
+
+  const totalBitLength = bitfields.reduce((size, curr) => size + curr.bitlength, 0)
+  const primitive = getPrimitive(totalBitLength)
+  let result = 0 // (1 << totalBitLength) - 1
+  bitfields.reduce((offset: number, bf: BitField<This>) => {
+    const OFFSET = offset - bf.bitlength
+    const MASK = ((1 << bf.bitlength) - 1)
+    const value = Number(targetInstance[bf.propertyName])
+
+    result |= ((MASK & value) << OFFSET)
+    return OFFSET
+  }, (Math.ceil(totalBitLength / 8) * 8))
+
+  cursor.write(primitive, result)
 }
