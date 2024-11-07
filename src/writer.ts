@@ -5,7 +5,7 @@
  *
  * @module reader
  */
-import { type BinaryWriter } from './cursor'
+import { BinaryWriter } from './cursor'
 import { UnknownPropertyType } from './error'
 import Meta from './metadatas'
 import {
@@ -87,4 +87,18 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor)
   })
+}
+
+export function computeBinSize (instance: any): number {
+  function _getSize (x: any): number {
+    const bw = new BinaryWriter()
+    binwrite(bw, x.constructor, x)
+    return bw.length
+  }
+
+  if (Array.isArray(instance)) {
+    return instance.reduce((acc, curr) => acc + _getSize(curr), 0)
+  } else {
+    return _getSize(instance)
+  }
 }
