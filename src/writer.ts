@@ -73,17 +73,14 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     if (finalRelationField !== undefined) {
       // Condition don't need to be used since the object are already in here.
       const transformers = Meta.getTransformers(metadata, field.propertyName)
-      transformers.reverse()
-      const transformedValue = useTransformer(transformers, instance[field.propertyName], instance, TransformerExecutionScope.OnWrite)
-
-      const propertyWriter = getBinWriter(finalRelationField, instance, transformedValue)
+      const reversedTransformers = transformers.slice().reverse()
+      const transformedValue = useTransformer(reversedTransformers, instance[field.propertyName], instance, TransformerExecutionScope.OnWrite)
+      getBinWriter(finalRelationField, instance, transformedValue)()
 
       // TODO Some controller should include instruction on how to normalize the data
       // For instance matrix should normalize the data into a single array
       // NullString should add back the \0
       // targetType sin
-
-      propertyWriter()
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor)
   })
