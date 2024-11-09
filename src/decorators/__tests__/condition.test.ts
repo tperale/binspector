@@ -29,7 +29,7 @@ describe('@Condition: basic testing', () => {
   })
   it('@Else: return a "String" relation', () => {
     class TestClass {
-      @IfThen((_) => false, Number)
+      @IfThen(_ => false, Number)
       @Else(String)
       field: number
     }
@@ -38,7 +38,7 @@ describe('@Condition: basic testing', () => {
   })
   it('@IfThen: return a "Number" relation everytime the condition are checked', () => {
     class TestClass {
-      @IfThen((_) => true, Number)
+      @IfThen(_ => true, Number)
       @Else(String)
       field: number
     }
@@ -52,7 +52,7 @@ describe('@Condition: basic testing', () => {
     class TestClass {
       testField: number = 1
       @Choice('testField', {
-        1: Number
+        1: Number,
       })
       field: number
     }
@@ -70,7 +70,7 @@ describe('@Condition: basic testing', () => {
     class TestClass {
       testField: number = 1
       @Choice('testField', {
-        1: [TestArg, (instance: TestClass) => [instance.testField]]
+        1: [TestArg, (instance: TestClass) => [instance.testField]],
       })
       field: TestArg
     }
@@ -101,7 +101,7 @@ describe('@Condition: basic testing', () => {
       foo: number = 1
       bar: number = 2
       @Choice('foo', {
-        1: [TestArg, 'foo, bar']
+        1: [TestArg, 'foo, bar'],
       })
       field: TestArg
     }
@@ -122,7 +122,7 @@ describe('@Condition: basic testing', () => {
 describe('@Condition: error testing', () => {
   it('NoConditionMatched: should alway define a valid option', () => {
     class TestClass {
-      @IfThen((_) => false, Number)
+      @IfThen(_ => false, Number)
       field: number
     }
 

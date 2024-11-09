@@ -1,1 +1,1 @@
-(Symbol as any).metadata ??= Symbol("Symbol.metadata")
+(Symbol as any).metadata ??= Symbol('Symbol.metadata')

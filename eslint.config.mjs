@@ -1,34 +1,37 @@
 // @ts-check
 
-import jestPlugin from 'eslint-plugin-jest';
-import tseslint from 'typescript-eslint';
-import jseslint from "@eslint/js"
-import stylistic from "@stylistic/eslint-plugin"
+import tseslint from 'typescript-eslint'
+import jseslint from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
 
 export default [
   {
-    files: ["**/*.ts"],
-    ignores: ['build/**', 'dist/**', 'docs/**', './webpack.config.js', '**/*.mjs'],
-  },
-  {
-    // enable jest rules on test files
-    files: ['**/__test__/**'],
-    ...jestPlugin.configs['flat/recommended'],
+    ignores: ['**/build/**', '**/dist/**', '**/docs/**', 'webpack.config.js', 'babel.config.js', '**/*.mjs'],
   },
   // syntax rules
   jseslint.configs.recommended,
   ...tseslint.configs.recommended,
   // code style rules
-  stylistic.configs["recommended-flat"],
+  stylistic.configs['recommended-flat'],
   stylistic.configs.customize({
     indent: 2,
-    braceStyle: "1tbs",
-    quotes: "single",
+    braceStyle: '1tbs',
+    quotes: 'single',
     semi: false,
+    commaDangle: 'only-multiline',
   }),
-  { 
+  {
     rules: {
-      '@stylistic/space-before-function-paren': ['error', { anonymous: 'always', asyncArrow: 'always', named: 'always' }]
-    }
-  }
+      '@stylistic/space-before-function-paren': ['error', { anonymous: 'always', asyncArrow: 'always', named: 'always' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn', // or "error"
+        {
+          'argsIgnorePattern': '^_',
+          'varsIgnorePattern': '^_',
+          'caughtErrorsIgnorePattern': '^_'
+        }
+      ]
+    },
+  },
 ]

@@ -12,7 +12,7 @@ import './symbol-polyfill'
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | number | symbol,
-  metadataKey: symbol
+  metadataKey: symbol,
 ): T[] {
   // TODO Can be optionnal since its set on the set metadata
   if (metadata[metadataKey] === undefined) {
@@ -26,7 +26,7 @@ function removeMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol | number,
   metadataKey: symbol,
-  rmValue: any
+  rmValue: any,
 ): T[] {
   const metas = getMetadata(metadata, propertyKey, metadataKey)
   const newMetas = metas.filter((x: any) => x.id !== rmValue.id)
@@ -39,7 +39,7 @@ function setMetadata<T> (
   propertyKey: string | symbol | number,
   metadataKey: symbol,
   newValue: any,
-  reverse = false
+  reverse = false,
 ): T[] {
   const metas = getMetadata(metadata, propertyKey, metadataKey)
   const newMetas = reverse ? [newValue, ...metas] : [...metas, newValue]
@@ -61,7 +61,7 @@ function getField<This> (metadata: DecoratorMetadataObject, propertyKey: keyof T
 
 function setField<This> (
   metadata: DecoratorMetadataObject,
-  field: PropertyType<This>
+  field: PropertyType<This>,
 ): Array<PropertyType<This>> {
   const fields = [...getFields(metadata), field]
   metadata[FieldSymbol] = fields
@@ -76,7 +76,7 @@ function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: keyof Thi
   return getMetadata(
     metadata,
     propertyKey,
-    PreFunctionSymbol
+    PreFunctionSymbol,
   )
 }
 
@@ -84,7 +84,7 @@ function setPre<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
   pre: PrePost<This>,
-  remove = false
+  remove = false,
 ): Array<PrePost<This>> {
   if (remove) {
     return removeMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
@@ -97,14 +97,14 @@ function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: ke
   return getMetadata(
     metadata,
     propertyKey,
-    ConditionSymbol
+    ConditionSymbol,
   )
 }
 
 function setCondition<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
-  condition: Condition<This>
+  condition: Condition<This>,
 ): Array<Condition<This>> {
   return setMetadata(metadata, propertyKey, ConditionSymbol, condition, true)
 }
@@ -113,14 +113,14 @@ function getControllers<This> (metadata: DecoratorMetadataObject, propertyKey: k
   return getMetadata(
     metadata,
     propertyKey,
-    ControllerSymbol
+    ControllerSymbol,
   )
 }
 
 function setController<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
-  controller: Controller<This>
+  controller: Controller<This>,
 ): Array<Controller<This>> {
   return setMetadata(metadata, propertyKey, ControllerSymbol, controller)
 }
@@ -129,14 +129,14 @@ function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: 
   return getMetadata(
     metadata,
     propertyKey,
-    TransformerSymbol
+    TransformerSymbol,
   )
 }
 
 function setTransformer<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  transformer: Transformer<This>
+  transformer: Transformer<This>,
 ): Array<Transformer<This>> {
   return setMetadata(metadata, propertyKey, TransformerSymbol, transformer)
 }
@@ -145,14 +145,14 @@ function getValidators<This, Value> (metadata: DecoratorMetadataObject, property
   return getMetadata(
     metadata,
     propertyKey,
-    ValidatorSymbol
+    ValidatorSymbol,
   )
 }
 
 function setValidator<This, Value> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol,
-  validator: Validator<This, Value>
+  validator: Validator<This, Value>,
 ): Array<Validator<This, Value>> {
   return setMetadata(metadata, propertyKey, validator.type, validator)
 }
@@ -161,7 +161,7 @@ function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: keyof Th
   return getMetadata(
     metadata,
     propertyKey,
-    PostFunctionSymbol
+    PostFunctionSymbol,
   )
 }
 
@@ -169,7 +169,7 @@ function setPost<This> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
   post: PrePost<This>,
-  remove = false
+  remove = false,
 ): Array<PrePost<This>> {
   if (remove) {
     return removeMetadata(metadata, propertyKey, PostFunctionSymbol, post)
@@ -193,7 +193,7 @@ function getBitFields<This> (metadata: DecoratorMetadataObject): Array<BitField<
 
 function setBitField<This> (
   metadata: DecoratorMetadataObject,
-  bitfield: BitField<This>
+  bitfield: BitField<This>,
 ): Array<BitField<This>> {
   const bitfields = [...getBitFields(metadata), bitfield]
   metadata[BitFieldSymbol] = bitfields
@@ -221,5 +221,5 @@ export default {
   setPost,
   getBitField,
   getBitFields,
-  setBitField
+  setBitField,
 }

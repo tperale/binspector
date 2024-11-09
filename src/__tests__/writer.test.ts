@@ -5,17 +5,16 @@ import { binwrite } from '../writer'
 import { binread } from '../reader'
 import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor'
 
-
 function areArrayBufferEqual (buf1: ArrayBuffer, buf2: ArrayBuffer) {
-  if (buf1.byteLength != buf2.byteLength) return false;
-  const arr1 = new Uint8Array(buf1);
-  const arr2 = new Uint8Array(buf2);
-  
+  if (buf1.byteLength != buf2.byteLength) return false
+  const arr1 = new Uint8Array(buf1)
+  const arr2 = new Uint8Array(buf2)
+
   for (let i = 0; i != buf1.byteLength; i++) {
-      if (arr1[i] != arr2[i]) return false;
+    if (arr1[i] != arr2[i]) return false
   }
 
-  return true;
+  return true
 }
 
 function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
@@ -312,7 +311,7 @@ describe('Writing binary definition with Condition decorators', () => {
       @Choice(_ => _.type, {
         0x01: PrimitiveSymbol.u8,
         0x02: PrimitiveSymbol.u16,
-        0x03: undefined
+        0x03: undefined,
       })
       payload: number
     }

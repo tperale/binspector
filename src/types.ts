@@ -30,9 +30,9 @@ export type DecoratorMetadataObject = Record<PropertyKey, any>
  * Context
  */
 export type Context<This, Value> =
-    | ClassAccessorDecoratorContext<This, Value>
-    | ClassGetterDecoratorContext<This, Value>
-    | ClassFieldDecoratorContext<This, Value>
+  | ClassAccessorDecoratorContext<This, Value>
+  | ClassGetterDecoratorContext<This, Value>
+  | ClassFieldDecoratorContext<This, Value>
 
 /**
  * DecoratorType.

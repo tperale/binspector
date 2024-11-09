@@ -60,7 +60,7 @@ class PNGChunkPLTE {
   @Relation(RGB)
   rgb: RGB
 
-  constructor(length: number) {
+  constructor (length: number) {
     this._length = length / 3
   }
 }
@@ -72,7 +72,7 @@ class PNGChunkbKGD {
 
 enum PhysUnit {
   pixel = 0x00,
-  meter = 0x01
+  meter = 0x01,
 }
 
 class PNGChunkpHYs {

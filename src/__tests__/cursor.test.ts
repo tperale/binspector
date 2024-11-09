@@ -5,7 +5,7 @@ import { EOF, PrimitiveSymbol } from '../types'
 describe('Tests on DataFrame through the Cursor object', () => {
   it('should read the project primitives', () => {
     const arr = Uint8Array.from([
-      0x09, 0x20, 0xFF, 0x34, 0x56
+      0x09, 0x20, 0xFF, 0x34, 0x56,
     ]).buffer
     const cur = new BinaryReader(arr)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(9)
@@ -16,7 +16,7 @@ describe('Tests on DataFrame through the Cursor object', () => {
   })
   it('', () => {
     const arr = Uint8Array.from([
-      0x09
+      0x09,
     ]).buffer
     const cur = new BinaryReader(arr)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(9)
@@ -32,7 +32,7 @@ describe('Tests BinaryWriter', () => {
 
     expect(bw.length).toStrictEqual(2)
     const buf = new Uint8Array(bw.buffer())
-    
+
     expect(buf[0]).toStrictEqual(1)
     expect(buf[1]).toStrictEqual(2)
   })

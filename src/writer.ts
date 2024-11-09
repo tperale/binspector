@@ -12,7 +12,7 @@ import {
   isRelation,
   isUnknownProperty,
   isPrimitiveRelation,
-  type PropertyType
+  type PropertyType,
 } from './decorators/primitive'
 import { type InstantiableObject } from './types'
 import { usePrePost } from './decorators/prepost'
@@ -46,7 +46,7 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     const _value = strToArray(value)
     return () => {
       if (Array.isArray(_value)) {
-        _value.flat(Infinity).flatMap(strToArray).forEach(x => {
+        _value.flat(Infinity).flatMap(strToArray).forEach((x) => {
           write(field, x)
         })
       } else {

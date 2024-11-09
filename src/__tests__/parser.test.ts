@@ -44,7 +44,7 @@ describe('Reading binary content into js object', () => {
 
     expectReadTest([0x09, 0x20, 0x10, 0x21], Protocol).toMatchObject({
       fstCoord: { x: 9, y: 32 },
-      sndCoord: { x: 16, y: 33 }
+      sndCoord: { x: 16, y: 33 },
     })
   })
   it('should read character', () => {
@@ -54,7 +54,7 @@ describe('Reading binary content into js object', () => {
     }
 
     expectReadTest([0x41], Protocol).toMatchObject({
-      character: 'A'
+      character: 'A',
     })
   })
   it('should pass parameter to the relation constructor', () => {
@@ -80,7 +80,7 @@ describe('Reading binary content into js object', () => {
 
     expectReadTest([0x02, 0x01, 0x02], Protocol).toMatchObject({
       size: 0x02,
-      relation: { buf: [0x01, 0x02] }
+      relation: { buf: [0x01, 0x02] },
     })
   })
 
@@ -101,7 +101,7 @@ describe('Reading binary content into js object', () => {
 
     expectReadTest([0x02, 0x01, 0x02], Protocol).toMatchObject({
       size: 0x02,
-      relation: { buf: [0x01, 0x02] }
+      relation: { buf: [0x01, 0x02] },
     })
   })
 })
@@ -115,7 +115,7 @@ describe('Reading binary with validator', () => {
     }
 
     expectReadTest([0x01], Protocol).toMatchObject({
-      field: 0x01
+      field: 0x01,
     })
   })
   it('should match field with array', () => {
@@ -127,7 +127,7 @@ describe('Reading binary with validator', () => {
     }
 
     expectReadTest([0x01, 0x02], Protocol).toMatchObject({
-      field: [0x01, 0x02]
+      field: [0x01, 0x02],
     })
   })
 })
@@ -141,7 +141,7 @@ describe('Reading binary with controller', () => {
     }
 
     expectReadTest([0x01, 0x02], Protocol).toMatchObject({
-      array: [0x01, 0x02]
+      array: [0x01, 0x02],
     })
   })
   it('should be able to use a variable with count decorator', () => {
@@ -156,7 +156,7 @@ describe('Reading binary with controller', () => {
 
     expectReadTest([0x03, 0x02, 0x03, 0x04], Protocol).toMatchObject({
       len: 0x03,
-      field: [0x02, 0x03, 0x04]
+      field: [0x02, 0x03, 0x04],
     })
   })
   it('should parse content as string', () => {
@@ -176,7 +176,7 @@ describe('Reading binary with controller', () => {
     expectReadTest([0x03, 0x41, 0x42, 0x43, 0x41, 0x42, 0x43], Protocol).toMatchObject({
       len: 0x03,
       field: 'ABC',
-      array: ['A', 'B', 'C']
+      array: ['A', 'B', 'C'],
     })
   })
   it('should work with while', () => {
@@ -191,7 +191,7 @@ describe('Reading binary with controller', () => {
 
     expectReadTest([0x03, 0x01, 0x02, 0x03], Protocol).toMatchObject({
       something: 0x03,
-      array: [0x01, 0x02, 0x03]
+      array: [0x01, 0x02, 0x03],
     })
   })
   it('should work with "map" controllers', () => {
@@ -202,7 +202,7 @@ describe('Reading binary with controller', () => {
       @Relation(PrimitiveSymbol.u8)
       data: number[]
 
-      constructor(size: number) {
+      constructor (size: number) {
         this._size = size
       }
     }
@@ -216,11 +216,11 @@ describe('Reading binary with controller', () => {
     expectReadTest([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7], TestClass).toMatchObject({
       field: [{
         _size: 1,
-        data: [1]
+        data: [1],
       }, {
         _size: 2,
-        data: [2, 3]
-      }]
+        data: [2, 3],
+      }],
     })
   })
 })
@@ -233,8 +233,8 @@ describe('Reading binary until EOF', () => {
       coords: number[]
     }
 
-    expectReadTest([0x03, 0x02, 0x03, 0x04], Header).toMatchObject({ 
-      coords: [0x03, 0x02, 0x03, 0x04]
+    expectReadTest([0x03, 0x02, 0x03, 0x04], Header).toMatchObject({
+      coords: [0x03, 0x02, 0x03, 0x04],
     })
   })
   it('should read the relation until the EOF', () => {
@@ -253,7 +253,7 @@ describe('Reading binary until EOF', () => {
     }
 
     expectReadTest([0x03, 0x02, 0x03, 0x04], Header).toMatchObject({
-      coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x04 }]
+      coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x04 }],
     })
   })
   it('should throw an error if can\'t read the primitive', () => {
@@ -292,12 +292,12 @@ describe('Reading binary with conditions', () => {
     }
 
     class Header {
-      @IfThen((_) => true, Coord)
+      @IfThen(_ => true, Coord)
       coord: Coord
     }
 
     expectReadTest([0x03, 0x02], Header).toMatchObject({
-      coord: { x: 0x03, y: 0x02 }
+      coord: { x: 0x03, y: 0x02 },
     })
   })
   it('should support conditional reading with in addition to controller', () => {
@@ -311,12 +311,12 @@ describe('Reading binary with conditions', () => {
 
     class Header {
       @Count(2)
-      @IfThen((_) => true, Coord)
+      @IfThen(_ => true, Coord)
       coords: Coord[]
     }
 
     expectReadTest([0x03, 0x02, 0x03, 0x02], Header).toMatchObject({
-      coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x02 }]
+      coords: [{ x: 0x03, y: 0x02 }, { x: 0x03, y: 0x02 }],
     })
   })
   it('should support conditional reading with enum', () => {
@@ -349,7 +349,7 @@ describe('Reading binary with conditions', () => {
     }
 
     expectReadTest([0x02, 0x03, 0x02, 0x03], Header).toMatchObject({
-      coords: { x: 0x03, y: 0x02, z: 0x03 }
+      coords: { x: 0x03, y: 0x02, z: 0x03 },
     })
   })
   it('should leaving property blank', () => {
@@ -371,10 +371,10 @@ describe('Reading binary with conditions', () => {
     expectReadTest([0x01, 0xFF, 0x02], Header).toMatchObject({
       data: [{
         type: 0x01,
-        payload: 0xFF
+        payload: 0xFF,
       }, {
-        type: 0x02
-      }]
+        type: 0x02,
+      }],
     })
   })
   it('should work with choice decorator', () => {
@@ -385,18 +385,18 @@ describe('Reading binary with conditions', () => {
       @Choice(_ => _.type, {
         0x01: PrimitiveSymbol.u8,
         0x02: PrimitiveSymbol.u16,
-        0x03: undefined
+        0x03: undefined,
       })
       payload: number
     }
 
     expectReadTest([0x02, 0x00, 0x01], Header).toMatchObject({
       type: 0x02,
-      payload: 0x0001
+      payload: 0x0001,
     })
 
     expectReadTest([0x03, 0x01, 0x01], Header).toMatchObject({
-      type: 0x03
+      type: 0x03,
     })
   })
   it('should raise an Error when not passing an array as argument', () => {
@@ -409,7 +409,7 @@ describe('Reading binary with conditions', () => {
       @Relation(PrimitiveSymbol.u8)
       y: number
 
-      constructor(scale: number) {
+      constructor (scale: number) {
         this._scale = scale
       }
     }
@@ -418,7 +418,7 @@ describe('Reading binary with conditions', () => {
       _scale = 1
 
       // @ts-expect-error we are testing this case
-      @IfThen((_) => true, Coord, _ => _._scale)
+      @IfThen(_ => true, Coord, _ => _._scale)
       coord: Coord
     }
 
@@ -448,8 +448,8 @@ describe('Reading binary with bitfields', () => {
       bf: {
         field1: 0,
         field2: 1,
-        field3: 1
-      }
+        field3: 1,
+      },
     })
   })
   it('should work with uncomplete bitfield', () => {
@@ -476,9 +476,9 @@ describe('Reading binary with bitfields', () => {
       bf: {
         field1: 0,
         field2: 0b1100000000,
-        field3: 0
+        field3: 0,
       },
-      field: 5
+      field: 5,
     })
   })
   it('should work with LittleEndian bitfield', () => {
@@ -505,9 +505,9 @@ describe('Reading binary with bitfields', () => {
       bf: {
         field1: 1,
         field2: 0b0000010011,
-        field3: 0
+        field3: 0,
       },
-      field: 5
+      field: 5,
     })
   })
 })
@@ -521,7 +521,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol).toMatchObject({
-      value: 0x03
+      value: 0x03,
     })
   })
 
@@ -541,7 +541,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     expectReadTest([0x01, 0x02, 0x03, 0x04, 0x05, 0x06], Protocol).toMatchObject({
       value_1: 0x0102,
       value_2: 0x0403,
-      value_3: 0x0506
+      value_3: 0x0506,
     })
   })
 
@@ -555,7 +555,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
     const curr = new BinaryReader(header)
     expect(binread(curr, Protocol)).toMatchObject({
-      value: 0x03
+      value: 0x03,
     })
     expect(curr.offset()).toStrictEqual(0)
   })
@@ -570,11 +570,10 @@ describe('Reading binary definition with PrePost decorators', () => {
     const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
     const curr = new BinaryReader(header)
     expect(binread(curr, Protocol)).toMatchObject({
-      value: 0x01
+      value: 0x01,
     })
     expect(curr.offset()).toStrictEqual(0)
   })
-
 })
 
 describe('Reading a relation to an empty definition', () => {

@@ -7,7 +7,7 @@ export abstract class Cursor {
   abstract offset (): number
   abstract move (address: number): number
   abstract read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF
-  abstract write (primitive: PrimitiveSymbol, value: number | string): void;
+  abstract write (primitive: PrimitiveSymbol, value: number | string): void
 
   forward (x: number): number {
     return this.move(this.offset() + x)

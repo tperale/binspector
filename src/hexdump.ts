@@ -21,7 +21,7 @@ const defaultHexdumpOptions: HexdumpOptions = {
   zeroAsciiCharRepresentation: '.',
   nonAsciiCharRepresentation: '·',
   separator: '|',
-  bufferOffsetPadding: 3
+  bufferOffsetPadding: 3,
 }
 
 function hexToAscii (value: number, opt: HexdumpOptions): string {

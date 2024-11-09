@@ -37,7 +37,7 @@ export const ValidatorOptionsDefault = {
   each: false,
   primitiveCheck: true,
   optional: false,
-  message: ''
+  message: '',
 }
 
 /**
@@ -80,7 +80,7 @@ export function validatorDecoratorFactory<This, Value> (name: string, func: Vali
     const validator: Validator<This, Value> = {
       ...createMetaDescriptor(ValidatorSymbol, name, context.metadata, context.name as keyof This),
       options,
-      validator: func
+      validator: func,
     }
 
     Meta.setValidator(context.metadata, context.name, validator)

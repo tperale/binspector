@@ -3,25 +3,25 @@ const path = require('path')
 
 module.exports = {
   entry: {
-    'binspector': path.resolve(__dirname, 'src') + '/index.ts',
+    binspector: path.resolve(__dirname, 'src') + '/index.ts',
   },
   module: {
     rules: [
       {
         test: /\.ts?$/,
         use: ['babel-loader', 'ts-loader'],
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+    ],
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
     globalObject: 'this',
     filename: '[name].js',
     libraryTarget: 'umd',
-    library: 'binspector'
-  }
+    library: 'binspector',
+  },
 }

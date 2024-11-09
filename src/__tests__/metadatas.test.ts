@@ -36,10 +36,10 @@ describe('Set metadata information through the metadata API', () => {
       metadata: MyClass[Symbol.metadata] as DecoratorMetadataObject,
       propertyName: 'field1',
       options: ValidatorOptionsDefault,
-      validator: (_: any) => true
+      validator: (_: any) => true,
     }
     expect(Meta.setValidator(c, 'field1', validator)).toStrictEqual([
-      validator
+      validator,
     ])
   })
 })
