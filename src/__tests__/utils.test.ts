@@ -55,4 +55,4 @@ describe('Reading binary content into js object', () => {
     const obj = binread(new BinaryReader(header), Header)
     expect(jsonify(obj)).toStrictEqual({ foo: 0x09, bar: { field1: 0, field2: 2, field3: 0 } })
   })
-}) 
+})

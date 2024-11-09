@@ -4,7 +4,7 @@ enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
   FDT_END_NODE = 0x2,
   FDT_PROP = 0x3,
-  FDT_NOP= 0x4,
+  FDT_NOP = 0x4,
   FDT_END = 0x9,
 }
 
@@ -73,7 +73,7 @@ class FDTProp {
   @Relation(PrimitiveSymbol.char)
   property: string
 
-  constructor(offset: number) {
+  constructor (offset: number) {
     this._string_off = offset
   }
 }
@@ -90,11 +90,11 @@ class DTBStructBlock {
     [DTBStructureBlockToken.FDT_END_NODE]: undefined,
     [DTBStructureBlockToken.FDT_PROP]: [FDTProp, '_string_off'],
     [DTBStructureBlockToken.FDT_NOP]: undefined,
-    [DTBStructureBlockToken.FDT_END]: undefined
+    [DTBStructureBlockToken.FDT_END]: undefined,
   })
   body: FDTBeginNode | FDTProp | undefined
 
-  constructor(string_memory_offset: number) {
+  constructor (string_memory_offset: number) {
     this._string_off = string_memory_offset
   }
 }
@@ -121,12 +121,12 @@ function bytesToArray (bytes: number[]): number[][] {
 function isString (bytes: number[]) {
   const array = bytesToArray(bytes)
 
-  return array.every(byteStr => byteStr.every((x) => 
+  return array.every(byteStr => byteStr.every(x =>
     (x >= 0x30 && x <= 0x39) // 0-9
     || (x >= 0x41 && x <= 0x5A) // A-Z
     || (x >= 0x61 && x <= 0x7A) // a-z
     || (x >= 0x2B && x <= 0x2E) // + , - .
-    || (x == 0x5F) // _
+    || (x == 0x5F), // _
   ))
 }
 
@@ -136,7 +136,7 @@ function asObjectDtb (structs: DTBStructBlock[]): object {
 
     currentObj[key] = value
   }
-  
+
   const current: string[] = []
   const result = {}
   for (const struct of structs) {
@@ -153,7 +153,7 @@ function asObjectDtb (structs: DTBStructBlock[]): object {
     } else if (struct.fdttype === DTBStructureBlockToken.FDT_PROP) {
       const prop = struct.body as FDTProp
       const propKey = prop.property
-      const arrayStr = bytesToArray(prop.name) 
+      const arrayStr = bytesToArray(prop.name)
       const propValue = arrayStr.length === 0
         ? prop.name
         : isString(prop.name)
@@ -173,12 +173,12 @@ export class DTB {
   header: DTBHeader
 
   @Offset('header.off_mem_rsvmap')
-  @While((rsv) => rsv.address && rsv.size, { peek: true })
+  @While(rsv => rsv.address && rsv.size, { peek: true })
   @Relation(DTBReservedMap)
   rsvmap: DTBReservedMap[]
 
   @Offset('header.off_dt_struct')
-  @While((struct) => struct.fdttype !== DTBStructureBlockToken.FDT_END)
+  @While(struct => struct.fdttype !== DTBStructureBlockToken.FDT_END)
   @Relation(DTBStructBlock, 'header.off_dt_strings')
   structs: DTBStructBlock[]
 
@@ -188,7 +188,7 @@ export class DTB {
   @Relation(PrimitiveSymbol.char)
   strings: string[]
 
-  asObject (): Object {
-    return asObjectDtb(this.structs)[""]
+  asObject (): object {
+    return asObjectDtb(this.structs)['']
   }
 }

@@ -12,7 +12,7 @@ import {
   isRelation,
   isPrimitiveRelation,
   isUnknownProperty,
-  type PropertyType
+  type PropertyType,
 } from './decorators/primitive'
 import { EOF, type InstantiableObject } from './types'
 import { useController, type ControllerReader } from './decorators/controller'

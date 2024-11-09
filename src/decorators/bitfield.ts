@@ -69,7 +69,7 @@ export interface BitFieldOptions {
 }
 
 export const BitFieldOptionsDefault = {
-  primitiveCheck: true
+  primitiveCheck: true,
 }
 
 export interface BitField<This> extends MetaDescriptor<This> {
@@ -102,7 +102,7 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
     const bitfield: BitField<This> = {
       ...createMetaDescriptor(BitFieldSymbol, name, context.metadata, context.name as keyof This),
       options,
-      bitlength: len
+      bitlength: len,
     }
 
     Meta.setBitField(context.metadata, bitfield)

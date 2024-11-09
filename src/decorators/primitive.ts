@@ -64,7 +64,7 @@ export interface PrimitiveTypeProperty<This> extends MetaDescriptor<This> {
 export function createPrimitiveTypeProperty<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This, primitive: PrimitiveSymbol): PrimitiveTypeProperty<This> {
   return {
     ...createMetaDescriptor<This>(PrimitiveTypePropertySymbol, 'primitive', metadata, propertyKey),
-    primitive
+    primitive,
   }
 }
 
@@ -166,7 +166,7 @@ export function createRelationTypeProperty<This, Target> (metadata: DecoratorMet
   return {
     ...createMetaDescriptor<This>(RelationTypePropertySymbol, 'relation', metadata, propertyKey),
     relation,
-    args: argsFunc
+    args: argsFunc,
   }
 }
 

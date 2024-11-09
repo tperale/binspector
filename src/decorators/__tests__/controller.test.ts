@@ -54,7 +54,12 @@ describe('@Controller: functions', () => {
       field: number
     }
 
-    testController(TestClass, 'field', () => 1, [1, 1, 1], (x) => { x.field = 1 })
+    testController(
+      TestClass,
+      'field',
+      () => 1, [1, 1, 1],
+      (x) => { x.field = 1 },
+    )
   })
   it('@Count: read 2 time based on value retrieved at runtime using recursiveGet', () => {
     class TestClass {
@@ -64,7 +69,12 @@ describe('@Controller: functions', () => {
       field: number
     }
 
-    testController(TestClass, 'field', () => 1, [1, 1], (x) => { x.count = 2 })
+    testController(
+      TestClass,
+      'field',
+      () => 1, [1, 1],
+      (x) => { x.count = 2 },
+    )
   })
   it('@Count: recursiveGet should retrieve child properties', () => {
     class TestClass {
@@ -86,7 +96,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1, 1, 1])
   })
-   it('@Count: recursiveGet should support simple arithmetic with number', () => {
+  it('@Count: recursiveGet should support simple arithmetic with number', () => {
     class TestClass {
       child = { count: 2 }
 
@@ -106,7 +116,7 @@ describe('@Controller: functions', () => {
 
     testController(TestClass, 'field', () => 1, [1])
   })
- it('@Count: recursiveGet should support simple arithmetic', () => {
+  it('@Count: recursiveGet should support simple arithmetic', () => {
     class TestClass {
       child = { offsetStart: 2, offsetEnd: 5 }
 
@@ -245,14 +255,14 @@ describe('@Controller: functions w/ cursor', () => {
     }
 
     const cur = new BinaryReader(new Uint8Array([
-      0x01, 0x02, 0x03, 0x04, 
+      0x01, 0x02, 0x03, 0x04,
       0x05, 0x06, 0x07, 0x08,
-      0x09, 0x0A, 0x0B, 0x0C
+      0x09, 0x0A, 0x0B, 0x0C,
     ]).buffer)
     testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [
       [0x01, 0x02, 0x03],
       [0x05, 0x06, 0x07],
-      [0x09, 0x0A, 0x0B]
+      [0x09, 0x0A, 0x0B],
     ], cur)
 
     expect(cur.offset()).toStrictEqual(12)

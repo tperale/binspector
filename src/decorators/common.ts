@@ -44,7 +44,7 @@ export function createMetaDescriptor<This> (type: symbol, name: string, metadata
     type,
     name,
     metadata,
-    propertyName
+    propertyName,
   }
 }
 
@@ -62,7 +62,7 @@ export function recursiveGet (obj: any, expr: string): any {
   const _isOperation = (x: string): boolean => ['+', '-'].includes(x)
 
   const _get = (path: string): any => path.split('.').reduce((acc: any, key: string) => {
-    if (acc.hasOwnProperty(key) === false) {
+    if (Object.prototype.hasOwnProperty.call(acc, key) === false) {
       throw new ReferenceError(`In 'recursiveGet' function from the expression '${expr}', can't access the property '${key}' available property are [${Object.getOwnPropertyNames(acc).toString()}].`)
     }
     return acc[key]
@@ -73,7 +73,7 @@ export function recursiveGet (obj: any, expr: string): any {
   if (elem.length === 1) {
     return _get(elem[0])
   } else {
-    return eval(elem.map(x => {
+    return eval(elem.map((x) => {
       if (_isOperation(x)) {
         return x
       } else if (Number.isFinite(+x)) {

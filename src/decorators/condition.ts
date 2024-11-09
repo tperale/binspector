@@ -70,7 +70,7 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, fu
     const condition: Condition<This> = {
       ...createMetaDescriptor(ConditionSymbol, name, context.metadata, propertyName),
       condition: func,
-      relation: then !== undefined ? createRelation(then) : undefined
+      relation: then !== undefined ? createRelation(then) : undefined,
     }
 
     Meta.setCondition(context.metadata, propertyName, condition)
@@ -104,7 +104,7 @@ export function dynamicConditionDecoratorFactory<This, Target, Value> (name: str
     const condition: Condition<This> = {
       ...createMetaDescriptor(DynamicConditionSymbol, name, context.metadata, propertyName),
       condition: (targetInstance: This) => createRelation(func(targetInstance)),
-      relation: undefined
+      relation: undefined,
     }
 
     Meta.setCondition(context.metadata, propertyName, condition)
@@ -317,7 +317,7 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
   })
 
   return function (_: undefined, context: Context<This, Value>) {
-    decorators.forEach(decorator => {
+    decorators.forEach((decorator) => {
       decorator(_, context)
     })
   }

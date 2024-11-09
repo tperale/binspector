@@ -20,7 +20,7 @@ describe('Testing the usage of decorator to create metadata about property', () 
     expect(fields.map((x: any) => x.propertyName)).toStrictEqual([
       'test',
       'hello',
-      'field'
+      'field',
     ])
   })
 

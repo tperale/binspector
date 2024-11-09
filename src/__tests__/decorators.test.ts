@@ -21,17 +21,17 @@ describe('Testing the usage of decorator to create metadata about property', () 
   it('should retrieve the member of the instance in the same order of definition', () => {
     const testMatchInstance = new TestMatch()
     const fields = Meta.getFields(TestMatch[Symbol.metadata] as DecoratorMetadataObject)
-    expect(fields.map((x) => x.propertyName)).toStrictEqual([
+    expect(fields.map(x => x.propertyName)).toStrictEqual([
       'test',
       'hello',
-      'field'
+      'field',
     ])
   })
   it('should retrieve the correct metadata content', () => {
     const testMatchInstance = new TestMatch()
     const testMatchPropertyMetadatas = Meta.getValidators(
       TestMatch[Symbol.metadata] as DecoratorMetadataObject,
-      'test'
+      'test',
     )
     expect(Array.isArray(testMatchPropertyMetadatas)).toBe(true)
     expect(testMatchPropertyMetadatas.length).toBe(1)

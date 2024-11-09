@@ -1,6 +1,6 @@
 import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset } from '../../src'
 import {
-  OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER
+  OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header'
 import { printColour } from './renderer'
 // import {
@@ -63,7 +63,7 @@ export class Bitmap {
     52: BITMAPV2INFOHEADER,
     56: BITMAPV3INFOHEADER,
     108: BITMAPV4INFOHEADER,
-    124: BITMAPV5INFOHEADER
+    124: BITMAPV5INFOHEADER,
   })
   bitmap_header: OS21XBITMAPHEADER | OS22XBITMAPHEADER | OS22XBITMAPCOREHEADER | BITMAPINFOHEADER | BITMAPV2INFOHEADER | BITMAPV3INFOHEADER | BITMAPV4INFOHEADER | BITMAPV5INFOHEADER
 
@@ -85,21 +85,21 @@ export class Bitmap {
   @Matrix('bitmap_header.width', 'bitmap_header.height', { alignment: 4 })
   @Choice('bitmap_header.bits_per_pixels', {
     8: PrimitiveSymbol.u8,
-    24: RGB
+    24: RGB,
   })
   data: RGB[][] | number[][]
 
   toString (): string {
     return JSON.stringify({
       file_header: this.file_header,
-      bitmap_header: { size: this.bitmap_header_size, ...this.bitmap_header }
+      bitmap_header: { size: this.bitmap_header_size, ...this.bitmap_header },
     }, null, 2)
   }
 
   render (): void {
     console.log(this.data.length, this.data.map(x => x.length))
-    const lines = this.data.map(x => {
-      const line = x.map(x => {
+    const lines = this.data.map((x) => {
+      const line = x.map((x) => {
         if (this.bitmap_header.bits_per_pixels === 24) {
           return printColour(x as RGB)
         } else if (this.bitmap_header.bits_per_pixels === 8) {

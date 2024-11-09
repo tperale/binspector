@@ -1,6 +1,6 @@
 import { test } from '@jest/globals'
 import { binread } from '../../src/reader'
-import { BinaryReader, BinaryCursorEndianness  } from '../../src/cursor'
+import { BinaryReader, BinaryCursorEndianness } from '../../src/cursor'
 import { promises as fs } from 'fs'
 import path from 'path'
 import { Bitmap } from './bmp'

@@ -42,7 +42,7 @@ export interface TransformerOptions {
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,
-  scope: TransformerExecutionScope.OnRead
+  scope: TransformerExecutionScope.OnRead,
 }
 
 /**
@@ -84,7 +84,7 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
     const transformer: Transformer<This> = {
       ...createMetaDescriptor(TransformerSymbol, name, context.metadata, context.name as keyof This),
       options,
-      transformer: func
+      transformer: func,
     }
 
     Meta.setTransformer(context.metadata, context.name, transformer)
@@ -113,8 +113,8 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
  */
 export function TransformScale<This, Value> (scale: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
-    transformerDecoratorFactory('transform-scale', (x) => x * scale, opt)(_, context)
-    transformerDecoratorFactory('transform-scale', (x) => x / scale, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-scale', x => x * scale, opt)(_, context)
+    transformerDecoratorFactory('transform-scale', x => x / scale, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
   }
 }
 
@@ -128,12 +128,10 @@ export function TransformScale<This, Value> (scale: number, opt?: Partial<Transf
  */
 export function TransformOffset<This, Value> (off: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
-    transformerDecoratorFactory('transform-offset', (x) => x + off, opt)(_, context)
-    transformerDecoratorFactory('transform-offset', (x) => x - off, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-offset', x => x + off, opt)(_, context)
+    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
   }
 }
-
-
 
 /**
  * useTransformer.

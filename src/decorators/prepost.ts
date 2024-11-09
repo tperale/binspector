@@ -38,7 +38,7 @@ export interface PrePostOptions {
 
 export const PrePostOptionsDefault = {
   primitiveCheck: true,
-  once: false
+  once: false,
 }
 
 /**
@@ -70,7 +70,7 @@ function prePostFunctionDecoratorFactory<This, Value> (name: string, typeSym: sy
     const preFunction: PrePost<This> = {
       ...createMetaDescriptor(typeSym, name, context.metadata, propertyName),
       options,
-      func
+      func,
     }
 
     if (options.once) {
@@ -174,14 +174,14 @@ export function Peek<This, Value> (offset?: number | string | ((instance: This, 
       postFunctionDecoratorFactory<This, Value>('post-peek', (_, cursor) => {
         cursor.move(preOff)
       }, { ...opt, once: true })(_, context)
-      const offCompute =
-        (offset === null || offset === undefined)
+      const offCompute
+        = (offset === null || offset === undefined)
           ? preOff
-        : typeof offset === 'number'
-          ? offset
-        : typeof offset === 'string'
-          ? Number(recursiveGet(targetInstance, offset))
-          : offset(targetInstance, cursor)
+          : typeof offset === 'number'
+            ? offset
+            : typeof offset === 'string'
+              ? Number(recursiveGet(targetInstance, offset))
+              : offset(targetInstance, cursor)
       cursor.move(offCompute)
     }, opt)(_, context)
   }
@@ -222,7 +222,7 @@ export function Endian<This, Value> (endianness: BinaryCursorEndianness, opt?: P
  * @category Advanced Use
  */
 export function usePrePost<This> (prepost: Array<PrePost<This>>, targetInstance: This, cursor: Cursor): void {
-  prepost.forEach(x => {
+  prepost.forEach((x) => {
     x.func(targetInstance, cursor)
   })
 }

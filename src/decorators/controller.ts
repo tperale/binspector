@@ -49,7 +49,7 @@ export const ControllerOptionsDefault = {
   primitiveCheck: true,
   targetType: undefined,
   alignment: 0,
-  peek: false
+  peek: false,
 }
 
 /**
@@ -90,7 +90,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
   const options = {
     ...ControllerOptionsDefault,
     ...opt,
-    ...{ targetType }
+    ...{ targetType },
   }
 
   return function (_: undefined, context: Context<This, Value>) {
@@ -102,7 +102,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
     const controller: Controller<This> = {
       ...createMetaDescriptor(ControllerSymbol, name, context.metadata, propertyName),
       options,
-      controller: (curr: This, cursor, read) => func(curr, cursor, read, options)
+      controller: (curr: This, cursor, read) => func(curr, cursor, read, options),
     }
     Meta.setController(context.metadata, propertyName, controller)
   }
@@ -126,7 +126,7 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
-    opt: ControllerOptions
+    opt: ControllerOptions,
   ): any {
     // TODO To something based on target type. If target is a string
     // add everithing into a string. If target is an array add everything
@@ -192,7 +192,7 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
     _: any,
     cursor: Cursor,
     read: ControllerReader,
-    opt: ControllerOptions
+    opt: ControllerOptions,
   ): any {
     const startOffset = cursor.offset()
 
@@ -335,7 +335,7 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
       currStateObject: This,
       cursor: Cursor,
       read: ControllerReader,
-      opt: ControllerOptions
+      opt: ControllerOptions,
     ): any {
       try {
         wrap(currStateObject, cursor, read, opt)
@@ -374,11 +374,11 @@ export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptio
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
-    opt: ControllerOptions
+    opt: ControllerOptions,
   ) => {
     const stringOpt = {
       ...opt,
-      targetType: String
+      targetType: String,
     }
     const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, cursor, read, stringOpt)
     return result.slice(0, -1)
@@ -432,10 +432,10 @@ export function Count<This, Value> (arg: number | string, opt?: Partial<Controll
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
-    opt: ControllerOptions
+    opt: ControllerOptions,
   ): any {
-    const count =
-      typeof arg === 'string'
+    const count
+      = typeof arg === 'string'
         ? recursiveGet(currStateObject, arg)
         : arg
 
@@ -468,7 +468,7 @@ export function Matrix<This, Value> (width: number | string, height: number | st
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
-    opt: ControllerOptions
+    opt: ControllerOptions,
   ): any {
     const getArg = (x: number | string): number => typeof x === 'string'
       ? recursiveGet(currStateObject, x)
@@ -505,7 +505,7 @@ export function Size<This, Value> (size: number | string, opt?: Partial<Controll
         : size
       return whileFunctionFactory((_1, _2, _3, offset, startOffset) => (offset - startOffset) < finalSize)(currStateObject, cursor, read, opt)
     },
-    opt
+    opt,
   )
 }
 
@@ -544,19 +544,19 @@ export function MapTo<This, Value> (arr: string | any[] | ((_: This) => any[]), 
   return controllerDecoratorFactory(
     'map',
     (currStateObject: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
-      const finalArray: number =
-        typeof arr === 'string'
+      const finalArray: number
+        = typeof arr === 'string'
           ? recursiveGet(currStateObject, arr)
-        : typeof arr === 'function'
-          ? arr(currStateObject)
-        : arr
+          : typeof arr === 'function'
+            ? arr(currStateObject)
+            : arr
 
       if (!Array.isArray(finalArray)) {
         throw new Error('Wrong map type')
       }
       return mapFunctionFactory(finalArray)(currStateObject, cursor, read, opt)
     },
-    opt
+    opt,
   )
 }
 

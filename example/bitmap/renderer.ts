@@ -254,14 +254,14 @@ const xtermRgb = [
   [0xd0, 0xd0, 0xd0],
   [0xda, 0xda, 0xda],
   [0xe4, 0xe4, 0xe4],
-  [0xee, 0xee, 0xee]
+  [0xee, 0xee, 0xee],
 ]
 
 function colorDistance ([red1, green1, blue1]: [number, number, number], [red2, green2, blue2]: [number, number, number]): number {
   return Math.sqrt(
-    Math.pow(red2 - red1, 2) +
-    Math.pow(green2 - green1, 2) +
-    Math.pow(blue2 - blue1, 2)
+    Math.pow(red2 - red1, 2)
+    + Math.pow(green2 - green1, 2)
+    + Math.pow(blue2 - blue1, 2),
   )
 }
 

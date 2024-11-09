@@ -75,7 +75,7 @@ describe('Testing validator decorator functions', () => {
   })
   it('should work with validate decorator that receive function', () => {
     class TestClass {
-      @Validate((x) => x[0] === 1, { primitiveCheck: false })
+      @Validate(x => x[0] === 1, { primitiveCheck: false })
       field: number[]
     }
 
