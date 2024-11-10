@@ -308,7 +308,7 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  * This decorator doesn't accept a function as argument.
  * If you need to use a function to verify an equality based on the currently read value
  * use the {@link While} decorator instead.
- 
+
  *
  * @param {any} cmp Continue reading/writting the binary file until the argument is reached.
  * @param {ControllerOptions} opt

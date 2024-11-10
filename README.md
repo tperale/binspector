@@ -6,20 +6,27 @@ definition and decorators directly on your webapp.
 
 ```typescript
 class ProtocolHeader {
+  // Validate magic number
   @Match(0x0E)
   @Relation(PrimitiveSymbol.u8)
   magic: number
 
+  // Read the subtype relation multiple time
   @Count(4)
   @Relation(PrimitiveSymbol.char)
-  extension: string;
+  extension: string
 
   @Relation(PrimitiveSymbol.u32)
-  len: number;
+  len: number
 
-  @Crc
   @Relation(PrimitiveSymbol.u32)
-  crc: number;
+  string_map_offset: number
+
+  @Relation(PrimitiveSymbol.u32)
+  string_map_size: number
+
+  @Relation(PrimitiveSymbol.u32)
+  crc: number
 }
 
 enum RecordTypes {
@@ -28,26 +35,49 @@ enum RecordTypes {
   RecordEnd = 0x03,
 }
 
+class RecordMessage {
+  @Until('\0')
+  @Relation(PrimitiveSymbol.char)
+  message: string
+}
+
 class Record {
   @Relation(PrimitiveSymbol.u32)
   id: number
 
+  // Typescript enums are supported.
   @Enum(RecordTypes)
   @Relation(PrimitiveSymbol.u8)
   type: RecordTypes
 
-  @Until('\0')
-  @Relation(PrimitiveSymbol.char)
-  message: string;
+  // You can select the subtype that's gonna be {read,written} based on a
+  // condition
+  @Choice('type', {
+    [RecordTypes.RecordMsg]: RecordMessage,
+    [RecordTypes.RecordStart]: undefined,
+    [RecordTypes.RecordEnd]: undefined,
+  })
+  data: RecordMessage;
 }
 
 class Protocol {
+  // Refer to other object as subtype
   @Relation(ProtocolHeader)
   header: ProtocolHeader
 
+  // Refer to properties directly to use dynamic value 
   @Count('header.len')
   @Relation(Record)
-  message: Record
+  records: Record
+
+  // Jump to an arbitrary address to continue reading the file
+  // Here null terminated strings would keep being read until the overall size
+  // is reached
+  @Offset('header.string_map_offset')  
+  @Size('header.string_map_size')  
+  @NullTerminatedString()
+  @Relation(PrimitiveSymbol.char)
+  strings: string[]
 }
 ```
 
@@ -67,6 +97,50 @@ class Protocol {
   * Reference other structure
   * Conditions
 * No dependencies
+
+## Usage
+
+Imagine the following binary file definition.
+
+```typescript
+import { Relation, Count } from 'binspector'
+
+class Coord {
+  @Relation(PrimitiveSymbol.u8)
+  x: number
+
+  @Relation(PrimitiveSymbol.u8)
+  y: number
+}
+
+class Protocol {
+  @Relation(PrimitiveSymbol.u8)
+  len: number
+
+  @Count('len')
+  coords: Coord[]
+}
+```
+
+### Reading bytes buffer into objects
+
+```typescript
+import { binread, BinaryReader } from 'binspector'
+
+const buf = new Uint8Array([0x02, 0x01, 0x02, 0x03, 0x04]).buffer
+
+binread(new BinaryHeader(buf), Protocol) // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
+```
+
+### Writing objects to bytes buffer
+
+```typescript
+import { binwrite, BinaryWriter } from 'binspector'
+
+const obj = { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
+
+binwrite(new BinaryWriter(), Protocol, obj).buffer() // => [0x02, 0x01, 0x02, 0x03, 0x04]
+```
 
 ## Installation
 
