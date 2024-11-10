@@ -215,11 +215,10 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
 /**
  * While decorator continue the execution flow while the condition passed as a parameter is not met.
  *
- * @remarks
- *
  * By default the relation that does not match the condition will be included in the result and the
  * cursor will be set after that relation. This is the default behavior because that's what we expect
  * most of the time.
+ *
  * To not include the relation that doesn't match the condition and move back the cursor to the position
  * before it was read use the `peek` option.
  *
@@ -277,15 +276,14 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
 }
 
 /**
- * @overload
- *
- * @param {any} arg Continue reading/writting the binary file until the argument is reached.
- * @returns {DecoratorType} The property decorator function ran at runtime
- */
-/**
  * `@Until` decorator read variable length array that end by a special character or magic number.
  *
+ * The difference between Until and {@link Count} is that this decorator accept to create arrays
+ * of undefined length.
+ *
  * @example
+ *
+ * This decorator can be used to read null terminated strings.
  *
  * ```typescript
  * class BinProtocol {
@@ -294,19 +292,6 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  *   message: string // Null terminated string
  * }
  * ```
- *
- * @remarks
- *
- * The difference between Until and {@link Count} is that this decorator accept to create arrays
- * of undefined length.
- *
- * @remarks
- *
- * This decorator doesn't accept a function as argument.
- * If you need to use a function to verify an equality based on the currently read value
- * use the {@link While} decorator instead.
- *
- * @example
  *
  * You can use this decorator to read relation or primitive until the EOF.
  *
@@ -317,6 +302,13 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  *   array: number[]
  * }
  * ```
+ *
+ * @remarks
+ *
+ * This decorator doesn't accept a function as argument.
+ * If you need to use a function to verify an equality based on the currently read value
+ * use the {@link While} decorator instead.
+ 
  *
  * @param {any} cmp Continue reading/writting the binary file until the argument is reached.
  * @param {ControllerOptions} opt
@@ -385,12 +377,6 @@ export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptio
   }, opt)
 }
 
-/**
- * @overload
- *
- * @param {number | string} arg The number of time to read the target property or a string refering to a field present on the target instance.
- * @returns {DecoratorType} The property decorator function ran at runtime
- */
 /**
  * `@Count` decorator define a variable length array based on the primitive.
  *
