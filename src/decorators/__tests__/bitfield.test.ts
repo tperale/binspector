@@ -1,8 +1,10 @@
 import { describe, expect } from '@jest/globals'
+
 import { useBitField, Bitfield } from '../bitfield'
-import { Relation } from '../primitive'
-import Meta from '../../metadatas'
 import { BinaryReader } from '../../cursor'
+import { WrongBitfieldClassImplementation } from '../../error'
+import Meta from '../../metadatas'
+import { Relation } from '../primitive'
 
 function testBitfield (TargetClass: new () => any, content: number[], match: any) {
   const instance = new TargetClass()
@@ -57,6 +59,24 @@ describe('@Bitfield: errors', () => {
         @Bitfield(6)
         field2: number
       }
-    }).toThrow(/Can't define bitfield inside an instance with relations/)
+    }).toThrow(WrongBitfieldClassImplementation)
+  })
+  it('@Bitfield: A @Relation can\'t exist along a @Bitfield', () => {
+    expect(() => {
+      class TestBitField {
+        @Relation(Number)
+        @Bitfield(6)
+        field1: number = 1
+      }
+    }).toThrow(WrongBitfieldClassImplementation)
+  })
+  it('@Bitfield: The decorated property can\'t exist along a @Relation', () => {
+    expect(() => {
+      class TestBitField {
+        @Bitfield(6)
+        @Relation(Number)
+        field1: number = 1
+      }
+    }).toThrow(WrongBitfieldClassImplementation)
   })
 })

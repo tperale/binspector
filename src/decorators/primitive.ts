@@ -8,8 +8,9 @@
  * @module Primitive
  */
 import { type MetaDescriptor, createMetaDescriptor, commaSeparetedRecursiveGet } from './common'
-import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
+import { WrongBitfieldClassImplementation } from '../error'
 import Meta from '../metadatas'
+import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
 
 export class RelationNotDefinedError extends Error {
   constructor (propertyKey: string | symbol) {
@@ -196,6 +197,10 @@ export function createRelationTypeProperty<This, Target> (metadata: DecoratorMet
  */
 export function Relation<This, Target, Value> (relation?: InstantiableObject<Target> | PrimitiveSymbol, args?: RelationParameters<This>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>): void {
+    if (Meta.getBitFields(context.metadata).length > 0) {
+      throw new WrongBitfieldClassImplementation(String(context.name))
+    }
+
     const propertyName = context.name as keyof This
     const field = Meta.getField(context.metadata, propertyName)
     if (field !== undefined) {
