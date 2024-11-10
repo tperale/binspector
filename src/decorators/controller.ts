@@ -215,7 +215,7 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
 /**
  * While decorator continue the execution flow while the condition passed as a parameter is not met.
  *
- * @remark
+ * @remarks
  *
  * By default the relation that does not match the condition will be included in the result and the
  * cursor will be set after that relation. This is the default behavior because that's what we expect
@@ -223,7 +223,7 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  * To not include the relation that doesn't match the condition and move back the cursor to the position
  * before it was read use the `peek` option.
  *
- * @remark
+ * @remarks
  *
  * Don't use this decorator to compare the current value to EOF. Use {@link Until} instead.
  *
@@ -295,12 +295,12 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  * }
  * ```
  *
- * @remark
+ * @remarks
  *
  * The difference between Until and {@link Count} is that this decorator accept to create arrays
  * of undefined length.
  *
- * @remark
+ * @remarks
  *
  * This decorator doesn't accept a function as argument.
  * If you need to use a function to verify an equality based on the currently read value
@@ -359,7 +359,7 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
 /**
  * `@NullTerminatedString` decorator read a string until the '\0' character is met and always interpret a string.
  *
- * @remark
+ * @remarks
  *
  * This decorator is similar to `@Until('\0', { targetType: String })` but `@Until` will include the `\0` while
  * this decorator always drops it.
