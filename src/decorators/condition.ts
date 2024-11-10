@@ -283,7 +283,7 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  * }
  * ```
  *
- * @remark
+ * @remarks
  *
  * To pass to the reader a relation by default use `@Choice` with the `@Else` decorator (see {@link Else})
  *

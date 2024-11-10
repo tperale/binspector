@@ -40,7 +40,7 @@
  * }
  * ```
  *
- * @remark
+ * @remarks
  *
  * {@link BitField} type decorator can't be used inside class
  * definition that also contains {@link Relation} definition.
@@ -137,18 +137,18 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  * }
  * ```
  *
- * @remark
+ * @remarks
  *
- * The top-most property of a class decorated with a @Bitfield decorator will
+ * The top-most property of a class decorated with a `@Bitfield` decorator will
  * contain the most significant bits (MSB) of the value decoded/encoded.
  * In the example 'field_1' contains the two most significant bits.
  *
- * @remark
+ * @remarks
  *
  * This decorator must be only used inside class definition that only includes
  * bitfield decorators.
  *
- * @remark
+ * @remarks
  *
  * The sum of the bit-length declared by the properties decorated with a
  * `@Bitfield` would result in a 8, 16 or 32bits integer being read. Right now
