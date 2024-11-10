@@ -2,11 +2,11 @@
  * Module definition of {@link BitField} decorators.
  *
  * {@link BitField} type decorators define bitfields data-structure.
- * This type of decorator is used to define an object
- * that has fixed-bit fields with a granularity smaller than a byte.
+ *
+ * Bitfields are classes where properties have a fixed size in bits.
  *
  * In a bitfield class definition the topmost `@Bitfield` decorated
- * property match the least significant bit being read.
+ * property match the most significant bit being encoded/decoded.
  *
  * @example
  *
@@ -44,8 +44,8 @@
  *
  * {@link BitField} type decorator can't be used inside class
  * definition that also contains {@link Relation} definition.
- * To create a {@link BitField} object create an independant
- * class solely made for this definition.
+ * To create a {@link BitField} object create a class solely
+ * made for the bitfield definition as in the example.
  *
  * @see {@link Bitfield}
  *
@@ -79,11 +79,14 @@ export interface BitField<This> extends MetaDescriptor<This> {
 }
 
 /**
- * bitFieldDecoratorFactory is a function to help with the creation of {@link BitField} type decorators.
+ * `bitFieldDecoratorFactory` is a function to help with the creation of {@link BitField} type decorators.
  *
- * @param {string} name
- * @param {number} len
- * @param {Partial} opt
+ * @typeParam This The type of the bitfield.
+ * @typeParam Value The type of the property decorated or the target type the bitfield resolve to.
+ *
+ * @param {string} name Decorator name
+ * @param {number} len Size of the bitfield property
+ * @param {Partial} opt Partial definition of the BitFieldOptions
  * @returns {DecoratorType}
  *
  * @category Advanced Use
@@ -111,6 +114,9 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
 /**
  * `@Bitfield` decorator define the bit-length of the property it decorates.
  *
+ * The sum of the bit-length declared by the properties decorated with a
+ * `@Bitfield` can exceed 8-bits and may not be aligned byte aligned.
+ *
  * @example
  *
  * ```typescript
@@ -121,7 +127,7 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  *   @Bitfield(4)
  *   field_2: number
  *
- *   @Bitfield(2)
+ *   @Bitfield(1)
  *   field_3: number
  * }
  *
@@ -133,25 +139,45 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  *
  * @remark
  *
+ * The top-most property of a class decorated with a @Bitfield decorator will
+ * contain the most significant bits (MSB) of the value decoded/encoded.
+ * In the example 'field_1' contains the two most significant bits.
+ *
+ * @remark
+ *
  * This decorator must be only used inside class definition that only includes
  * bitfield decorators.
  *
  * @remark
  *
- * The sum of all the the `@Bitfield` decorator of a class can be not aligned to 8 bit.
+ * The sum of the bit-length declared by the properties decorated with a
+ * `@Bitfield` would result in a 8, 16 or 32bits integer being read. Right now
+ * 24 bits bitfields or longer than 32bits are not supported.
  *
- * @throws {ReferenceError} if you attempt to access a non existing property.
+ * @throws {WrongBitfieldClassImplementation} If a {@link Relation} has already been defined inside the bitfield class
+ *
+ * @typeParam This The type of the bitfield.
+ * @typeParam Value The type of the property decorated or the target type the bitfield resolve to.
  *
  * @param {number} len The bitlength of the property it decorate.
  * @returns {DecoratorType}
  *
  * @category Decorators
  */
-export function Bitfield<This, Value> (len: number): DecoratorType<This, Value> {
-  return bitFieldDecoratorFactory('bitfield', len)
+export function Bitfield<This, Value> (len: number, opt?: Partial<BitFieldOptions>): DecoratorType<This, Value> {
+  return bitFieldDecoratorFactory('bitfield', len, opt)
 }
 
 /**
+ * Read a bitfield definition from a {@link Cursor}. This function is used
+ * in the context of the {@link binread} function.
+ *
+ * @typeParam This The type of the bitfield.
+ *
+ * @param {Array} bitfields An array of {@link BitField} definition
+ * @param {This} targetInstance The object related to the `bitfields` argument where the bitfield content will be written to.
+ * @param {Cursor} cursor {@link Cursor} to read the content of the bitfield from.
+ *
  * @category Advanced Use
  */
 export function useBitField<This> (bitfields: Array<BitField<This>>, targetInstance: This, cursor: Cursor): This {
@@ -185,6 +211,15 @@ export function useBitField<This> (bitfields: Array<BitField<This>>, targetInsta
 }
 
 /**
+ * Write a bitfield definition to a {@link BinaryWriter}. This function is used
+ * in the context of the {@link binwrite}.
+ *
+ * @typeParam This The type of the bitfield.
+ *
+ * @param {Array} bitfields An array of {@link BitField} definition
+ * @param {This} targetInstance The object related to the `bitfields` argument with the bitfield content
+ * @param {BinaryWriter} cursor Cursor the write the content of the bitfield to.
+ *
  * @category Advanced Use
  */
 export function writeBitField<This> (bitfields: Array<BitField<This>>, targetInstance: This, cursor: BinaryWriter): void {
