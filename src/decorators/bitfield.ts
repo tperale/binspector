@@ -52,8 +52,9 @@
  * @module Bitfield
  */
 import { type MetaDescriptor, createMetaDescriptor } from './common'
-import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
 import { type Cursor, type BinaryWriter } from '../cursor'
+import { WrongBitfieldClassImplementation } from '../error'
+import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
 import Meta from '../metadatas'
 
 export const BitFieldSymbol = Symbol('bitfield')
@@ -93,9 +94,7 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
   return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
       if (Meta.getFields(context.metadata).length > 0) {
-        // TODO Create new Error
-        // TODO This will not fail if the Relation is at the end of the class.
-        throw new Error('Can\'t define bitfield inside an instance with relations')
+        throw new WrongBitfieldClassImplementation(String(context.name))
       }
     }
 
@@ -140,6 +139,8 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  * @remark
  *
  * The sum of all the the `@Bitfield` decorator of a class can be not aligned to 8 bit.
+ *
+ * @throws {ReferenceError} if you attempt to access a non existing property.
  *
  * @param {number} len The bitlength of the property it decorate.
  * @returns {DecoratorType}
