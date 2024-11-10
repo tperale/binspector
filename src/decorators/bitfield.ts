@@ -43,7 +43,7 @@
  * @remarks
  *
  * {@link BitField} type decorator can't be used inside class
- * definition that also contains {@link Relation} definition.
+ * definition that also contains {@link Primitive} definition.
  * To create a {@link BitField} object create a class solely
  * made for the bitfield definition as in the example.
  *
@@ -119,6 +119,10 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  *
  * @example
  *
+ * The top-most property of a class decorated with a `@Bitfield` decorator will
+ * contain the most significant bits (MSB) of the value decoded/encoded.
+ * In the example 'field_1' contains the two most significant bits.
+ *
  * ```typescript
  * class BitFieldObject {
  *   @Bitfield(2)
@@ -139,22 +143,11 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
  *
  * @remarks
  *
- * The top-most property of a class decorated with a `@Bitfield` decorator will
- * contain the most significant bits (MSB) of the value decoded/encoded.
- * In the example 'field_1' contains the two most significant bits.
- *
- * @remarks
- *
- * This decorator must be only used inside class definition that only includes
- * bitfield decorators.
- *
- * @remarks
- *
  * The sum of the bit-length declared by the properties decorated with a
  * `@Bitfield` would result in a 8, 16 or 32bits integer being read. Right now
  * 24 bits bitfields or longer than 32bits are not supported.
  *
- * @throws {WrongBitfieldClassImplementation} If a {@link Relation} has already been defined inside the bitfield class
+ * @throws {WrongBitfieldClassImplementation} If a {@link Primitive} (`@Relation`) has already been defined inside the bitfield class
  *
  * @typeParam This The type of the bitfield.
  * @typeParam Value The type of the property decorated or the target type the bitfield resolve to.
