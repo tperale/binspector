@@ -29,8 +29,8 @@ import { writeBitField } from './decorators/bitfield'
  * @returns {void}
  *
  */
-export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): void {
-  function getBinWriter (field: PropertyType<Target>, instance: any, value: any): () => void {
+export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
+  function binWrite (field: PropertyType<Target>, value: any): void {
     const strToArray = (x: any): any => (typeof x === 'string' && x.length > 1) ? x.split('') : x
 
     const write = (field: PropertyType<Target>, value: any): void => {
@@ -44,14 +44,12 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     }
 
     const _value = strToArray(value)
-    return () => {
-      if (Array.isArray(_value)) {
-        _value.flat(Infinity).flatMap(strToArray).forEach((x) => {
-          write(field, x)
-        })
-      } else {
-        write(field, _value)
-      }
+    if (Array.isArray(_value)) {
+      _value.flat(Infinity).flatMap(strToArray).forEach((x) => {
+        write(field, x)
+      })
+    } else {
+      write(field, _value)
     }
   }
 
@@ -63,7 +61,7 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
   const bitfields = Meta.getBitFields(metadata)
   if (bitfields.length > 0) {
     writeBitField(bitfields, instance, cursor)
-    return
+    return cursor
   }
 
   Meta.getFields<Target>(metadata).forEach((field) => {
@@ -75,7 +73,7 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       const transformers = Meta.getTransformers(metadata, field.propertyName)
       const reversedTransformers = transformers.slice().reverse()
       const transformedValue = useTransformer(reversedTransformers, instance[field.propertyName], instance, TransformerExecutionScope.OnWrite)
-      getBinWriter(finalRelationField, instance, transformedValue)()
+      binWrite(finalRelationField, transformedValue)
 
       // TODO Some controller should include instruction on how to normalize the data
       // For instance matrix should normalize the data into a single array
@@ -84,6 +82,8 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor)
   })
+
+  return cursor
 }
 
 export function computeBinSize (instance: any): number {
