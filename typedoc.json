@@ -1,7 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
-    "./src/index.ts",
     "./src/decorators/controller.ts",
     "./src/decorators/validator.ts",
     "./src/decorators/transformer.ts",
