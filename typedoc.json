@@ -12,5 +12,7 @@
   "out": "docs",
   "excludeExternals": true,
   "includeVersion": true,
-  "exclude": ["**/__test__/*.test.ts*"]
+  "exclude": ["**/__test__/*.test.ts*"],
+  "plugin": ["typedoc-plugin-mermaid"],
+  "projectDocuments": ["src/decorators/*.md"]
 }
