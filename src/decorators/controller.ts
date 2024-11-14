@@ -1,11 +1,40 @@
 /**
  * Module definition of {@link Controller} decorators.
  *
- * {@link Controller} type decorators define decorators used to modify the
- * parser/writter behavior based on property only present at runtime,
- * create array based on runtime property (see {@link While})
- * or to create array of primitive of fixed length (see {@link Count}) or
- * undefined length (see {@link Until}).
+ * {@link Controller} type decorators are used to modify the parser/writter
+ * behavior based on property only present at runtime.
+*
+ * The {@link Controller} decorators is executed during the reading.
+ *
+ * ```mermaid
+ * flowchart TB
+ *  subgraph s1[For each properties]
+ *  direction TB
+ *  PreOperation[__Pre__ property reading operations] --> Condition
+ *  click PreOperation "/binspector/modules/PrePost.html" "Documentation for 'Pre' type decorators"
+ *  Condition[__Condition__ get the definitive subtype to read based on current state] --> s2
+ *  click Condition "/binspector/modules/Condition.html" "Documentation for 'Condtion' type decorators"
+ *  subgraph s2[Reading subtype]
+ *  Controller[__Controller__ decides when to stop reading the subtype based on a set of arbitrary conditions] --> TypeReading[Read __Relation__ or __Primitive__]
+ *  click Controller "/binspector/modules/Controller.html" "Documentation for 'Controller' type decorators"
+ *  click TypeReading "/binspector/modules/Primitive.html" "Documentation for 'Primitive' type decorators"
+ *  end
+ *  TypeReading --> Controller
+ *  s2 --> Transform[__Transform__ the value we read into something else]
+ *  click Transform "/binspector/modules/Transformer.html" "Documentation for 'Transformer' type decorators"
+ *  Transform --> Validate[__Validate__ the final value]
+ *  click Validate "/binspector/modules/Validator.html" "Documentation for 'Validator' type decorators"
+ *  Validate --> PostOperation[__Post__ property reading operations]
+ *  click PostOperation "/binspector/modules/PrePost.html" "Documentation for 'Post' type decorators"
+ *  end
+ *  PostOperation -->  A@{ shape: framed-circle, label: "Stop" }
+ *  style Controller fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+ * ```
+ *
+ * You can create array based on runtime property (see {@link While}),
+ * create array of primitive of fixed length (see {@link Count}) or
+ * undefined length that are based on the value being read (see {@link Until}).
+ *
  *
  * @module Controller
  */

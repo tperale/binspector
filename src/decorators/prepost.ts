@@ -1,11 +1,41 @@
 /**
  * Module definition of {@link PrePost} decorators.
  *
- * {@link PrePost} type decorators are used to define function
- * computed before and after starting reading the relation.
- * The {@link PrePost} decorators receive the cursor instance and
- * can execute operation on it. Allowing to move/save the current offset
- * of buffer.
+ * {@link PrePost} type decorators are used to define function computed before
+ * and after reading the decorated property relation.
+ *
+ * ```mermaid
+ * flowchart TB
+ *  subgraph s1[For each properties]
+ *  direction TB
+ *  PreOperation[__Pre__ property reading operations] --> Condition
+ *  click PreOperation "/binspector/modules/PrePost.html" "Documentation for 'Pre' type decorators"
+ *  Condition[__Condition__ get the definitive subtype to read based on current state] --> s2
+ *  click Condition "/binspector/modules/Condition.html" "Documentation for 'Condtion' type decorators"
+ *  subgraph s2[Reading subtype]
+ *  Controller[__Controller__ decides when to stop reading the subtype based on a set of arbitrary conditions] --> TypeReading[Read __Relation__ or __Primitive__]
+ *  click Controller "/binspector/modules/Controller.html" "Documentation for 'Controller' type decorators"
+ *  click TypeReading "/binspector/modules/Primitive.html" "Documentation for 'Primitive' type decorators"
+ *  end
+ *  TypeReading --> Controller
+ *  s2 --> Transform[__Transform__ the value we read into something else]
+ *  click Transform "/binspector/modules/Transformer.html" "Documentation for 'Transformer' type decorators"
+ *  Transform --> Validate[__Validate__ the final value]
+ *  click Validate "/binspector/modules/Validator.html" "Documentation for 'Validator' type decorators"
+ *  Validate --> PostOperation[__Post__ property reading operations]
+ *  click PostOperation "/binspector/modules/PrePost.html" "Documentation for 'Post' type decorators"
+ *  end
+ *  PostOperation -->  A@{ shape: framed-circle, label: "Stop" }
+ *  style PreOperation fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+ *  style PostOperation fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+ * ```
+ *
+ * The {@link PrePost} decorators receive the cursor instance and can execute
+ * operation on it. Allowing to move/save the current offset of buffer.
+ *
+ * {@link PrePost} decorators can also be used to apply custom functions to the
+ * reader if the functions provided by this library is not providing the
+ * functionality you need for your format definition.
  *
  * @module PrePost
  */
