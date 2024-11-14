@@ -1,8 +1,44 @@
 /**
  * Module definition of {@link Transformer} type decorators.
  *
- * The {@link Transformer} decorators take a fully read property and transform it into a new property.
- * Those decorators can be used to apply a string encoding to a byte array.
+ * The {@link Transformer} decorators take a fully read property and transform
+ * it into a new property.
+ *
+ * The {@link Transformer} decorators are executed just after the value has
+ * been read.
+ *
+ * ```mermaid
+ * flowchart TB
+ *  subgraph s1[For each properties]
+ *  direction TB
+ *  PreOperation[__Pre__ property reading operations] --> Condition
+ *  click PreOperation "/binspector/modules/PrePost.html" "Documentation for 'Pre' type decorators"
+ *  Condition[__Condition__ get the definitive subtype to read based on current state] --> s2
+ *  click Condition "/binspector/modules/Condition.html" "Documentation for 'Condtion' type decorators"
+ *  subgraph s2[Reading subtype]
+ *  Controller[__Controller__ decides when to stop reading the subtype based on a set of arbitrary conditions] --> TypeReading[Read __Relation__ or __Primitive__]
+ *  click Controller "/binspector/modules/Controller.html" "Documentation for 'Controller' type decorators"
+ *  click TypeReading "/binspector/modules/Primitive.html" "Documentation for 'Primitive' type decorators"
+ *  end
+ *  TypeReading --> Controller
+ *  s2 --> Transform[__Transform__ the value we read into something else]
+ *  click Transform "/binspector/modules/Transformer.html" "Documentation for 'Transformer' type decorators"
+ *  Transform --> Validate[__Validate__ the final value]
+ *  click Validate "/binspector/modules/Validator.html" "Documentation for 'Validator' type decorators"
+ *  Validate --> PostOperation[__Post__ property reading operations]
+ *  click PostOperation "/binspector/modules/PrePost.html" "Documentation for 'Post' type decorators"
+ *  end
+ *  PostOperation -->  A@{ shape: framed-circle, label: "Stop" }
+ *  style Transform fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+ * ```
+ *
+ * For instance those {@link Transformer} type decorators can be used to apply
+ * a string encoding to a byte array.
+ *
+ * By default the custom transformers you will define are only applied when
+ * reading the binary. To also support encoding binary file from your object
+ * you need to define a second custom transformer with a different
+ * {@link TransformerExecutionScope} passed to the {@link TransformerOptions}.
  *
  * @module Transformer
  */
