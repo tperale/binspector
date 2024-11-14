@@ -38,6 +38,8 @@ export type Context<This, Value> =
  * DecoratorType.
  */
 export type DecoratorType<This, Value> = (target: undefined, context: Context<This, Value>) => void
+export type ClassAndPropertyDecoratorContext<This> = ClassDecoratorContext<new (...args: any) => This> | ClassFieldDecoratorContext<This>
+export type ClassAndPropertyDecoratorType<This> = (target: any, context: ClassAndPropertyDecoratorContext<This>) => void
 
 /**
  * InstantiableObject.
