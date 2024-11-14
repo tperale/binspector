@@ -9,18 +9,21 @@
  *
  * @module PrePost
  */
-import { type MetaDescriptor, createMetaDescriptor, recursiveGet } from './common'
+import { ClassMetaDescriptor, type MetaDescriptor, createClassMetaDescriptor, createMetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
-import { type DecoratorType, type Context } from '../types'
+import { type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
 
 export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')
+export const PreClassFunctionSymbol = Symbol('pre-class-function')
+export const PostClassFunctionSymbol = Symbol('post-class-function')
+export type PrePostSymbols = symbol
 
 export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
-type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>, remove?: boolean) => Array<PrePost<This>>
+// type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>, remove?: boolean) => Array<PrePost<This>>
 
 /**
  * PrePostOptions.
@@ -58,29 +61,72 @@ export interface PrePost<This> extends MetaDescriptor<This> {
   func: PrePostFunction<This>
 }
 
-function prePostFunctionDecoratorFactory<This, Value> (name: string, typeSym: symbol, metaSetter: PrePostMetadataSetter<This>, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType<This, Value> {
+export interface PrePostClass<This> extends ClassMetaDescriptor {
+  /**
+   * Options for prepost decorator
+   */
+  options: PrePostOptions
+
+  /**
+   * Function that will be executed before or after the Controller, Validator and Transformer decorator.
+   */
+  func: PrePostFunction<This>
+}
+
+function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
   const options = { ...PrePostOptionsDefault, ...opt }
 
-  return function (_: undefined, context: Context<This, Value>) {
+  return function (_: any, context: ClassFieldDecoratorContext<This>) {
     if (options.primitiveCheck) {
       relationExistOrThrow(context.metadata, context)
     }
 
     const propertyName = context.name as keyof This
-    const preFunction: PrePost<This> = {
+    const prePostFunction: PrePost<This> = {
       ...createMetaDescriptor(typeSym, name, context.metadata, propertyName),
       options,
       func,
     }
 
     if (options.once) {
-      preFunction.func = (instance: This, cursor: Cursor) => {
+      prePostFunction.func = (instance: This, cursor: Cursor) => {
         func(instance, cursor)
-        metaSetter(context.metadata, propertyName, preFunction, true)
+        Meta.removePrePost(context.metadata, typeSym, prePostFunction, propertyName)
       }
     }
 
-    metaSetter(context.metadata, propertyName, preFunction)
+    Meta.setPrePost(context.metadata, typeSym, prePostFunction, propertyName)
+  }
+}
+
+function prePostClassFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
+  const options = { ...PrePostOptionsDefault, ...opt }
+
+  return function (_: new() => This, context: ClassDecoratorContext<new (...args: any) => This>) {
+    const prePostFunction: PrePostClass<This> = {
+      ...createClassMetaDescriptor(typeSym, name, context.metadata, context.name as string),
+      options,
+      func,
+    }
+
+    if (options.once) {
+      prePostFunction.func = (instance: This, cursor: Cursor) => {
+        func(instance, cursor)
+        Meta.removePrePost(context.metadata, typeSym, prePostFunction)
+      }
+    }
+
+    Meta.setPrePost(context.metadata, typeSym, prePostFunction)
+  }
+}
+
+function prePostClassAndPropertyFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
+  return function (_: any, context: ClassAndPropertyDecoratorContext<This>) {
+    if (context.kind === 'class') {
+      prePostClassFunctionDecoratorFactory(name, typeSym === PreFunctionSymbol ? PreClassFunctionSymbol : PostClassFunctionSymbol, func, opt)(_, context)
+    } else {
+      prePostFunctionDecoratorFactory(name, typeSym, func, opt)(_, context)
+    }
   }
 }
 
@@ -94,8 +140,8 @@ function prePostFunctionDecoratorFactory<This, Value> (name: string, typeSym: sy
  *
  * @category Advanced Use
  */
-export function preFunctionDecoratorFactory<This, Value> (name: string, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType<This, Value> {
-  return prePostFunctionDecoratorFactory(name, PreFunctionSymbol, Meta.setPre, func, opt)
+export function preFunctionDecoratorFactory<This> (name: string, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
+  return prePostClassAndPropertyFunctionDecoratorFactory(name, PreFunctionSymbol, func, opt)
 }
 
 /**
@@ -108,8 +154,8 @@ export function preFunctionDecoratorFactory<This, Value> (name: string, func: Pr
  *
  * @category Advanced Use
  */
-export function postFunctionDecoratorFactory<This, Value> (name: string, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): DecoratorType<This, Value> {
-  return prePostFunctionDecoratorFactory(name, PostFunctionSymbol, Meta.setPost, func, opt)
+export function postFunctionDecoratorFactory<This> (name: string, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
+  return prePostClassAndPropertyFunctionDecoratorFactory(name, PostFunctionSymbol, func, opt)
 }
 
 /**
@@ -121,7 +167,7 @@ export function postFunctionDecoratorFactory<This, Value> (name: string, func: P
  *
  * @category Decorators
  */
-export function Pre<This, Value> (func: PrePostFunction<This>, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
+export function Pre<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return preFunctionDecoratorFactory('pre', func, opt)
 }
 
@@ -134,7 +180,7 @@ export function Pre<This, Value> (func: PrePostFunction<This>, opt?: Partial<Pre
  *
  * @category Decorators
  */
-export function Post<This, Value> (func: PrePostFunction<This>, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
+export function Post<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return postFunctionDecoratorFactory('post', func, opt)
 }
 
@@ -147,7 +193,7 @@ export function Post<This, Value> (func: PrePostFunction<This>, opt?: Partial<Pr
  *
  * @category Decorators
  */
-export function Offset<This, Value> (offset: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
+export function Offset<This> (offset: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
     const offCompute = typeof offset === 'string'
       ? recursiveGet(targetInstance, offset) as number
@@ -167,11 +213,11 @@ export function Offset<This, Value> (offset: number | string | ((instance: This,
  *
  * @category Decorators
  */
-export function Peek<This, Value> (offset?: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
-  return function (_: undefined, context: Context<This, Value>) {
-    preFunctionDecoratorFactory<This, Value>('pre-peek', (targetInstance, cursor) => {
+export function Peek<This> (offset?: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+  return function (_: undefined, context: ClassAndPropertyDecoratorContext<This>) {
+    preFunctionDecoratorFactory<This>('pre-peek', (targetInstance, cursor) => {
       const preOff = cursor.offset()
-      postFunctionDecoratorFactory<This, Value>('post-peek', (_, cursor) => {
+      postFunctionDecoratorFactory<This>('post-peek', (_, cursor) => {
         cursor.move(preOff)
       }, { ...opt, once: true })(_, context)
       const offCompute
@@ -196,16 +242,19 @@ export function Peek<This, Value> (offset?: number | string | ((instance: This, 
  *
  * @category Decorators
  */
-export function Endian<This, Value> (endianness: BinaryCursorEndianness, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
-  return function (_: undefined, context: Context<This, Value>) {
-    preFunctionDecoratorFactory('preEndian', (_2, cursor) => {
+export function Endian<This> (endianness: BinaryCursorEndianness, opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+  return function (_: any, context: ClassAndPropertyDecoratorContext<This>) {
+    prePostClassAndPropertyFunctionDecoratorFactory('preEndian', PreFunctionSymbol, (_2, cursor) => {
       if (cursor instanceof BinaryCursor) {
         const currentEndian = cursor.getEndian()
-        cursor.setEndian(endianness)
 
-        postFunctionDecoratorFactory('postEndian', () => {
-          cursor.setEndian(currentEndian)
-        }, { ...opt, once: true })(_, context)
+        if (currentEndian !== endianness) {
+          cursor.setEndian(endianness)
+
+          prePostClassAndPropertyFunctionDecoratorFactory('postEndian', PostFunctionSymbol, () => {
+            cursor.setEndian(currentEndian)
+          }, { ...opt, once: true })(_, context)
+        }
       }
     }, opt)(_, context)
   }
@@ -221,7 +270,7 @@ export function Endian<This, Value> (endianness: BinaryCursorEndianness, opt?: P
  *
  * @category Advanced Use
  */
-export function usePrePost<This> (prepost: Array<PrePost<This>>, targetInstance: This, cursor: Cursor): void {
+export function usePrePost<This> (prepost: Array<PrePost<This>> | Array<PrePostClass<This>>, targetInstance: This, cursor: Cursor): void {
   prepost.forEach((x) => {
     x.func(targetInstance, cursor)
   })

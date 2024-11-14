@@ -4,10 +4,44 @@ import { type Controller, ControllerSymbol } from './decorators/controller'
 import { type Transformer, TransformerSymbol } from './decorators/transformer'
 import { type Validator, ValidatorSymbol } from './decorators/validator'
 import { type BitField, BitFieldSymbol } from './decorators/bitfield'
-import { type PrePost, PreFunctionSymbol, PostFunctionSymbol } from './decorators/prepost'
+import { type PrePost, PreFunctionSymbol, PostFunctionSymbol, PreClassFunctionSymbol, PostClassFunctionSymbol, PrePostSymbols, PrePostClass } from './decorators/prepost'
 import { type DecoratorMetadataObject } from './types'
 
 import './symbol-polyfill'
+
+function getClassMetadata<T> (
+  metadata: DecoratorMetadataObject,
+  metadataKey: symbol,
+): T[] {
+  if (metadata[metadataKey] === undefined) {
+    metadata[metadataKey] = []
+  }
+  const meta = metadata[metadataKey]
+  return Array.isArray(meta) ? meta : []
+}
+
+function removeClassMetadata<T> (
+  metadata: DecoratorMetadataObject,
+  metadataKey: symbol,
+  rmValue: any,
+): T[] {
+  const metas = getClassMetadata(metadata, metadataKey)
+  const newMetas = metas.filter((x: any) => x.id !== rmValue.id)
+  metadata[metadataKey] = newMetas
+  return metadata[metadataKey]
+}
+
+function setClassMetadata<T> (
+  metadata: DecoratorMetadataObject,
+  metadataKey: symbol,
+  newValue: any,
+  reverse = false,
+): T[] {
+  const metas = getClassMetadata(metadata, metadataKey)
+  const newMetas = reverse ? [newValue, ...metas] : [...metas, newValue]
+  metadata[metadataKey] = newMetas
+  return newMetas
+}
 
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
@@ -72,25 +106,19 @@ function isFieldDecorated<This> (metadata: DecoratorMetadataObject, propertyKey:
   return getField(metadata, propertyKey) !== undefined
 }
 
+function getClassPre<This> (metadata: DecoratorMetadataObject): Array<PrePost<This>> {
+  return getClassMetadata(
+    metadata,
+    PreClassFunctionSymbol,
+  )
+}
+
 function getPre<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<PrePost<This>> {
   return getMetadata(
     metadata,
     propertyKey,
     PreFunctionSymbol,
   )
-}
-
-function setPre<This> (
-  metadata: DecoratorMetadataObject,
-  propertyKey: keyof This,
-  pre: PrePost<This>,
-  remove = false,
-): Array<PrePost<This>> {
-  if (remove) {
-    return removeMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
-  } else {
-    return setMetadata(metadata, propertyKey, PreFunctionSymbol, pre)
-  }
 }
 
 function getConditions<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Condition<This>> {
@@ -165,16 +193,40 @@ function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: keyof Th
   )
 }
 
-function setPost<This> (
+function getClassPost<This> (metadata: DecoratorMetadataObject): Array<PrePostClass<This>> {
+  return getClassMetadata(
+    metadata,
+    PostClassFunctionSymbol,
+  )
+}
+
+function setPrePost<This> (
   metadata: DecoratorMetadataObject,
-  propertyKey: keyof This,
-  post: PrePost<This>,
-  remove = false,
+  sym: PrePostSymbols,
+  prepost: PrePost<This> | PrePostClass<This>,
+  propertyKey?: keyof This,
 ): Array<PrePost<This>> {
-  if (remove) {
-    return removeMetadata(metadata, propertyKey, PostFunctionSymbol, post)
+  if ((sym === PreClassFunctionSymbol) || (sym === PostClassFunctionSymbol)) {
+    return setClassMetadata(metadata, sym, prepost)
+  } else if (((sym === PreFunctionSymbol) || (sym === PostFunctionSymbol)) && (propertyKey !== undefined)) {
+    return setMetadata(metadata, propertyKey, sym, prepost)
   } else {
-    return setMetadata(metadata, propertyKey, PostFunctionSymbol, post)
+    throw new Error()
+  }
+}
+
+function removePrePost<This> (
+  metadata: DecoratorMetadataObject,
+  sym: PrePostSymbols,
+  prepost: PrePost<This> | PrePostClass<This>,
+  propertyKey?: keyof This,
+): Array<PrePost<This>> {
+  if ((sym === PreClassFunctionSymbol) || (sym === PostClassFunctionSymbol)) {
+    return removeClassMetadata(metadata, sym, prepost)
+  } else if (((sym === PreFunctionSymbol) || (sym === PostFunctionSymbol)) && (propertyKey !== undefined)) {
+    return removeMetadata(metadata, propertyKey, sym, prepost)
+  } else {
+    throw new Error()
   }
 }
 
@@ -207,8 +259,8 @@ export default {
   getFields,
   setField,
   isFieldDecorated,
+  getClassPre,
   getPre,
-  setPre,
   getConditions,
   setCondition,
   getControllers,
@@ -218,7 +270,9 @@ export default {
   getValidators,
   setValidator,
   getPost,
-  setPost,
+  getClassPost,
+  setPrePost,
+  removePrePost,
   getBitField,
   getBitFields,
   setBitField,
