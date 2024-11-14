@@ -9,6 +9,7 @@
     "./src/decorators/bitfield.ts",
     "./src/decorators/primitive.ts"
   ],
+  "highlightLanguages": ["c", "typescript"],
   "out": "docs",
   "excludeExternals": true,
   "includeVersion": true,

@@ -1,12 +1,40 @@
 /**
  * Module definition of {@link Condition} decorators.
  *
- * {@link Condition } decorators apply certain {@link Primitive.Relation} to the property
- * they decorate based on a condition.
- * {@link Condition } decorators are optionnal and are the first type of decorator to be
- * executed when the target is read.
- * When using a {@link Condition} type decorator you should not define the size of the
- * property it decorate as it will be known at runtime.
+ * When reading a binary file certain parts of the format definition will only
+ * exist based on a value known at runtime.
+ * This is the role of {@link Condition} type decorators.
+ *
+ * {@link Condition} type decorators will determine the
+ * {@link Primitive.Relation} to read next based on a condition.
+ *
+ * {@link Condition} decorators are executed before reading to determine the
+ * type of the next relation to read.
+ *
+ * ```mermaid
+ * flowchart TB
+ *  subgraph s1[For each properties]
+ *  direction TB
+ *  PreOperation[__Pre__ property reading operations] --> Condition
+ *  click PreOperation "/binspector/modules/PrePost.html" "Documentation for 'Pre' type decorators"
+ *  Condition[__Condition__ get the definitive subtype to read based on current state] --> s2
+ *  click Condition "/binspector/modules/Condition.html" "Documentation for 'Condtion' type decorators"
+ *  subgraph s2[Reading subtype]
+ *  Controller[__Controller__ decides when to stop reading the subtype based on a set of arbitrary conditions] --> TypeReading[Read __Relation__ or __Primitive__]
+ *  click Controller "/binspector/modules/Controller.html" "Documentation for 'Controller' type decorators"
+ *  click TypeReading "/binspector/modules/Primitive.html" "Documentation for 'Primitive' type decorators"
+ *  end
+ *  TypeReading --> Controller
+ *  s2 --> Transform[__Transform__ the value we read into something else]
+ *  click Transform "/binspector/modules/Transformer.html" "Documentation for 'Transformer' type decorators"
+ *  Transform --> Validate[__Validate__ the final value]
+ *  click Validate "/binspector/modules/Validator.html" "Documentation for 'Validator' type decorators"
+ *  Validate --> PostOperation[__Post__ property reading operations]
+ *  click PostOperation "/binspector/modules/PrePost.html" "Documentation for 'Post' type decorators"
+ *  end
+ *  PostOperation -->  A@{ shape: framed-circle, label: "Stop" }
+ *  style Condition fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
+ * ```
  *
  * @module Condition
  */
@@ -323,6 +351,15 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
   }
 }
 
+/**
+ * `@Select`
+ *
+ * @param {((targetInstance: This) => Primitive<any>)} getter
+ * @param {RelationParameters} args
+ * @returns {DecoratorType}
+ *
+ * @category Decorators
+ */
 export function Select<This, Value> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This>): DecoratorType<This, Value> {
   return dynamicConditionDecoratorFactory('select', getter, args)
 }
