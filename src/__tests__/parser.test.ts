@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
@@ -524,7 +524,6 @@ describe('Reading binary definition with PrePost decorators', () => {
       value: 0x03,
     })
   })
-
   it('should change the endianness and then set it back', () => {
     class Protocol {
       @Relation(PrimitiveSymbol.u16)
@@ -544,7 +543,25 @@ describe('Reading binary definition with PrePost decorators', () => {
       value_3: 0x0506,
     })
   })
+  it('should change the endianness when defined as class decorator', () => {
+    @Endian(BinaryCursorEndianness.LittleEndian)
+    class Protocol {
+      @Relation(PrimitiveSymbol.u16)
+      value_1: number
 
+      @Relation(PrimitiveSymbol.u16)
+      value_2: number
+
+      @Relation(PrimitiveSymbol.u16)
+      value_3: number
+    }
+
+    expectReadTest([0x01, 0x02, 0x03, 0x04, 0x05, 0x06], Protocol).toMatchObject({
+      value_1: 0x0201,
+      value_2: 0x0403,
+      value_3: 0x0605,
+    })
+  })
   it('should peek the cursor to the mentionned address', () => {
     class Protocol {
       @Peek(2)

@@ -100,6 +100,8 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
     return useBitField(bitfields, instance, content)
   }
 
+  usePrePost(Meta.getClassPre(metadata), instance, content)
+
   Meta.getFields<Target>(metadata).forEach((field) => {
     usePrePost(Meta.getPre(metadata, field.propertyName), instance, content)
 
@@ -128,6 +130,8 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, content)
   })
+
+  usePrePost(Meta.getClassPost(metadata), instance, content)
 
   return instance
 }
