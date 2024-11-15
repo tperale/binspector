@@ -5,7 +5,7 @@
  */
 /**
  */
-export interface _MetaDescriptor {
+export interface MetaDescriptor {
   /**
    * Unique ID
    */
@@ -26,14 +26,14 @@ export interface _MetaDescriptor {
   metadata: DecoratorMetadataObject
 }
 
-export interface MetaDescriptor<This> extends _MetaDescriptor {
+export interface PropertyMetaDescriptor<This> extends MetaDescriptor {
   /**
    * Property name of the object the decorator is applied.
    */
   propertyName: keyof This
 }
 
-export interface ClassMetaDescriptor extends _MetaDescriptor {
+export interface ClassMetaDescriptor extends MetaDescriptor {
   /**
    * Class name of the decorated class.
    */
@@ -47,7 +47,7 @@ const uid = (function () {
   }
 })()
 
-export function createMetaDescriptor<This> (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: keyof This): MetaDescriptor<This> {
+export function createPropertyMetaDescriptor<This> (type: symbol, name: string, metadata: DecoratorMetadataObject, propertyName: keyof This): PropertyMetaDescriptor<This> {
   return {
     id: uid(),
     type,
