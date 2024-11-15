@@ -51,7 +51,7 @@
  *
  * @module Bitfield
  */
-import { type MetaDescriptor, createMetaDescriptor } from './common'
+import { type PropertyMetaDescriptor, createPropertyMetaDescriptor } from './common'
 import { type Cursor, type BinaryWriter } from '../cursor'
 import { WrongBitfieldClassImplementation } from '../error'
 import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
@@ -73,7 +73,7 @@ export const BitFieldOptionsDefault = {
   primitiveCheck: true,
 }
 
-export interface BitField<This> extends MetaDescriptor<This> {
+export interface BitField<This> extends PropertyMetaDescriptor<This> {
   options: BitFieldOptions
   bitlength: number
 }
@@ -102,7 +102,7 @@ export function bitFieldDecoratorFactory<This, Value> (name: string, len: number
     }
 
     const bitfield: BitField<This> = {
-      ...createMetaDescriptor(BitFieldSymbol, name, context.metadata, context.name as keyof This),
+      ...createPropertyMetaDescriptor(BitFieldSymbol, name, context.metadata, context.name as keyof This),
       options,
       bitlength: len,
     }

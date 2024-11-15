@@ -5,7 +5,7 @@
  */
 import { type Cursor } from '../cursor'
 import { type DecoratorType, type Context } from '../types'
-import { createMetaDescriptor, type MetaDescriptor } from './common'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
 import { relationExistOrThrow } from './primitive'
 import { ValidationTestFailed } from '../error'
 import Meta from '../metadatas'
@@ -48,9 +48,9 @@ export type ValidatorFunction<This, Value> = (value: Value, targetInstance: This
 /**
  * Validator.
  *
- * @extends {MetaDescriptor}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface Validator<This, Value> extends MetaDescriptor<This> {
+export interface Validator<This, Value> extends PropertyMetaDescriptor<This> {
   options: ValidatorOptions
 
   /**
@@ -78,7 +78,7 @@ export function validatorDecoratorFactory<This, Value> (name: string, func: Vali
     }
 
     const validator: Validator<This, Value> = {
-      ...createMetaDescriptor(ValidatorSymbol, name, context.metadata, context.name as keyof This),
+      ...createPropertyMetaDescriptor(ValidatorSymbol, name, context.metadata, context.name as keyof This),
       options,
       validator: func,
     }

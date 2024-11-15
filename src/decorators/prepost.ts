@@ -9,7 +9,7 @@
  *
  * @module PrePost
  */
-import { ClassMetaDescriptor, type MetaDescriptor, createClassMetaDescriptor, createMetaDescriptor, recursiveGet } from './common'
+import { ClassMetaDescriptor, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
@@ -47,9 +47,9 @@ export const PrePostOptionsDefault = {
 /**
  * PrePost type interface structure definition.
  *
- * @extends {MetaDescriptor}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface PrePost<This> extends MetaDescriptor<This> {
+export interface PrePost<This> extends PropertyMetaDescriptor<This> {
   /**
    * Options for prepost decorator
    */
@@ -83,7 +83,7 @@ function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSy
 
     const propertyName = context.name as keyof This
     const prePostFunction: PrePost<This> = {
-      ...createMetaDescriptor(typeSym, name, context.metadata, propertyName),
+      ...createPropertyMetaDescriptor(typeSym, name, context.metadata, propertyName),
       options,
       func,
     }

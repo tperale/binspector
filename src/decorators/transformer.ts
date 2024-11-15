@@ -6,7 +6,7 @@
  *
  * @module Transformer
  */
-import { createMetaDescriptor, type MetaDescriptor } from './common'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
 import { relationExistOrThrow } from './primitive'
 import { type DecoratorType, type Context } from '../types'
 import Meta from '../metadatas'
@@ -53,9 +53,9 @@ export type TransformerFunction<This> = (value: any, targetInstance: This) => an
 /**
  * Transformer.
  *
- * @extends {MetaDescriptor<T>}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface Transformer<This> extends MetaDescriptor<This> {
+export interface Transformer<This> extends PropertyMetaDescriptor<This> {
   options: TransformerOptions
   /**
    * The transformer function taking the value in input and return the transformed value.
@@ -82,7 +82,7 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
     }
 
     const transformer: Transformer<This> = {
-      ...createMetaDescriptor(TransformerSymbol, name, context.metadata, context.name as keyof This),
+      ...createPropertyMetaDescriptor(TransformerSymbol, name, context.metadata, context.name as keyof This),
       options,
       transformer: func,
     }

@@ -10,7 +10,7 @@
  *
  * @module Condition
  */
-import { recursiveGet, type MetaDescriptor, createMetaDescriptor } from './common'
+import { recursiveGet, type PropertyMetaDescriptor, createPropertyMetaDescriptor } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
 import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types'
 import { NoConditionMatched } from '../error'
@@ -30,9 +30,9 @@ export type DynamicConditionFunction<This, Value> = (targetInstance: This) => Pr
 /**
  * Condition.
  *
- * @extends {MetaDescriptor<T>}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface Condition<This> extends MetaDescriptor<This> {
+export interface Condition<This> extends PropertyMetaDescriptor<This> {
   /**
    * Function to control the flow of execution of the parser/writter.
    */
@@ -68,7 +68,7 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, fu
     }
 
     const condition: Condition<This> = {
-      ...createMetaDescriptor(ConditionSymbol, name, context.metadata, propertyName),
+      ...createPropertyMetaDescriptor(ConditionSymbol, name, context.metadata, propertyName),
       condition: func,
       relation: then !== undefined ? createRelation(then) : undefined,
     }
@@ -102,7 +102,7 @@ export function dynamicConditionDecoratorFactory<This, Target, Value> (name: str
     }
 
     const condition: Condition<This> = {
-      ...createMetaDescriptor(DynamicConditionSymbol, name, context.metadata, propertyName),
+      ...createPropertyMetaDescriptor(DynamicConditionSymbol, name, context.metadata, propertyName),
       condition: (targetInstance: This) => createRelation(func(targetInstance)),
       relation: undefined,
     }
