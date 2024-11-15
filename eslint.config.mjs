@@ -6,7 +6,7 @@ import stylistic from '@stylistic/eslint-plugin'
 
 export default [
   {
-    ignores: ['**/build/**', '**/dist/**', '**/docs/**', 'webpack.config.js', 'babel.config.js', '**/*.mjs'],
+    ignores: ['**/build/**', '**/dist/**', '**/docs/**', 'webpack.config.js', 'jest.config.js', '**/*.mjs'],
   },
   // syntax rules
   jseslint.configs.recommended,
