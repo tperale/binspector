@@ -155,7 +155,7 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
  *
  * @category Decorators
  */
-export function Match<This, Value> (matchingValue: Value, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
+export function Match<This, Value> (matchingValue: Value | Array<Value>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value | Array<Value>> {
   /**
    * matchValidatorFactory.
    *
@@ -222,7 +222,7 @@ export function Match<This, Value> (matchingValue: Value, opt?: Partial<Validato
  *
  * @category Decorators
  */
-export function Enum<This, Value> (enumeration: Record<string, Value>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value> {
+export function Enum<This, Value> (enumeration: Record<string, Value>, opt?: Partial<ValidatorOptions>): DecoratorType<This, Value | Array<Value>> {
   function enumerationValidator (value: Value, _: This): boolean {
     return Object.prototype.hasOwnProperty.call(enumeration, value)
   }
