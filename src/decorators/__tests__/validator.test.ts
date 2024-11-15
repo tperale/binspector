@@ -9,7 +9,9 @@ function testValidator (TargetClass: new () => any, field: string, preFunc?: (in
     preFunc(instance)
   }
 
-  const validators = Meta.getValidators(TargetClass[Symbol.metadata], field)
+  const metadata = TargetClass[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
+
+  const validators = Meta.getValidators(metadata, field)
   useValidators(validators, instance[field], instance)
 }
 

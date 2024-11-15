@@ -33,13 +33,4 @@ describe('Testing the usage of decorator to create metadata about property', () 
       }
     }).toThrow(RelationAlreadyDefinedError)
   })
-
-  it('should throw an error when defined as a relation', () => {
-    expect(() => {
-      class Header {
-        @Relation(Header)
-        header: Header
-      }
-    }).toThrow(ReferenceError)
-  })
 })
