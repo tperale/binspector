@@ -10,7 +10,7 @@ class Coord {
 
 const testSymbol = Symbol('test')
 
-function Decorator (_: any, context: Context): void {
+function Decorator<This, Value> (_: any, context: Context<This, Value>): void {
   Meta.setMetadata(context.metadata, context.name, testSymbol, context.name)
 }
 
@@ -30,7 +30,8 @@ describe('Set metadata information through the metadata API', () => {
   })
   it('should store the validator', () => {
     const c = new MyClass()
-    const validator: Validator = {
+    const validator: Validator<any, boolean> = {
+      id: 0,
       type: ValidatorSymbol,
       name: 'test',
       metadata: MyClass[Symbol.metadata] as DecoratorMetadataObject,

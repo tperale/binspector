@@ -131,7 +131,7 @@ function isString (bytes: number[]) {
 }
 
 function asObjectDtb (structs: DTBStructBlock[]): object {
-  function setObject (o: object, current: string[], key: string, value: any) {
+  function setObject (o: Record<string, any>, current: string[], key: string, value: any) {
     const currentObj = current.reduce((obj, k) => obj[k], o)
 
     currentObj[key] = value
@@ -188,7 +188,7 @@ export class DTB {
   @Relation(PrimitiveSymbol.char)
   strings: string[]
 
-  asObject (): object {
-    return asObjectDtb(this.structs)['']
+  asObject (): Record<string, any> {
+    return Reflect.get(asObjectDtb(this.structs), '')
   }
 }
