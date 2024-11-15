@@ -9,7 +9,7 @@
  *
  * @module Controller
  */
-import { createMetaDescriptor, type MetaDescriptor, recursiveGet } from './common'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor, recursiveGet } from './common'
 import { type Cursor } from '../cursor'
 import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
@@ -61,9 +61,9 @@ export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor,
 /**
  * Controller type interface structure definition.
  *
- * @extends {MetaDescriptor}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface Controller<This> extends MetaDescriptor<This> {
+export interface Controller<This> extends PropertyMetaDescriptor<This> {
   /**
    * Options for controller decorator
    */
@@ -100,7 +100,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
 
     const propertyName = context.name as keyof This
     const controller: Controller<This> = {
-      ...createMetaDescriptor(ControllerSymbol, name, context.metadata, propertyName),
+      ...createPropertyMetaDescriptor(ControllerSymbol, name, context.metadata, propertyName),
       options,
       controller: (curr: This, cursor, read) => func(curr, cursor, read, options),
     }

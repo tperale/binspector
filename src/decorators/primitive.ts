@@ -7,7 +7,7 @@
  *
  * @module Primitive
  */
-import { type MetaDescriptor, createMetaDescriptor, commaSeparetedRecursiveGet } from './common'
+import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet } from './common'
 import { WrongBitfieldClassImplementation } from '../error'
 import Meta from '../metadatas'
 import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
@@ -43,9 +43,9 @@ export function isPrimitiveRelation<This> (field: PropertyType<This>): field is 
 /**
  * PrimitiveTypeField.
  *
- * @extends {MetaDescriptor}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface PrimitiveTypeProperty<This> extends MetaDescriptor<This> {
+export interface PrimitiveTypeProperty<This> extends PropertyMetaDescriptor<This> {
   /**
    * @type {symbol} property that hold the primitive symbol type.
    */
@@ -64,7 +64,7 @@ export interface PrimitiveTypeProperty<This> extends MetaDescriptor<This> {
  */
 export function createPrimitiveTypeProperty<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This, primitive: PrimitiveSymbol): PrimitiveTypeProperty<This> {
   return {
-    ...createMetaDescriptor<This>(PrimitiveTypePropertySymbol, 'primitive', metadata, propertyKey),
+    ...createPropertyMetaDescriptor<This>(PrimitiveTypePropertySymbol, 'primitive', metadata, propertyKey),
     primitive,
   }
 }
@@ -74,7 +74,7 @@ const UnknownTypePropertySymbol = Symbol('unknown-property-symbol')
 /**
  * UnknownPropertyType.
  */
-export type UnknownTypeProperty<This> = MetaDescriptor<This>
+export type UnknownTypeProperty<This> = PropertyMetaDescriptor<This>
 
 /**
  * isUnknownProperty.
@@ -138,9 +138,9 @@ export type RelationParameters<This> = ((targetInstance: This) => any[]) | strin
 /**
  * RelationType.
  *
- * @extends {MetaDescriptor}
+ * @extends {PropertyMetaDescriptor}
  */
-export interface RelationTypeProperty<This, Target> extends MetaDescriptor<This> {
+export interface RelationTypeProperty<This, Target> extends PropertyMetaDescriptor<This> {
   /**
    * @type {InstantiableObject} Primitive value that the property hold.
    */
@@ -165,7 +165,7 @@ export function createRelationTypeProperty<This, Target> (metadata: DecoratorMet
     : args as ((targetInstance: This) => any[]) | undefined
 
   return {
-    ...createMetaDescriptor<This>(RelationTypePropertySymbol, 'relation', metadata, propertyKey),
+    ...createPropertyMetaDescriptor<This>(RelationTypePropertySymbol, 'relation', metadata, propertyKey),
     relation,
     args: argsFunc,
   }
@@ -207,7 +207,7 @@ export function Relation<This, Target, Value> (relation?: InstantiableObject<Tar
       throw new RelationAlreadyDefinedError(field, String(propertyName))
     }
     if (relation === undefined) {
-      Meta.setField(context.metadata, createMetaDescriptor<This>(UnknownTypePropertySymbol, 'unknown', context.metadata, propertyName))
+      Meta.setField(context.metadata, createPropertyMetaDescriptor<This>(UnknownTypePropertySymbol, 'unknown', context.metadata, propertyName))
     } else if (isPrimitiveSymbol(relation)) {
       Meta.setField(context.metadata, createPrimitiveTypeProperty<This>(context.metadata, propertyName, relation))
     } else {
