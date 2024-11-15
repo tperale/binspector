@@ -4,10 +4,11 @@ import { type RelationTypeProperty, type PrimitiveTypeProperty } from '../primit
 import { NoConditionMatched } from '../../error'
 import Meta from '../../metadatas'
 
-function testCondition (TargetClass: new () => any, relation: any, post?: (relation: PrimitiveTypeProperty | RelationTypeProperty | undefined, instance: any) => void, field: string = 'field') {
+function testCondition<This> (TargetClass: new (...args: any) => This, relation: any, post?: (relation: PrimitiveTypeProperty<This> | RelationTypeProperty<This, any> | undefined, instance: This) => void, field: keyof This = 'field' as keyof This) {
   const instance = new TargetClass()
 
-  const conditions = Meta.getConditions(TargetClass[Symbol.metadata] as DecoratorMetadataObject, field)
+  const metadata = TargetClass[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
+  const conditions = Meta.getConditions(metadata, field)
   const result = useConditions(conditions, instance)
 
   expect(result).toEqual(expect.objectContaining({ relation }))
