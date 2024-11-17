@@ -264,26 +264,6 @@ export function Enum<This, Value> (enumeration: Record<string, Value>, opt?: Par
 }
 
 /**
- * The decarator define that the field contains the CRC code of the whole struct.
- * The parser will validate the struct by calculating its CRC and comparing it to this field.
- *
- * ```
- * {
- *   id: u32,
- *   @Count(3)
- *   name: char,
- *   @Crc
- *   crc: u32,
- * }
- * ```
- */
-// TODO
-// export const Crc = (term: any) => {
-//   return function (target: any, propertyKey: string) {
-//   };
-// };
-
-/**
  * useValidators.
  *
  * @param {Array} validators
