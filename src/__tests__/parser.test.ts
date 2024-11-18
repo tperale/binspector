@@ -83,7 +83,6 @@ describe('Reading binary content into js object', () => {
       relation: { buf: [0x01, 0x02] },
     })
   })
-
   it('should pass the context to the sub-relation', () => {
     class Header extends withBinspectorContext {
       @Count('_ctx.size')
@@ -576,7 +575,6 @@ describe('Reading binary definition with PrePost decorators', () => {
     })
     expect(curr.offset()).toStrictEqual(0)
   })
-
   it('should peek the cursor to the next address', () => {
     class Protocol {
       @Peek()
