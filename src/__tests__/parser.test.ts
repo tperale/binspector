@@ -578,6 +578,37 @@ describe('Reading binary definition with PrePost decorators', () => {
       value_3: 0x0605,
     })
   })
+  it('should change the endianness based on a value known at runtime', () => {
+    class Protocol {
+      @Relation(PrimitiveSymbol.u8)
+      endian: number
+
+      @Endian(_ => _.endian > 0 ? BinaryCursorEndianness.BigEndian : BinaryCursorEndianness.LittleEndian)
+      @Relation(PrimitiveSymbol.u16)
+      value: number
+    }
+
+    expectReadTest([0x00, 0x01, 0x02], Protocol, BinaryCursorEndianness.BigEndian).toMatchObject({
+      value: 0x0201,
+    })
+  })
+  it('should change the endianness based on a value known at runtime at class level', () => {
+    @Endian(_ => _._endian > 0 ? BinaryCursorEndianness.BigEndian : BinaryCursorEndianness.LittleEndian)
+    class Protocol {
+      _endian: number
+
+      @Relation(PrimitiveSymbol.u16)
+      value: number
+
+      constructor (endian: number) {
+        this._endian = endian
+      }
+    }
+
+    expectReadTest([0x01, 0x02], Protocol, BinaryCursorEndianness.BigEndian, 0).toMatchObject({
+      value: 0x0201,
+    })
+  })
   it('should peek the cursor to the mentionned address', () => {
     class Protocol {
       @Peek(2)
