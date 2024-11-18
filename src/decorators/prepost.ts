@@ -272,14 +272,18 @@ export function Peek<This> (offset?: number | string | ((instance: This, cursor:
  *
  * @category Decorators
  */
-export function Endian<This> (endianness: BinaryCursorEndianness, opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function Endian<This> (endianness: BinaryCursorEndianness | ((instance: This) => BinaryCursorEndianness), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return function (_: any, context: ClassAndPropertyDecoratorContext<This>) {
-    prePostClassAndPropertyFunctionDecoratorFactory('preEndian', PreFunctionSymbol, (_2, cursor) => {
+    prePostClassAndPropertyFunctionDecoratorFactory<This> ('preEndian', PreFunctionSymbol, (targetInstance, cursor) => {
       if (cursor instanceof BinaryCursor) {
+        const finalEndian = typeof endianness === 'function'
+          ? endianness(targetInstance)
+          : endianness
+
         const currentEndian = cursor.getEndian()
 
-        if (currentEndian !== endianness) {
-          cursor.setEndian(endianness)
+        if (currentEndian !== finalEndian) {
+          cursor.setEndian(finalEndian)
 
           prePostClassAndPropertyFunctionDecoratorFactory('postEndian', PostFunctionSymbol, () => {
             cursor.setEndian(currentEndian)
