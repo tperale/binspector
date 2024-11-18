@@ -1,12 +1,12 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
 
-function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-  return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition))
+function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ...args: any[]) {
+  return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition, ...args))
 }
 
 function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
@@ -520,6 +520,23 @@ describe('Reading binary definition with PrePost decorators', () => {
     }
 
     expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol).toMatchObject({
+      value: 0x03,
+    })
+  })
+  it('should offset the protocol based on a value passed as a parameter', () => {
+    @Offset('_offset')
+    class Protocol {
+      _offset: number
+
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+
+      constructor (offset: number) {
+        this._offset = offset
+      }
+    }
+
+    expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol, BinaryCursorEndianness.BigEndian, 2).toMatchObject({
       value: 0x03,
     })
   })
