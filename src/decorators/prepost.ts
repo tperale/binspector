@@ -1,8 +1,8 @@
 /**
- * Module definition of {@link PrePost} decorators.
+ * Module definition of {@link PrePost} property and class decorators.
  *
- * {@link PrePost} type decorators are used to define function computed before
- * and after reading the decorated property relation.
+ * {@link PrePost} type decorators are used to define functions computed before
+ * and/or after reading or writing the decorated property or class.
  *
  * ```mermaid
  * flowchart TB
@@ -30,12 +30,20 @@
  *  style PostOperation fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
  * ```
  *
- * The {@link PrePost} decorators receive the cursor instance and can execute
- * operation on it. Allowing to move/save the current offset of buffer.
+ * The {@link PrePost} decorators are used to provide tools to manage cursor
+ * operations, and injecting custom logic into the parsing process.
  *
- * {@link PrePost} decorators can also be used to apply custom functions to the
- * reader if the functions provided by this library is not providing the
- * functionality you need for your format definition.
+ * - **Offset Management**: Save and restore cursor positions during complex
+ *   parsing operations with the {@link Offset} and {@link Peek} decorators.
+ *
+ * - **Endian Handling**: Dynamically set and restore endianness for properties,
+ *   classes, or subtypes with the {@link Endian} decorator.
+ *
+ * - **Debugging and Analysis**: Use the {@link Pre} and {@link Post} decorators
+ *   to log cursor positions or values during parsing.
+ *
+ * - **Dynamic Behavior**: Implement custom functions that allows developper to
+ *   not be constrained by the declarative nature of the library.
  *
  * @module PrePost
  */
@@ -53,18 +61,16 @@ export type PrePostSymbols = symbol
 
 export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
-// type PrePostMetadataSetter<This> = (metadata: DecoratorMetadataObject, propertyKey: keyof This, pre: PrePost<This>, remove?: boolean) => Array<PrePost<This>>
-
 /**
  * PrePostOptions.
  */
 export interface PrePostOptions {
   /**
-   * Verify a relation already exist before the definition of the PrePost function
+   * Ensures that a relation exists before defining the PrePost decorator.
    */
   primitiveCheck: boolean
   /**
-   * Remove the Decorator from the metadata once its function has been ran.
+   * Removes the decorator from metadata after its function is executed.
    */
   once: boolean
 }
@@ -98,11 +104,28 @@ export interface PrePostClass<This> extends ClassMetaDescriptor {
   options: PrePostOptions
 
   /**
-   * Function that will be executed before or after the Controller, Validator and Transformer decorator.
+   * Function to be executed before or after the Controller, Validator, and Transformer decorators.
    */
   func: PrePostFunction<This>
 }
 
+/**
+ * `prePostFunctionDecoratorFactory` function returns a decorator function
+ * that can be applied to properties.
+ *
+ * This factory enables defining `Pre` or `Post` type decorators for
+ * property-level operations, allowing execution of a specified function
+ * before or after a property has been processed.
+ *
+ * @param {string} name The name of the 'pre' or 'post' type decorator.
+ * @param {PrePostSymbols} typeSym The symbol indicating whether it's a 'Pre'
+ * or 'Post' decorator.
+ * @param {PrePostFunction} func The function to be executed.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {ClassAndPropertyDecoratorType<This>} The property decorator function.
+ *
+ * @category Advanced Use
+ */
 function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
   const options = { ...PrePostOptionsDefault, ...opt }
 
@@ -129,6 +152,23 @@ function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSy
   }
 }
 
+/**
+ * `prePostClassFunctionDecoratorFactory` function returns a decorator function
+ * that can be applied to classes.
+ *
+ * This factory enables defining `Pre` or `Post` type decorators for class-level
+ * operations, allowing execution of a specified function before or after a
+ * class has been processed.
+ *
+ * @param {string} name The name of the 'pre' or 'post' decorator.
+ * @param {PrePostSymbols} typeSym The symbol indicating whether it's a 'Pre'
+ * or 'Post' decorator.
+ * @param {PrePostFunction} func The function to be executed.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {ClassAndPropertyDecoratorType<This>} The class decorator function.
+ *
+ * @category Advanced Use
+ */
 function prePostClassFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
   const options = { ...PrePostOptionsDefault, ...opt }
 
@@ -150,6 +190,24 @@ function prePostClassFunctionDecoratorFactory<This> (name: string, typeSym: PreP
   }
 }
 
+/**
+ * `prePostClassAndPropertyFunctionDecoratorFactory` function returns a
+ * decorator function that can be applied to both classes and properties.
+ * It uses the appropriate factory function
+ * ({@link prePostClassFunctionDecoratorFactory} or
+ * {@link prePostFunctionDecoratorFactory}) depending on whether the target
+ * is a class or a property.
+ *
+ * @param {string} name The name of the 'pre' or 'post' decorator.
+ * @param {PrePostSymbols} typeSym The symbol indicating whether it's a 'Pre'
+ * or 'Post' decorator.
+ * @param {PrePostFunction} func The function to be executed.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {ClassAndPropertyDecoratorType<This>} The class or property
+ * decorator function.
+ *
+ * @category Advanced Use
+ */
 function prePostClassAndPropertyFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, opt: Partial<PrePostOptions> = PrePostOptionsDefault): ClassAndPropertyDecoratorType<This> {
   return function (_: any, context: ClassAndPropertyDecoratorContext<This>) {
     if (context.kind === 'class') {
@@ -161,12 +219,17 @@ function prePostClassAndPropertyFunctionDecoratorFactory<This> (name: string, ty
 }
 
 /**
- * `preFunctionDecoratorFactory` function helps create a decorator that will save the metadata of the `Pre` decorator.
+ * `preFunctionDecoratorFactory` function helps creates a decorator that saves
+ * the metadata of `Pre` type decorator.
  *
- * @param {string} name Name of the 'pre' decorator.
- * @param {PrePostFunction} func Function that will be executed before the Controller/Validator/Transfromer validators.
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {string} name Name of the 'Pre' type decorator.
+ * * @param {PrePostFunction} func Function that will be executed before the
+ * property or class has been processed, that receive the instance and cursor
+ * value as argument.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Advanced Use
  */
@@ -175,12 +238,15 @@ export function preFunctionDecoratorFactory<This> (name: string, func: PrePostFu
 }
 
 /**
- * `postFunctionDecoratorFactory` function helps create a decorator that will save the metadata of the `Post` decorator.
+ * `postFunctionDecoratorFactory` function helps creates a decorator that saves
+ * the metadata of the `Post` type decorator.
  *
- * @param {string} name Name of the 'post' decorator.
- * @param {PrePostFunction} func Function that will be executed after the Controller/Validator/Transfromer validators.
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {string} name Name of the 'Post' type decorator.
+ * @param {PrePostFunction} func Function that will be executed after the property or class has been fully processed.
  * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Advanced Use
  */
@@ -189,11 +255,34 @@ export function postFunctionDecoratorFactory<This> (name: string, func: PrePostF
 }
 
 /**
- * `@Pre` decorator defines a function computed before reading the property value.
+ * `@Pre` decorator defines a function computed before reading or
+ * writing the value of the decorated property or class .
  *
- * @param {PrePostFunction} func Function that will be executed before the Controller/Validator/Transfromer validators.
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * It is typically used for pre-processing tasks such as debugging,
+ * to run operation on the Cursor instance at runtime.
+ *
+ * @example
+ *
+ * In the following example, the `@Pre` operator is used read the value
+ * of the cursor and make a debug log to notify the position where the
+ * type definition start to be read.
+ *
+ * ```typescript
+ * @Pre((_, cursor) => { console.log(`${_.constructor.name} : ${cursor.offset()}`) })
+ * class Protocol {
+ *   @Pre((_, cursor) => { console.log(`${_.constructor.name} : ${cursor.offset()}`) })
+ *   @Relation(PrimitiveSymbol.u8)
+ *   foo: number
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {PrePostFunction} func Function that will be executed before the
+ * property or class has been processed, that receive the instance and cursor
+ * value as argument.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
@@ -202,11 +291,61 @@ export function Pre<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOpt
 }
 
 /**
- * `@Post` decorator defines a function computed after fully reading and transforming the property value.
+ * `@Post` decorator defines a function computed after fully reading or
+ * writing the value of the decorated property or class .
  *
- * @param {PrePostFunction} func Function that will be executed after the Controller/Validator/Transfromer validators.
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * It is typically used for post-processing tasks such as debugging, or
+ * to enforce custom constraints that the library cannot handle declaratively.
+ *
+ * @example
+ *
+ * In the following example, the `@Post` operator is used to store the value of
+ * the property it decorate inside a global variable that will be accessed by other
+ * part of the code. Currently, the library does not natively support shared
+ * context functionality, this example demonstrates a workaround for achieving
+ * similar behavior.
+ *
+ * ```typescript
+ * const GLOBAL_STORAGE = {}
+ *
+ * // After the 'Record' class has been processed key-value will be stored
+ * // in the 'GLOBAL_STORAGE' variable.
+ * @Post(_ => { GLOBAL_STORAGE[_.key] = _.value })
+ * class Record {
+ *   @NullTerminatedString
+ *   @Relation(PrimitiveSymbol.char)
+ *   key: string
+ *
+ *   @NullTerminatedString
+ *   @Relation(PrimitiveSymbol.char)
+ *   value: string
+ * }
+ *
+ * class SubProtocol {
+ *   ...
+ *   constructor (key: string, value: string) {
+ *     ...
+ *   }
+ * }
+ *
+ * class Protocol {
+ *   @Count(16)
+ *   @Relation(Records)
+ *   records: Record
+ *
+ *   // Map 'GLOBAL_STORAGE' to a [key, value] array and pass it to the
+ *   // SubProtocol constructor.
+ *   @MapTo(_ => Object.entries(GLOBAL_STORAGE))
+ *   @Relation(SubProtocol)
+ *   map:
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {PrePostFunction} func Function that will be executed after the property or class has been fully processed.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
@@ -215,11 +354,42 @@ export function Post<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOp
 }
 
 /**
- * `@Offset` decorator define the place to move the cursor of the buffer to perform the following operation on it.
+ * `@Offset` decorator define the address where the cursor should move to
+ * continue the next reading or writing operation.
+ *
+ * This is useful when dealing with binary file format with sections of data
+ * located at specific address.
+ *
+ * @example
+ *
+ * Some binary file format will define arbitrary area where part its definition
+ * is stored based on an address referenced somewhere else.
+ *
+ * In the following example, the `@Offset` decorator moves the cursor to an
+ * address defined in the 'header.address' property and then read
+ * null-terminated strings until the enf of the file.
+ *
+ * ```typescript
+ * class ProtocolHeader {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   address: number
+ * }
+ *
+ * class Protocol {
+ *   @Relation(ProtocolHeader)
+ *   header: ProtocolHeader
+ *
+ *   @Offset('header.address') // Move the cursor the the address in the header
+ *   @Until(EOF) // Keep reading strings until the end of the file
+ *   @NullTerminatedString() // Read a null-terminated string
+ *   area: string[]
+ * }
+ * ```
+ * @typeParam This The type of the class the decorator is applied to.
  *
  * @param {number | string} offset
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
@@ -235,11 +405,74 @@ export function Offset<This> (offset: number | string | ((instance: This, cursor
 }
 
 /**
- * `@Peek` decorator define the place to move the cursor of the buffer then move it back
+ * `@Peek` decorator moves the cursor to a specified address to read/write the
+ * decorated property, then moves back the cursor to its original position.
  *
- * @param {number | string} offset
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * The `@Peek` decorator shares similar functionality with the {@link Offset}
+ * decorator, but with a key difference: `@Peek` will automatically reset the
+ * cursor to its original position after reading or writing the decorated
+ * class or property.
+ *
+ * @example
+ *
+ * A use case where the `@Peek` decorator could be used instead of `@Offset`
+ * is if you need to apply some form of processing to the value of the property
+ * to know decide on the structure that value follows.
+ *
+ * In the following example the structure of the bitfield is only known based
+ * on the value of the most significant bit. For this I use `@Peek` to check the
+ * content of the next value and then I properly read it in the correct form.
+ *
+ * ```typescript
+ * class BitfieldB {
+ *   ...
+ * }
+ *
+ * class BitfieldA {
+ *   ...
+ * }
+ *
+ * class Protocol {
+ *   // Use `@Peek` to check the MSB but restore the cursor position
+ *   @Peek()
+ *   @Transform(x => x & 0x80)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   peeked: number
+ *
+ *   @IfThen(_ => _.peeked > 0, BitfieldA)
+ *   @Else(BitfieldB)
+ *   bitfield: BitfieldA | BitfieldB
+ * }
+ * ```
+ *
+ * You can also use the `@Peek` decorator with a dynamic offset that depends on
+ * the class instance and the current cursor position:
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   offset: number
+ *
+ *   @Peek((instance, cursor) => cursor.offset() + instance.offset)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   peeked: number
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * If you don’t need to return the cursor to its original position or know
+ * the exact position of the next read/write operation, use `@Offset`.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {number | string | ((instance: This, cursor: Cursor) => number)} [offset]
+ * The offset to move the cursor to before reading or writing the decorated property. It can be:
+ *   - A static number, indicating a fixed offset.
+ *   - A string that refer to a property of the current instance.
+ *   - A function that computes the offset dynamically based on the current instance and cursor.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
@@ -264,11 +497,106 @@ export function Peek<This> (offset?: number | string | ((instance: This, cursor:
 }
 
 /**
- * `@Endian`
+ * `@Endian` decorator change the endianness of the decorated property or class.
+ * It allows you to control how binary data is serialized or deserialized, based
+ * endianness that define the byte order of 16 and 32 bits integers.
  *
- * @param {BinaryCursorEndianness} endianness
- * @param {Partial} opt PrePost options.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @example
+ *
+ * **Changing Endianness for individual properties**
+ *
+ * Use the `@Endian` decorator over a `PrimitiveSymbol` property to change it's endianness.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Endian(BinaryCursorEndianness.LittleEndian)
+ *   @Relation(PrimitiveSymbol.u16)
+ *   little_endian: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   big_endian: number
+ * }
+ * ```
+ *
+ * **Changing Endianness for subtypes**
+ *
+ * By using the `@Endian` decorator over a subtype relation property to change
+ * the endianness of the entire sub-type
+ *
+ * ```typescript
+ * class SubProtocol {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   foo: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   bar: number
+ * }
+ *
+ * class Protocol {
+ *   @Endian(BinaryCursorEndianness.LittleEndian)
+ *   @Relation(SubProtocol)
+ *   sub_type: SubProtocol
+ * }
+ * ```
+ *
+ * **Set the endianness of an entire type definition**
+ *
+ * It's also possible to apply `@Endian` decorator on top of a class
+ * declaration to change the endianness of all its properties.
+ *
+ * In the following example, the `Protocol` type definition that
+ * include two unsigned 32bits integer: `foo` and `bar`, will use big-endian
+ * byte order.
+ *
+ * ```typescript
+ * @Endian(BinaryCursorEndianness.BigEndian)
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u32)
+ *   foo: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   bar: number
+ * }
+ * ```
+ *
+ * **Runtime Conditional Endianness:**
+ *
+ * If you need to set the endianness dynamically at runtime based on a class
+ * property, you can pass a function to the `@Endian` decorator.
+ *
+ * In the following example, the `@Endian` decorator uses the value of the
+ * `_value` property passed as an argument of `Protocol` constructor whether
+ * little-endian or big-endian byte order should be applied to the protocol.
+ *
+ * ```typescript
+ * @Endian(_ => _value > 0 ? BinaryCursorEndianness.LittleEndian : BinaryCursorEndianness.BigEndian)
+ * class Protocol {
+ *   _value: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   foo: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   bar: number
+ *
+ *   constructor(value: number) {
+ *      this._value = value
+ *   }
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * Because of the current architecture of the library, if multiple `@Endian`
+ * that are based on values known at runtime are run in parallel it could
+ * potentially mess up the result because they will all populate the 'post'
+ * property metadata.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {BinaryCursorEndianness | ((instance: This) => BinaryCursorEndianness)} endianness The endianness to apply, or a function that return the endianness based on the instance value.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
