@@ -1,10 +1,10 @@
 /**
- * Module definition of {@link Controller} decorators.
+ * Module definition of {@link Controller} property decorators.
  *
- * {@link Controller} type decorators are used to modify the parser/writter
- * behavior based on property only present at runtime.
-*
- * The {@link Controller} decorators is executed during the reading.
+ * {@link Controller} decorators modify the behavior of the parser during
+ * the reading process. These decorators are applied to properties within
+ * a class, enabling dynamic and flexible parsing scenarios of the child
+ * {@link Primitive.Relation} based on runtime data and conditions.
  *
  * ```mermaid
  * flowchart TB
@@ -31,10 +31,22 @@
  *  style Controller fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
  * ```
  *
- * You can create array based on runtime property (see {@link While}),
- * create array of primitive of fixed length (see {@link Count}) or
- * undefined length that are based on the value being read (see {@link Until}).
+ * The {@link Controller} decorators defines various mechanisms to provide
+ * control over the data reading process and handling dynamic data that depends
+ * on the parsing context.
  *
+ * - **Fixed-Length Arrays**: Define arrays with a statically set or
+ *   dynamically determined by another property using the {@link Count}
+ *   decorator.
+ *
+ * - **Variable-Length Arrays**: Read arrays until a specific condition or
+ *   EOF marker is encountered using the {@link Until} decorator.
+ *
+ * - **Byte-Sized Arrays**: Read arrays until the size in byte is met
+ *   using the {@link Size} decorator.
+ *
+ * - **Matrix**: Use {@link Matrix} to process two-dimensional arrays
+ *   with dynamic dimensions.
  *
  * @module Controller
  */
@@ -57,7 +69,7 @@ export type ControllerReader = (arg?: any) => any
  */
 export interface ControllerOptions {
   /**
-   * Verify a relation already exist before the definition of the controller
+   * Ensures that a relation exists before defining the Controller decorator.
    */
   primitiveCheck: boolean
   /**
@@ -107,9 +119,21 @@ export interface Controller<This> extends PropertyMetaDescriptor<This> {
 /**
  * controllerDecoratorFactory.
  *
- * @param {string} name Name of the controller decorator.
- * @param {ControllerFunction} func Function to control the flow of execution of the parser/writter.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * `controllerDecoratorFactory` is a utility function used to create `Controller`
+ * type property decorators, used to control the execution flow of a parser in
+ * a binary data processing context.
+ *
+ *
+ * @remarks
+ *
+ * Use this factory function to design custom 'Controller' type decorators
+ * tailored to specific data format requirements that are not supported by the
+ * library yet.
+ *
+ * @param {string} name The name of the 'controller' type decorator.
+ * @param {ControllerFunction} func Function to control the flow of execution of the parser.
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
  */
@@ -145,8 +169,8 @@ export type ControllerWhileFunction<This> = (curr: any, count: number, targetIns
 /**
  * whileFunctionFactory.
  *
- * @param {ControllerWhileFunction} cond
- * @returns {any}
+ * @param {ControllerWhileFunction} cond A function that defines the condition for continuation.
+ * @returns {ControllerFunction<This>} A controller function reader implementing the reading logic.
  *
  * @category Advanced Use
  */
@@ -158,7 +182,7 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
     opt: ControllerOptions,
   ): any {
     // TODO To something based on target type. If target is a string
-    // add everithing into a string. If target is an array add everything
+    // add everything into a string. If target is an array add everything
     // into an array
     const result = []
     const startOffset = cursor.offset()
@@ -211,8 +235,8 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
 /**
  * mapFunctionFactory.
  *
- * @param {} array
- * @returns {any}
+ * @param {any[]} array An array that will map each element to the child relation constructor.
+ * @returns {ControllerFunction<This>} A controller function reader implementing the reading logic.
  *
  * @category Advanced Use
  */
@@ -242,22 +266,19 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
 }
 
 /**
- * While decorator continue the execution flow while the condition passed as a parameter is not met.
+ * `@While` decorator continues the execution flow while the condition passed
+ * as a parameter is met.
  *
- * By default the relation that does not match the condition will be included in the result and the
- * cursor will be set after that relation. This is the default behavior because that's what we expect
- * most of the time.
- *
- * To not include the relation that doesn't match the condition and move back the cursor to the position
- * before it was read use the `peek` option.
- *
- * @remarks
- *
- * Don't use this decorator to compare the current value to EOF. Use {@link Until} instead.
+ * By default, if the condition is not met by a value, it will be included in
+ * the result, and the cursor will move forward.
+ * This is the default behavior because it's the most common use case. However,
+ * you can modify this behavior using the `peek` option.
  *
  * @example
  *
- * Use this decorator to make decisions based on the object currently interpreted.
+ * In the following example, the `@While` decorator is used to reads
+ * variable-length array from binary stream until a the condition based on the
+ * object currently read is no longer met.
  *
  * ```typescript
  * class BinObject {
@@ -271,19 +292,21 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  *   @Relation(PrimitiveSymbol.u8)
  *   blob: number[]
  * }
- * class BinProtocol {
+ *
+ * class Protocol {
  *   @While((obj) => obj.type !== 0x00)
  *   @Relation(BinObject)
  *   objs: BinObject[]
  * }
  * ```
  *
- * Use the `peek` option to not include the element that does not match the condition.
- * With this option the cursor will then be set back before the element was read and not
- * included in the resulting array.
+ * You can also use the `peek` option to exclude the elements that don't meet
+ * the condition and prevent them from being included in the result.
+ * With this option the cursor will then be set back before the element was
+ * read.
  *
  * ```typescript
- * class BinProtocol {
+ * class Protocol {
  *   @While((elem) => elem !== 0x00, { peek: true })
  *   @Relation(PrimitiveSymbol.u8)
  *   array: number[]
@@ -293,9 +316,22 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  *   end_elem: number
  * }
  * ```
-
- * @param {ControllerWhileFunction} func A function that return a boolean and receive three arguments: the currently read relation, the count and a reference the target instance.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ *
+ * @remarks
+ *
+ * Don't use this decorator to compare the current value to EOF. Use {@link Until} instead.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {ControllerWhileFunction} func A function that returns a boolean and receives multiple arguments:
+ *   - The currently read relation
+ *   - The count
+ *   - A reference to the target instance
+ *   - The current offset
+ *   - The offset before that relation
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -305,22 +341,15 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
 }
 
 /**
- * `@Until` decorator read variable length array that end by a special character or magic number.
+ * `@Until` decorator reads variable-length array from binary stream until a
+ * specified terminating character or magic number is encountered.
  *
- * The difference between Until and {@link Count} is that this decorator accept to create arrays
- * of undefined length.
+ * The main difference between `@Until` and `@Count` is that `@Until` supports
+ * reading data of an undefined length, terminating when a specific character
+ * is met. This makes it useful for reading data that ends with a special
+ * character or an EOF symbol.
  *
  * @example
- *
- * This decorator can be used to read null terminated strings.
- *
- * ```typescript
- * class BinProtocol {
- *   @Until('\0')
- *   @Relation(PrimitiveSymbol.char)
- *   message: string // Null terminated string
- * }
- * ```
  *
  * You can use this decorator to read relation or primitive until the EOF.
  *
@@ -334,14 +363,18 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  *
  * @remarks
  *
- * This decorator doesn't accept a function as argument.
+ * This decorator does not accept a function as argument.
  * If you need to use a function to verify an equality based on the currently read value
  * use the {@link While} decorator instead.
-
  *
- * @param {any} cmp Continue reading/writting the binary file until the argument is reached.
- * @param {ControllerOptions} opt
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {number | string | EOF} cmp The comparison value that indicates the
+ * end of the reading process. This can be a specific character, number, or
+ * the `EOF` symbol.
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @see {@link Count}
  * @see {@link While}
@@ -378,15 +411,37 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
 }
 
 /**
- * `@NullTerminatedString` decorator read a string until the '\0' character is met and always interpret a string.
+ * `@NullTerminatedString` decorator reads a string from a binary stream until
+ * the null-terminator (`\0`) character is encountered and exclude that
+ * character from the final value.
+ *
+ * @example
+ *
+ * In the following example, the `@NullTerminatedString` decorator is used
+ * in conjunction of the `@Until` decorator to read Null terminated strings
+ * until the end of the file.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Until(EOF)
+ *   @NullTerminatedString()
+ *   @Relation(PrimitiveSymbol.char)
+ *   data: string[]
+ * }
+ * ```
  *
  * @remarks
  *
- * This decorator is similar to `@Until('\0', { targetType: String })` but `@Until` will include the `\0` while
- * this decorator always drops it.
+ * This decorator is similar to `@Until('\0', { targetType: String })`.
+ * The key difference is that `@NullTerminatedString` always drop the
+ * null-terminator, whereas `@Until` includes the `\0` character as part of
+ * the string.
  *
- * @param {Partial} opt
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -397,24 +452,32 @@ export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptio
     read: ControllerReader,
     opt: ControllerOptions,
   ) => {
+    // Always extend the provided options with target type as String
     const stringOpt = {
       ...opt,
       targetType: String,
     }
+
+    // Drop the last character (null terminator)
     const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, cursor, read, stringOpt)
     return result.slice(0, -1)
   }, opt)
 }
 
 /**
- * `@Count` decorator define a variable length array based on the primitive.
+ * `@Count` decorator defines a variable-length array based on a value you pass
+ * as argument.
+ *
+ * This decorator is useful for dynamic parsing of arrays when the length is
+ * not fixed but can be derived from another property.
  *
  * @example
  *
- * The decorator also allows to refer to another field already present in the binary definition target instance.
+ * In the following example, the `@Count` decorator is used to define an array
+ * (`vec`) whose length is determined by the value of another property (`len`):
  *
  * ```typescript
- * class BinProtocol {
+ * class Protocol {
  *   @Relation(PrimitiveSymbol.u8)
  *   len: Number
  *
@@ -428,27 +491,25 @@ export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptio
  * @see {@link While}
  * @see {@link Controller}
  *
- * @param {number | string} arg The number of time to read the target property or a string refering to a field present on the target instance.
- * @param {ControllerOptions} opt
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {number | string} arg The number of time to read the target property
+ * or a string referring to a property that specifies the array length.
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
 export function Count<This, Value> (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
-  /**
-   * countFactory
-   *
-   * @param {any} _
-   * @param {number} i
-   * @param {object} currStateObject
-   * @returns {boolean}
-   */
   function countController (
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions,
   ): any {
+    // Determine the count (length) either from a static value or dynamically
+    // from another field in the class.
     const count
       = typeof arg === 'string'
         ? recursiveGet(currStateObject, arg)
@@ -469,12 +530,16 @@ export function Count<This, Value> (arg: number | string, opt?: Partial<Controll
 }
 
 /**
- * `@Matrix` decorator create array of arrays based on sizes you pass as arguments.
+ * `@Matrix` decorator creates a two-dimensional array based on the specified
+ * width and height arguments.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
  *
  * @param {number | string} width
  * @param {number | string} height
- * @param {Partial} opt
- * @returns {DecoratorType}
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -503,11 +568,50 @@ export function Matrix<This, Value> (width: number | string, height: number | st
 }
 
 /**
- * `@Size` decorator read until the size if met.
+ * `@Size` decorator reads data until the specified size in bytes is met.
  *
- * @param {number | string} size
- * @param {Partial} opt
- * @returns {DecoratorType}
+ * This decorator is useful when you need to process a fixed-size amount of
+ * data, either in bytes or based on another property that dynamically defines
+ * the size in bytes to read.
+ *
+ * Binary format definitions often specify the size of sections in bytes.
+ * These sections can have components of dynamic size, making it difficult to
+ * deduce the exact number of components.
+ *
+ * @example
+ *
+ * In the following example, the `@Size` decorator is used to read
+ * a specific number of bytes from a binary data stream into the decorated
+ * property.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Size(16)
+ *   @Relation(PrimitiveSymbol.u16)
+ *   data: number[] // Will contain 8 numbers
+ * }
+ * ```
+ *
+ * You can also use a string representing a property path to define the size
+ * dynamically.
+ *
+ * ```typescript
+ * class Protocol {
+ *   _size: number = 16
+ *
+ *   @Size('_size')
+ *   @Relation(PrimitiveSymbol.u16)
+ *   data: number[]
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {number | string} size The fixed size or a property path that defines
+ * the size dynamically.
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -525,12 +629,20 @@ export function Size<This, Value> (size: number | string, opt?: Partial<Controll
 }
 
 /**
- * `@MapTo` decorator map each array value to a child relation constructor.
+ * `@MapTo` decorator map each value of an array to a child relation constructor.
+ * This is useful when a property is an array, and you want each item in the array
+ * to be processed by a specific relation.
  *
  * @example
  *
+ * In the following example, the `@MapTo` decorator passes each element of the
+ * array passed as an argument to the child 'Relation' (`SubProtocol`)
+ * constructor.
+ * The `SubProtocol` then uses this value to set the length of array of number
+ * in the `data` property.
+ *
  * ```typescript
- * class SubClass {
+ * class SubProtocol {
  *   _size: number
  *
  *   @Count('_size')
@@ -542,16 +654,19 @@ export function Size<This, Value> (size: number | string, opt?: Partial<Controll
  *   }
  * }
  *
- * class TestClass {
+ * class Protocol {
  *   @MapTo([1, 2])
- *   @Relation(SubClass)
- *   field: number
+ *   @Relation(SubProtocol)
+ *   field: SubProtocol[]
  * }
  * ```
  *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
  * @param {number | string} arr
- * @param {Partial} opt
- * @returns {DecoratorType}
+ * @param {Partial<ControllerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -576,11 +691,17 @@ export function MapTo<This, Value> (arr: string | any[] | ((_: This) => any[]), 
 }
 
 /**
- * useController.
+ * useController execute an array of `Contoller` decorator metadata on a target
+ * instance.
  *
- * @param {Controller} controllers `Controller` decorator metadata.
- * @param {T} targetInstance Current state of the object the `Controller` is defined in, that will be passed to the `Controller` function.
- * @param {ControllerReader} reader Function defining how to read the next chunk of data.
+ * @typeParam This The type of the class the controllers belong in.
+ *
+ * @param {Array<Controller<This>>} controllers Array of `Controller` decorator
+ * metadata.
+ * @param {This} targetInstance Current state of the object the `Controller` is
+ * defined in, that will be passed to the `Controller` function.
+ * @param {ControllerReader} reader Function defining how to read the next chunk
+ * of data.
  * @returns {any}
  *
  * @category Advanced Use
