@@ -1,11 +1,9 @@
 /**
- * Module definition of {@link Transformer} type decorators.
+ * Module definition of {@link Transformer} property decorators.
  *
- * The {@link Transformer} decorators take a fully read property and transform
- * it into a new property.
- *
- * The {@link Transformer} decorators are executed just after the value has
- * been read.
+ * The {@link Transformer} decorators transform a fully read property into
+ * a new, derived property. These transformations occur immediately after
+ * the value has been read.
  *
  * ```mermaid
  * flowchart TB
@@ -32,13 +30,20 @@
  *  style Transform fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
  * ```
  *
- * For instance those {@link Transformer} type decorators can be used to apply
- * a string encoding to a byte array.
+ * By default, custom transformers are applied only during the reading phase.
+ * To support binary encoding (writing phase), define an additional transformer
+ * with a {@link TransformerExecutionScope} set to `OnWrite` or `OnBoth` via
+ * {@link TransformerOptions}.
  *
- * By default the custom transformers you will define are only applied when
- * reading the binary. To also support encoding binary file from your object
- * you need to define a second custom transformer with a different
- * {@link TransformerExecutionScope} passed to the {@link TransformerOptions}.
+ * The {@link Transformer} category define various decorators to perform
+ * transformation.
+ *
+ * - **Generic Transformer**: Defines custom transformer function using
+ * the {@link Transform} decorator.
+ *
+ * - **Predefined Transformer**: Defines basic transformation to apply to
+ * the decorated property that already include both read and write transformer
+ * see {@link TransformScale} and {@link TransformOffset}.
  *
  * @module Transformer
  */
@@ -47,10 +52,12 @@ import { relationExistOrThrow } from './primitive'
 import { type DecoratorType, type Context } from '../types'
 import Meta from '../metadatas'
 
-/**
- */
 export const TransformerSymbol = Symbol('transformer')
 
+/**
+ * The execution scope defines in which part of the binary processing (read,
+ * write or both) the transformer is applied.
+ */
 export enum TransformerExecutionScope {
   OnRead = 0x01,
   OnWrite = 0x02,
@@ -62,15 +69,16 @@ export enum TransformerExecutionScope {
  */
 export interface TransformerOptions {
   /**
-   * Verify a relation already exist before the definition of the controller
+   * Ensures that a relation exists before defining the Transformer decorator.
    */
   primitiveCheck: boolean
   /**
-   * If the value to apply the transformer to is an array the transformer will be applied to every member.
+   * Applies the transformer function to each element if the value is an array.
    */
   each: boolean
   /**
-   * Whether that Transformer function must be executed during the read process or the write process (or both).
+   * Specifies whether the transformer function should be executed during
+   * the read phase, the write phase, or both.
    */
   scope: TransformerExecutionScope
 }
@@ -82,30 +90,47 @@ export const TransformerOptionsDefault = {
 }
 
 /**
- * TransformerFunction.
+ * TransformerFunction is a function that takes as arguments the current value
+ * of the property as well as an instance of the class the decorated property
+ * belongs in, and returns a transformed value.
  */
 export type TransformerFunction<This> = (value: any, targetInstance: This) => any
 
 /**
- * Transformer.
+ * Transformer metadata type definition.
+ *
+ * This interface define how a transformer decorator will be stored in the
+ * metadata of the class definition.
  *
  * @extends {PropertyMetaDescriptor}
  */
 export interface Transformer<This> extends PropertyMetaDescriptor<This> {
   options: TransformerOptions
   /**
-   * The transformer function taking the value in input and return the transformed value.
+   * Function that perform the transformation.
    */
   transformer: TransformerFunction<This>
 }
 
 /**
- * transformerDecoratorFactory.
+ * `transformerDecoratorFactory` is a utility function used to create
+ * `Transformer` type property decorators, used to transform the value
+ * of a property.
  *
- * @param {string} name
- * @param {TransformerFunction} func
- * @param {TransformerOptions} opt
- * @returns {DecoratorType}
+ * @remarks
+ *
+ * Use this factory function to design custom 'Transformer' type decorators
+ * tailored to specific data format requirements that are not supported by the
+ * library yet.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {string} name The name of the 'Transformer' type decorator.
+ * @param {TransformerFunction} func The function to execute as part of the
+ * transformation process.
+ * @param {Partial<TransformerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
  */
@@ -128,10 +153,66 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
 }
 
 /**
- * Transform.
+ * `@Transform` decorator applies a custom transformation function to the
+ * decorated property value immediately after it is read or written during
+ * binary processing.
  *
- * @param {TransformerFunction} transformFunction
- * @returns {DecoratorType}
+ * The decorator enables dynamic transformations, such as decoding, scaling,
+ * or reformatting values, providing flexibility in how data is interpreted and
+ * manipulated during parsing.
+ *
+ * @example
+ *
+ * The following example demonstrates how to use the `@Transform` decorator to
+ * apply custom logic during parsing. In this case, it decodes an array
+ * into a UTF-8 string.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Transform((value: number[]) => {
+ *     const buf = new Uint8Array(value)
+ *     return new TextDecoder().decode(buf)
+ *   })
+ *   @Until(EOF)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   decodedString: string;
+ * }
+ * ```
+ *
+ * To add support for writing, define a complementary transformer for the
+ * writing phase:
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Transform((value: number[]) => {
+ *     const buf = new Uint8Array(value)
+ *     return new TextDecoder().decode(buf)
+ *   }, { scope: TransformerExecutionScope.OnRead })
+ *   @Transform((value: string) => {
+ *     const buf = new TextEncoder().encode(value)
+ *     return Array.from(buf)
+ *   }, { scope: TransformerExecutionScope.OnWrite })
+ *   @Until(EOF)
+ *   @Relation(PrimitiveSymbol.u8)
+ *   decodedString: string;
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * By default, the `@Transform` decorator applies the transformation only
+ * during the reading phase. To enable the reverse transformation during
+ * the writing phase, define a separate transformer with the appropriate
+ * execution scope.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {TransformerFunction<This>} transformFunction A function that based
+ * on the current value of the decorated property and instance, returns a
+ * transformed value.
+ * @param {Partial<TransformerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -140,10 +221,17 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
 }
 
 /**
- * TransformScale
+ * `@TransformScale` decorator applies a scaling transformation to the decorated
+ * property value during the binary reading or writing phase.
+ * The decorator multiplies the value by the given scale factor when reading
+ * and divides it by the same factor when writing, ensuring symmetry.
  *
- * @param {number} scale
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {number} scale The scaling factor to apply.
+ * @param {Partial<TransformerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -155,10 +243,17 @@ export function TransformScale<This, Value> (scale: number, opt?: Partial<Transf
 }
 
 /**
- * TransformOffset
+ * `@TransformOffset` decorator applies an offset transformation to the
+ * decorated property value during the binary reading or writing phase.
+ * The decorator adds the specified offset to the value when reading and
+ * subtracts it during writing, ensuring symmetry.
  *
- * @param {number} offset
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {number} off The offset number to apply.
+ * @param {Partial<TransformerOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -170,12 +265,15 @@ export function TransformOffset<This, Value> (off: number, opt?: Partial<Transfo
 }
 
 /**
- * useTransformer.
+ * useTransformer execute an array of `Transformer` decorator metadata on a
+ * property of a target instance.
  *
- * @param {Array} transformers
- * @param {any} propertyValue
- * @param {T} targetInstance
- * @returns {any}
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {Array<Transformer<This>>} transformers An array of transformers to apply.
+ * @param {any} propertyValue The initial value of the property to transform.
+ * @param {This} targetInstance The target class instance containing the property.
+ * @returns {any} The transformed value.
  *
  * @category Advanced Use
  */

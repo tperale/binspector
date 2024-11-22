@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset } from '../decorators'
-import { InstantiableObject, PrimitiveSymbol } from '../types'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, TransformerExecutionScope, Transform, Until } from '../decorators'
+import { InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
 import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor'
@@ -299,6 +299,23 @@ describe('Writing binary definition with Transformer decorators', () => {
     }
 
     decodeEncodeTest(Protocol, [0x02, 0x01])
+  })
+  it('should work with custom Transformer', () => {
+    class Protocol {
+      @Transform((value: number[]) => {
+        const buf = new Uint8Array(value)
+        return new TextDecoder().decode(buf)
+      }, { scope: TransformerExecutionScope.OnRead })
+      @Transform((value: string) => {
+        const buf = new TextEncoder().encode(value)
+        return Array.from(buf)
+      }, { scope: TransformerExecutionScope.OnWrite })
+      @Until(EOF)
+      @Relation(PrimitiveSymbol.u8)
+      decodedString: string
+    }
+
+    decodeEncodeTest(Protocol, [84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 115, 97, 109, 112, 108, 101, 32, 112, 97, 114, 97, 103, 114, 97, 112, 104, 46])
   })
 })
 
