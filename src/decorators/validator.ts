@@ -1,13 +1,16 @@
 /**
- * Module definition of {@link Validator} decorators.
+ * Module definition of {@link Validator} property decorators.
  *
- * {@link Validator} are a class of decorators that help you ensure the binary
- * file being parsed adhere the binary file definition.
+ * {@link Validator} decorators ensure that a decorated property adheres
+ * to an expected format or value. These decorators validate the value
+ * of a property against predefined rules, such as matching a specific value,
+ * conforming to an enumeration, or meeting a custom condition.
  *
- * If the validation of the property failed an error will be raised to help
- * spot potential error in the format definition.
+ * If validation fails, an error is raised, allowing developers to identify
+ * and debug discrepancies between the binary data and its expected format.
  *
- * The validation happens as the last step of the property reading loop.
+ * The validation happens as the final step of the property reading loop, after
+ * the property has been fully read and transformed.
  *
  * ```mermaid
  * flowchart TB
@@ -34,6 +37,19 @@
  *  style Validate fill:blue,stroke:#f66,stroke-width:2px,color:#fff,stroke-dasharray: 5 5
  * ```
  *
+ * The {@link Validator} category define various decorators to perform
+ * validation.
+ *
+ * - **Generic Validator**: Defines custom validator function using
+ * the {@link Validate} decorator.
+ *
+ * - **Magic Number Validator**: Verify the value of the decorated
+ * property against a pre-defined value with the {@link Match}
+ * decorator.
+ *
+ * - **Enum Validator**: Verify a value belong to a TypeScript enum
+ * with the {@link Enum} decorator.
+ *
  * @module Validator
  */
 import { type Cursor } from '../cursor'
@@ -43,23 +59,21 @@ import { relationExistOrThrow } from './primitive'
 import { ValidationTestFailed } from '../error'
 import Meta from '../metadatas'
 
-/**
- */
 export const ValidatorSymbol = Symbol('validator')
 
 export interface ValidatorOptions {
   /**
-   * Specifies if validated value is an array and each of its item must be validated.
+   * Ensures that a relation exists before defining the Transformer decorator.
+   */
+  primitiveCheck: boolean
+  /**
+   * Applies the validator function to each element if the value is an array.
    */
   each: boolean
   /**
-   * Do not throw an error if the validation doesn't match
+   * Prevents an error from being thrown if the validation fails.
    */
   optional: boolean
-  /**
-   * Verify a relation already exist before the definition of the controller
-   */
-  primitiveCheck: boolean
   /**
    * Validation error message to be shown if validator function return false.
    */
@@ -74,31 +88,44 @@ export const ValidatorOptionsDefault = {
 }
 
 /**
- * ValidatorFunction.
+ * ValidatorFunction. is a function that takes the current value and
+ * instance as input and returns a boolean if an arbitrary condition
+ * pass.
  */
 export type ValidatorFunction<This, Value> = (value: Value, targetInstance: This) => boolean
 
 /**
- * Validator.
+ * Validator metadata type definition.
+ *
+ * This interface define how a validator decorator will be stored in the
+ * metadata of the class definition.
  *
  * @extends {PropertyMetaDescriptor}
  */
 export interface Validator<This, Value> extends PropertyMetaDescriptor<This> {
   options: ValidatorOptions
-
   /**
-   *
+   * Function that perform the validation.
    */
   validator: ValidatorFunction<This, Value>
 }
 
 /**
- * validatorDecoratorFactory.
+ * `validatorDecoratorFactory` is a utility function used to create
+ * `Validator` type property decorators, used to validate the value
+ * of a property.
  *
- * @param {string} name
- * @param {ValidatorFunction} func
- * @param {ValidatorOptions} opt
- * @returns {DecoratorType}
+ * @remarks
+ *
+ * Use this factory function to design custom 'Validator' type decorators
+ * tailored to specific data format requirements that are not supported by the
+ * library yet.
+ *
+ * @param {string} name The name of the 'validator' type decorator.
+ * @param {ValidatorFunction} func A function that validates the value of the
+ * decorated property.
+ * @param {Partial<ValidatorOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
  */
@@ -123,8 +150,13 @@ export function validatorDecoratorFactory<This, Value> (name: string, func: Vali
 /**
  * `@Validate` decorator
  *
- * @param {ValidatorFunction} validatingFunction A function that will validate the content of the property.
- * @returns {DecoratorType} A decorator
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {ValidatorFunction} validatingFunction A function that validates
+ * the value of the decorated property.
+ * @param {Partial<ValidatorOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -133,10 +165,11 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
 }
 
 /**
- * `@Match` decorator
+ * `@Match` decorator validates that the value of the decorated property
+ * matches a specified value.
  *
- * Define a decorator that gives the proper information to verify the content of a field.
- * Binary files will often use magic number to validate the structure of the file.
+ * This is commonly used to enforce "magic numbers" or other fixed values in binary
+ * formats that help verify file structure or integrity.
  *
  * @example
  *
@@ -176,15 +209,19 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
  * ```typescript
  * class Header {
  *    @Match('.PNG')
- *    @Count(4)
+ *    @Count(4, { targetType: String })
  *    @Relation(PrimitiveSymbol.char)
  *    magic: string,
  * }
  * ```
  *
- * @param {any} matchingValue
- * @param {Object} opt
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {any} matchingValue The value or array of values to match against the
+ * decorated property value.
+ * @param {Partial<ValidatorOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -212,9 +249,11 @@ export function Match<This, Value> (matchingValue: Value | Array<Value>, opt?: P
 }
 
 /**
- * `@Enum` decorator
+ * `@Enum` decorator validates that the decorated property value belongs to a
+ * specified TypeScript `Enum`.
  *
- * Validates the final content of the property belong to a typescript `Enum` object passed as a parameter.
+ * This ensures that the value conforms to one of the keys or values defined in
+ * the provided `Enum`.
  *
  * @example
  *
@@ -249,9 +288,13 @@ export function Match<This, Value> (matchingValue: Value | Array<Value>, opt?: P
  * }
  * ```
  *
- * @param {object} enumeration
- * @param {Object} opt
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {Record<string, Value>} enumeration The enum object to validate
+ * against.
+ * @param {Partial<ValidatorOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -264,11 +307,17 @@ export function Enum<This, Value> (enumeration: Record<string, Value>, opt?: Par
 }
 
 /**
- * useValidators.
+ * useValidators execute an array of `Validator` decorator metadata on a
+ * property of a target instance.
  *
- * @param {Array} validators
- * @param {any} value
- * @param {T} targetInstance
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {Array<Validator<This, Value>>} validators An array of validator
+ * metadata to apply.
+ * @param {Value} value The value of the decorated property to validate.
+ * @param {Cursor} [cursor] The optional cursor, used for providing context
+ * in validation errors.
  * @returns {void}
  *
  * @category Advanced Use
