@@ -1,4 +1,5 @@
 import { type Cursor } from './cursor'
+import { PropertyType } from './decorators'
 
 export class EOFError extends Error {
   value: any
@@ -22,6 +23,18 @@ export class NoConditionMatched extends Error {
 export class ReferringToEmptyClassError extends Error {
   constructor (classname: string) {
     super(`The relation '@Relation(${classname})' can't reference the empty '${classname}' class not containing any '@Relation' or '@Bitfield'.`)
+  }
+}
+
+export class RelationNotDefinedError extends Error {
+  constructor (propertyKey: string | symbol) {
+    super(`No relation defined for the property '${propertyKey.toString()}'`)
+  }
+}
+
+export class RelationAlreadyDefinedError extends Error {
+  constructor (propertyType: PropertyType<any>, propertyKey: string) {
+    super(`The relation '${JSON.stringify(propertyType)}' already exist for the property '${propertyKey}'`)
   }
 }
 
