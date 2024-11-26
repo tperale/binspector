@@ -55,8 +55,7 @@
 import { type Cursor } from '../cursor'
 import { type DecoratorType, type Context } from '../types'
 import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
-import { relationExistOrThrow } from './primitive'
-import { ValidationTestFailed } from '../error'
+import { relationExistsOrThrow, ValidationTestFailed } from '../error'
 import Meta from '../metadatas'
 
 export const ValidatorSymbol = Symbol('validator')
@@ -134,7 +133,7 @@ export function validatorDecoratorFactory<This, Value> (name: string, func: Vali
 
   return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
-      relationExistOrThrow(context.metadata, context)
+      relationExistsOrThrow(context.metadata, context)
     }
 
     const validator: Validator<This, Value> = {

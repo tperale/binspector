@@ -34,7 +34,7 @@
  * @module Primitive
  */
 import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet } from './common'
-import { RelationNotDefinedError, RelationAlreadyDefinedError, WrongBitfieldClassImplementation } from '../error'
+import { RelationAlreadyDefinedError, WrongBitfieldClassImplementation } from '../error'
 import Meta from '../metadatas'
 import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
 
@@ -362,27 +362,5 @@ export function Relation<This, Target, Value> (relation?: InstantiableObject<Tar
     } else {
       Meta.setField(context.metadata, createRelationTypeProperty<This, Target>(context.metadata, propertyName, relation, args))
     }
-  }
-}
-
-/**
- * `relationExistOrThrow` Verifiy the existance of a primitive in the metadata
- * or throw an error.
- *
- * @typeParam This The type of the class the decorator is applied to.
- * @typeParam Target The type of the relation
- * @typeParam Value The type of the decorated property.
- *
- * @param {metadata} metadata The Class metadata object.
- * @param {context} context The decorator context object.
- * @returns {void}
- *
- * @throws {@link RelationNotDefinedError} if no relation metadata is found.
- *
- * @category Advanced Use
- */
-export function relationExistOrThrow<This, Value> (metadata: DecoratorMetadataObject, context: Context<This, Value>): void {
-  if (Meta.getField(metadata, context.name as keyof This) === undefined) {
-    throw new RelationNotDefinedError(context.name)
   }
 }

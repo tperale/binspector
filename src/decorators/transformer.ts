@@ -48,7 +48,7 @@
  * @module Transformer
  */
 import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
-import { relationExistOrThrow } from './primitive'
+import { relationExistsOrThrow } from '../error'
 import { type DecoratorType, type Context } from '../types'
 import Meta from '../metadatas'
 
@@ -139,7 +139,7 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
 
   return function (_: any, context: Context<This, Value>) {
     if (options.primitiveCheck) {
-      relationExistOrThrow(context.metadata, context)
+      relationExistsOrThrow(context.metadata, context)
     }
 
     const transformer: Transformer<This> = {

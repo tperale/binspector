@@ -1,5 +1,7 @@
+import Meta from './metadatas'
 import { type Cursor } from './cursor'
 import { PropertyType } from './decorators'
+import { type Context, type DecoratorMetadataObject } from './types'
 
 export class EOFError extends Error {
   value: any
@@ -60,5 +62,27 @@ export class WrongArgumentReturnType extends Error {
 export class WrongBitfieldClassImplementation extends Error {
   constructor (property: string) {
     super(`WrongBitfieldClassImplementation: The property '@Bitfield() ${property}' can't be declared alongside a relation '@Relation(...) ${property}'.`)
+  }
+}
+
+/**
+ * `relationExistsOrThrow` Verifiy the existance of a primitive in the metadata
+ * or throw an error.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Target The type of the relation
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {metadata} metadata The Class metadata object.
+ * @param {context} context The decorator context object.
+ * @returns {void}
+ *
+ * @throws {@link RelationNotDefinedError} if no relation metadata is found.
+ *
+ * @category Advanced Use
+ */
+export function relationExistsOrThrow<This, Value> (metadata: DecoratorMetadataObject, context: Context<This, Value>): void {
+  if (Meta.getField(metadata, context.name as keyof This) === undefined) {
+    throw new RelationNotDefinedError(context.name)
   }
 }
