@@ -2,8 +2,7 @@ import { describe, expect } from '@jest/globals'
 import { Count, While, Until, MapTo, Matrix, useController, ControllerReader, NullTerminatedString, Size } from '../controller'
 import { Cursor, BinaryReader } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
-import { EOFError } from '../../error'
-import { RelationNotDefinedError } from '../primitive'
+import { EOFError, RelationNotDefinedError } from '../../error'
 import Meta from '../../metadatas'
 
 class TestCursor extends Cursor {
