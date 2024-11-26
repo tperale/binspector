@@ -52,9 +52,8 @@
  */
 import { createPropertyMetaDescriptor, type PropertyMetaDescriptor, recursiveGet } from './common'
 import { type Cursor } from '../cursor'
-import { relationExistOrThrow } from './primitive'
 import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
-import { EOFError } from '../error'
+import { relationExistsOrThrow, EOFError } from '../error'
 import Meta from '../metadatas'
 
 export const ControllerSymbol = Symbol('controller')
@@ -148,7 +147,7 @@ export function controllerDecoratorFactory<This, Value> (name: string, func: Con
 
   return function (_: undefined, context: Context<This, Value>) {
     if (options.primitiveCheck) {
-      relationExistOrThrow(context.metadata, context)
+      relationExistsOrThrow(context.metadata, context)
     }
 
     const propertyName = context.name as keyof This

@@ -48,7 +48,7 @@
  * @module PrePost
  */
 import { ClassMetaDescriptor, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
-import { relationExistOrThrow } from './primitive'
+import { relationExistsOrThrow } from '../error'
 import { type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
@@ -131,7 +131,7 @@ function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSy
 
   return function (_: any, context: ClassFieldDecoratorContext<This>) {
     if (options.primitiveCheck) {
-      relationExistOrThrow(context.metadata, context)
+      relationExistsOrThrow(context.metadata, context)
     }
 
     const propertyName = context.name as keyof This
