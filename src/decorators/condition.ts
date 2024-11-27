@@ -1,15 +1,17 @@
 /**
- * Module definition of {@link Condition} decorators.
+ * Module definition of {@link Condition} property decorators.
  *
- * When reading a binary file certain parts of the format definition will only
- * exist based on a value known at runtime.
- * This is the role of {@link Condition} type decorators.
+ * The {@link Condition} decorators are used to handle scenarios where parts
+ * of a binary file format exist conditionally, based on values determined
+ * at runtime.
  *
- * {@link Condition} type decorators will determine the
- * {@link Primitive.Relation} to read next based on a condition.
+ * These decorators enable the parser to dynamically select the
+ * {@link Primitive.Relation} to read next, based on the provided conditions.
+ * This functionality is essential for parsing formats that have conditional
+ * properties or polymorphic structures.
  *
- * {@link Condition} decorators are executed before reading to determine the
- * type of the next relation to read.
+ * {@link Condition} decorators are executed *before* reading a property
+ * to determine the type of the next relation to read.
  *
  * ```mermaid
  * flowchart TB
@@ -48,7 +50,7 @@ export const ConditionSymbol = Symbol('condition-symbol')
 export const DynamicConditionSymbol = Symbol('dynamic-condition-symbol')
 
 /**
- * ConditionFunction type are the function passed to the {@link Condition} decorators.
+ * `ConditionFunction` type are the function passed to the {@link Condition} decorators.
  * It receive the instance of the non finalized object in its current state and return a boolean.
  */
 export type ConditionFunction<This> = (targetInstance: This) => boolean
@@ -56,7 +58,9 @@ export type DynamicGetterFunction<This, Value> = (targetInstance: This) => Primi
 export type DynamicConditionFunction<This, Value> = (targetInstance: This) => PrimitiveTypeProperty<This> | RelationTypeProperty<This, Value>
 
 /**
- * Condition.
+ * `Condition`
+ *
+ * @typeParam This The type of the class the decorator is applied to.
  *
  * @extends {PropertyMetaDescriptor}
  */
@@ -72,15 +76,18 @@ export interface Condition<This> extends PropertyMetaDescriptor<This> {
 }
 
 /**
- * conditionDecoratorFactory.
+ * `conditionDecoratorFactory`
  *
- * @param {string} name Name of the controller decorator.
- * @param {ConditionFunction} func Condition to control the relation to read.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @param {string} name Name of the condition decorator.
+ * @param {ConditionFunction} cond Condition to control the relation to read.
+ * @param {Primitive<Target>} [then] Property type to read if the 'cond'
+ * function pass.
+ * @param {RelationParameters<This>} [args]
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
  */
-export function conditionDecoratorFactory<This, Target, Value> (name: string, func: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function conditionDecoratorFactory<This, Target, Value> (name: string, cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>) {
     const propertyName = context.name as keyof This
     function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
@@ -97,7 +104,7 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, fu
 
     const condition: Condition<This> = {
       ...createPropertyMetaDescriptor(ConditionSymbol, name, context.metadata, propertyName),
-      condition: func,
+      condition: cond,
       relation: then !== undefined ? createRelation(then) : undefined,
     }
 
@@ -106,11 +113,15 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, fu
 }
 
 /**
- * dynamicConditionDecoratorFactory.
+ * `dynamicConditionDecoratorFactory`
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Target The type of the relation
+ * @typeParam Value The type of the decorated property.
  *
  * @param {string} name Name of the controller decorator.
  * @param {ConditionFunction} func Condition to control the relation to read.
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
  */
@@ -140,44 +151,107 @@ export function dynamicConditionDecoratorFactory<This, Target, Value> (name: str
 }
 
 /**
- * `@IfThen` decorator pass the {@link Primitive.Relation} to read if the condition is met.
+ * `@IfThen` decorator determine if a {@link Primitive} passed as argument
+ * should be read with the associated property based on a condition passed
+ * as argument.
  *
- * @param {ControllerIfFunction} func A function that receive the instance as a parameter and return a boolean
- * @param {Primitive} then
- * @param {Function} args
- * @returns {DecoratorType} The property decorator function ran at runtime
+ * @example
+ *
+ * In the following example the `data` property will be associated with a
+ * unsigned 16 bit integer if the value of the property type is equal to
+ * `0x01`.
+ * If the condition is not met the `data` property will be left undefined.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @IfThen(instance => instance.type === 0x01, PrimitiveSymbol.u16)
+ *   @Else()
+ *   data: number
+ * }
+ * ```
+ *
+ * The `@IfThen` decorators are executed with a top-down direction. This means
+ * the condition the further away from the property get executed first.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @IfThen(_ => true, Foo) // This one get picked first.
+ *   @IfThen(_ => true, Bar)
+ *   @Else()
+ *   condition: Foo | Bar
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * The `@IfThen` decorator is often used in conjunction with other conditional
+ * decorators like {@link Else}.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Target The type of the relation
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {ControllerIfFunction} cond A function that receives the instance of
+ * the class the property belongs in as a parameter and return a boolean.
+ * @param {Primitive<Target>} [then] Property type to read if the 'cond'
+ * function pass.
+ * @param {RelationParameters<This>} [args] Optional arguments passed to the
+ * nested type definition if the 'cond' pass.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
-export function IfThen<This, Target, Value> (func: ConditionFunction<This>, then?: Primitive<Target>, args?: (curr: This) => any[]): DecoratorType<This, Value> {
-  return conditionDecoratorFactory('ifthen', func, then, args)
+export function IfThen<This, Target, Value> (cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+  return conditionDecoratorFactory('ifthen', cond, then, args)
 }
 
 /**
  * @overload
- *
- * @returns {DecoratorType}
- *
- * @category Decorators
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  */
 /**
  * @overload
- *
  * @param {Primitive} then
- * @returns {DecoratorType}
- *
- * @category Decorators
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  */
 /**
- * `@Else` decorator is an always executed conditionnal decorator.
+ * `@Else` decorator acts as a fallback when no other condition is met.
+ * This decorator always executes if none of the preceding conditions
+ * passed.
  *
- * @param {Primitive} then
- * @param {Function} args
- * @returns {DecoratorType}
+ * @example
+ *
+ * In the following example the `data` property of the `Protocol` class will
+ * be associated with a unsigned 8-bits integer if the `type` property doesn't
+ * equals to `0x01`.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   type: number
+ *
+ *   @IfThen(_ => _.type === 0x01, PrimitiveSymbol.u16)
+ *   @Else(PrimitiveSymbol.u8)
+ *   data: number
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Target The type of the relation
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {Primitive<Target>} [then] The property type to read if no other
+ * condition is met.
+ * @param {RelationParameters<This>} [args] Optional arguments passed to the
+ * nested type definition if the 'cond' pass.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
-export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (curr: This) => any[]): DecoratorType<This, Value> {
+export function Else<This, Target, Value> (then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
   return conditionDecoratorFactory('else', () => true, then, args)
 }
 
@@ -186,8 +260,8 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *
  * @param {string} cmp
  * @param {Record} match
- * @param {Function} args
- * @returns {DecoratorType}
+ * @param {RelationParameters<This>} [args] The arguments to pass to the matching relation definition (see {@link Primitive.RelationParameters})
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -196,17 +270,22 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *
  * @param {Function} cmp
  * @param {Record} match
- * @param {Function} args
- * @returns {DecoratorType}
+ * @param {RelationParameters<This>} [args] The arguments to pass to the matching relation definition (see {@link Primitive.RelationParameters})
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
 /**
- * `@Choice` decorator match a field to record object.
+ * `@Choice` decorator match a value to a record of value:primitive.
+ *
+ * The `@Choice` decorator is just syntactic sugar to the `@IfThen` decorator,
+ * useful for simple straightforward equality comparaison that doesn't requires
+ * any preprocessing.
  *
  * @example
  *
- * The simplest way to use the `@Choice` decorator is to reference the name of a property belonging to the target instance to match with the record.
+ * The simplest way to use the `@Choice` decorator is to reference the name
+ * of a property belonging to the target instance to match with the record.
  *
  * ```typescript
  * class Chunk {
@@ -221,27 +300,33 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *   data: number
  * }
  *
- * class BinProtocol {
+ * class Protocol {
  *   @While((value: Chunk) => value.type !== 0x03)
  *   message: Chunk[]
  * }
  * ```
  *
  * You can also pass arguments to the relation using comma separeted string.
- * In the following example I pass teh value of the property 'length' and 'type'
- * to the constructor of 'Data' on creation. Notice that relation you want to pass
- * arguments requires to be defined inside of an array of two member.
+ * In the following example the value of the property 'length' and
+ * 'type' is passed to the constructor of 'Data' on creation.
+ * Notice that relation you
+ * want to pass arguments requires to be defined inside of an array of two
+ * member.
  *
  * ```typescript
  * class Data {
  *   _length: number
+ *   _type: number
  *
  *   @Count('_length')
  *   @Relation(PrimitiveSymbol.u8)
  *   data: number[]
  *
+ *   ...
+ *
  *   constructor(length: number, type: number) {
  *     this._length = length
+ *     this._type = type
  *   }
  * }
  *
@@ -254,7 +339,7 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *   crc: number
  * }
  *
- * class BinProtocol {
+ * class Protocol {
  *   @Relation(PrimitiveSymbol.u32)
  *   length: number
  *
@@ -266,22 +351,22 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *     0x02: [Data, 'length, type'],
  *     0x03: undefined,
  *   })
- *   data: number
+ *   data: Header | Data | undefined
  * }
  * ```
  *
- * Or functions if you want to perform some operation on the data before passing them to the
- * constructor.
+ * An alternative to string reference is to use functions if you need
+ * to performs manipulation on the datas.
  *
  * ```typescript
- * class BinProtocol {
+ * class Protocol {
  *   @Relation(PrimitiveSymbol.u32)
  *   length: number
  *
  *   @Relation(PrimitiveSymbol.u8)
  *   type: number
  *
- *   @Choice('type', {
+ *   @Choice(_ => _.type, {
  *     0x01: Header,
  *     0x02: [Data, (instance: BinProtocol) => [instance.length - 5, instance.type]],
  *     0x03: undefined,
@@ -290,12 +375,12 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  * }
  * ```
 
- * You can also define the default arguments you pass to every relations. In the
- * following example the value of the property 'length' will be passed to every relation
- * on creation.
+ * You can also define the default arguments you pass to every relations.
+ * In the following example the value of the property 'length' will be passed
+ * to every relation on creation.
  *
  * ```typescript
- * class BinProtocol {
+ * class Protocol {
  *   @Relation(PrimitiveSymbol.u32)
  *   length: number
  *
@@ -313,7 +398,8 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  *
  * @remarks
  *
- * To pass to the reader a relation by default use `@Choice` with the `@Else` decorator (see {@link Else})
+ * Use `@Choice` with the `@Else` decorator  to pass a {@link Primitive} by
+ * default (see {@link Else})
  *
  * ```typescript
  * class Protocol {
@@ -328,10 +414,19 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: (cur
  * }
  * ```
  *
- * @param {string | ((targetInstance: T) => any)} cmp The name of the property of the target instance containing a value or a function receiving the target instance as parameter that return the value to compare to the record param.
- * @param {Record} match Match the 'cmp' value to the key of the record for this argument. The value is the relation to read if the value match.
- * @param {RelationParameters} args The arguments to pass to the matching relation definition (see {@link Primitive.RelationParameters})
- * @returns {DecoratorType}
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {string | ((targetInstance: T) => any)} cmp The name of the property
+ * of the target instance containing a value or a function receiving the
+ * target instance as parameter that return the value to compare to the record
+ * param.
+ * @param {Record<any, Primitive<any> | [Primitive<any>, RelationParameters<This>] | undefined>} match
+ * A record where keys are compared against the evaluated `cmp` value, and
+ * values define the corresponding relations.
+ * @param {RelationParameters<This>} args The arguments to pass to the matching
+* relation definition (see {@link Primitive.RelationParameters})
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
  */
@@ -352,12 +447,57 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
 }
 
 /**
- * `@Select`
+ * `@Select` decorator works similarly to the {@link Choice} decorator but
+ * the function passed as argument directly returns the {@link Primitive}
+ * instead of declaring the condition.
+ *
+ * The `@Select` decorator should be used for a small subset of special cases,
+ * most of the time the `@Choice` decorator fits the job perfectly.
+ * But sometimes certain format definitions have a long list of sub type you
+ * need match to a set of value and defining every available options in the
+ * `@Choice` decorator is verbose.
+ *
+ * At the end of the day use the one you feel make your definition easier to
+ * read in your declaration, both are valid options.
+ *
+ * @example
+ *
+ * In the following example let's imagine the `DEFINITION` object is actually
+ * bigger than it is.
+ * The `@Select` decorator is used to pick the {@link Primitive} type of the
+ * decorated property with the help of a combination of key found in the
+ * `Protocol` instance.
+ *
+ * ```typescript
+ * const DEFINITION = {
+ *    0: {
+ *      1: SubProtocol,
+ *      ...
+ *    },
+ *    ...
+ * }
+ *
+ * class SubProtocol {
+ * }
+ *
+ * class Protocol {
+ *   @Relation(PrimitiveType.u8)
+ *   foo: number
+ *
+ *   @Relation(PrimitiveType.u8)
+ *   bar: number
+ *
+ *   @Select(_ => DEFINITION[_.foo][_.bar])
+ *   sub_protocol
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
  *
  * @param {((targetInstance: This) => Primitive<any>)} getter
- * @param {RelationParameters} args
- * @returns {DecoratorType}
- *
+ * @param {RelationParameters<This>} args
+ * @returns {DecoratorType<This, Value>} The property decorator function.
  * @category Decorators
  */
 export function Select<This, Value> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This>): DecoratorType<This, Value> {
@@ -365,9 +505,13 @@ export function Select<This, Value> (getter: ((targetInstance: This) => Primitiv
 }
 
 /**
- * useConditions function helper
+ * `useConditions` function helper
  *
- * Get the first matching {@link Primitive.Relation} based on the {@link Condition} decorators condition that decorate a property.
+ * Get the first matching {@link Primitive.Relation} based on the
+ * {@link Condition} decorators condition that decorate a property.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
  *
  * @param {Array} conditions
  * @param {T} targetInstance
