@@ -1,7 +1,6 @@
 import { describe, expect } from '@jest/globals'
 import { useConditions, IfThen, Else, Choice } from '../condition'
 import { type RelationTypeProperty, type PrimitiveTypeProperty } from '../primitive'
-import { NoConditionMatched } from '../../error'
 import Meta from '../../metadatas'
 
 function testCondition<This> (TargetClass: new (...args: any) => This, relation: any, post?: (relation: PrimitiveTypeProperty<This> | RelationTypeProperty<This, any> | undefined, instance: This) => void, field: keyof This = 'field' as keyof This) {
@@ -117,21 +116,5 @@ describe('@Condition: basic testing', () => {
       const newTestArg = new relation.relation(...relation.args(instance))
       expect(newTestArg).toEqual(expect.objectContaining({ foo: 1, bar: 2 }))
     })
-  })
-})
-
-describe('@Condition: error testing', () => {
-  it('NoConditionMatched: should alway define a valid option', () => {
-    class TestClass {
-      @IfThen(_ => false, Number)
-      field: number
-    }
-
-    const instance = new TestClass()
-    const conditions = Meta.getConditions(TestClass[Symbol.metadata] as DecoratorMetadataObject, 'field')
-
-    expect(() => {
-      useConditions(conditions, instance)
-    }).toThrow(NoConditionMatched)
   })
 })

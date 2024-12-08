@@ -531,7 +531,10 @@ export function useConditions<This, Value> (conditions: Array<Condition<This>>, 
       // - cursor backtrace to show the position in the file
       // - current instance to print. The condition are mostly done on the current instance
       // - If creating a `@Choice` it's probably more easy to debug.
-      throw new NoConditionMatched()
+      // It's still unclear if I need to throw an error or not. Right now usecases
+      // seems to indicate it's better to not throw.
+      // throw new NoConditionMatched()
+      return undefined
     }
 
     return cond.relation
