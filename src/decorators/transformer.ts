@@ -227,8 +227,8 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
  */
 export function TransformScale<This, Value> (scale: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
-    transformerDecoratorFactory('transform-scale', x => x * scale, opt)(_, context)
-    transformerDecoratorFactory('transform-scale', x => x / scale, { ...opt, scope: ExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-scale', x => x * scale, { ...opt, each: true })(_, context)
+    transformerDecoratorFactory('transform-scale', x => x / scale, { ...opt, each: true, scope: ExecutionScope.OnWrite })(_, context)
   }
 }
 
@@ -249,8 +249,8 @@ export function TransformScale<This, Value> (scale: number, opt?: Partial<Transf
  */
 export function TransformOffset<This, Value> (off: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
-    transformerDecoratorFactory('transform-offset', x => x + off, opt)(_, context)
-    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, scope: ExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-offset', x => x + off, { ...opt, each: true })(_, context)
+    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, each: true, scope: ExecutionScope.OnWrite })(_, context)
   }
 }
 
