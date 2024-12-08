@@ -64,8 +64,10 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     return cursor
   }
 
+  usePrePost(Meta.getClassPre(metadata), instance, cursor, ExecutionScope.OnWrite)
+
   Meta.getFields<Target>(metadata).forEach((field) => {
-    usePrePost(Meta.getPre(metadata, field.propertyName), instance, cursor)
+    usePrePost(Meta.getPre(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
 
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
@@ -80,8 +82,10 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       // NullString should add back the \0
       // targetType sin
     }
-    usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor)
+    usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
   })
+
+  usePrePost(Meta.getClassPost(metadata), instance, cursor, ExecutionScope.OnWrite)
 
   return cursor
 }
