@@ -49,7 +49,7 @@
  */
 import { ClassMetaDescriptor, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistsOrThrow } from '../error'
-import { type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
+import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
 
@@ -73,11 +73,17 @@ export interface PrePostOptions {
    * Removes the decorator from metadata after its function is executed.
    */
   once: boolean
+  /**
+   * Specifies whether the prepost function should be executed during
+   * the read phase, the write phase, or both.
+   */
+  scope: ExecutionScope
 }
 
 export const PrePostOptionsDefault = {
   primitiveCheck: true,
   once: false,
+  scope: ExecutionScope.OnBoth,
 }
 
 /**
@@ -632,8 +638,10 @@ export function Endian<This> (endianness: BinaryCursorEndianness | ((instance: T
  *
  * @category Advanced Use
  */
-export function usePrePost<This> (prepost: Array<PrePost<This>> | Array<PrePostClass<This>>, targetInstance: This, cursor: Cursor): void {
+export function usePrePost<This> (prepost: Array<PrePost<This>> | Array<PrePostClass<This>>, targetInstance: This, cursor: Cursor, scope = ExecutionScope.OnBoth): void {
   prepost.forEach((x) => {
-    x.func(targetInstance, cursor)
+    if ((x.options.scope & scope) > 0) {
+      x.func(targetInstance, cursor)
+    }
   })
 }

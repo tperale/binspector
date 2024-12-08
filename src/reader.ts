@@ -14,7 +14,7 @@ import {
   isUnknownProperty,
   type PropertyType,
 } from './decorators/primitive'
-import { EOF, type InstantiableObject } from './types'
+import { EOF, ExecutionScope, type InstantiableObject } from './types'
 import { useController, type ControllerReader } from './decorators/controller'
 import { useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
@@ -100,10 +100,10 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
     return useBitField(bitfields, instance, content)
   }
 
-  usePrePost(Meta.getClassPre(metadata), instance, content)
+  usePrePost(Meta.getClassPre(metadata), instance, content, ExecutionScope.OnRead)
 
   Meta.getFields<Target>(metadata).forEach((field) => {
-    usePrePost(Meta.getPre(metadata, field.propertyName), instance, content)
+    usePrePost(Meta.getPre(metadata, field.propertyName), instance, content, ExecutionScope.OnRead)
 
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
@@ -128,10 +128,10 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
 
       instance[field.propertyName] = transformedValue
     }
-    usePrePost(Meta.getPost(metadata, field.propertyName), instance, content)
+    usePrePost(Meta.getPost(metadata, field.propertyName), instance, content, ExecutionScope.OnRead)
   })
 
-  usePrePost(Meta.getClassPost(metadata), instance, content)
+  usePrePost(Meta.getClassPost(metadata), instance, content, ExecutionScope.OnRead)
 
   return instance
 }
