@@ -15,6 +15,16 @@ export enum PrimitiveSymbol {
 }
 
 /**
+ * The execution scope defines in which part of the binary processing (read,
+ * write or both).
+ */
+export enum ExecutionScope {
+  OnRead = 0x01,
+  OnWrite = 0x02,
+  OnBoth = 0x03,
+}
+
+/**
  * isPrimitiveSymbol.
  *
  * @param {any} x

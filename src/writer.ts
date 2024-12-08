@@ -14,10 +14,10 @@ import {
   isPrimitiveRelation,
   type PropertyType,
 } from './decorators/primitive'
-import { type InstantiableObject } from './types'
+import { ExecutionScope, type InstantiableObject } from './types'
 import { usePrePost } from './decorators/prepost'
 import { useConditions } from './decorators/condition'
-import { useTransformer, TransformerExecutionScope } from './decorators/transformer'
+import { useTransformer } from './decorators/transformer'
 import { writeBitField } from './decorators/bitfield'
 
 /**
@@ -72,7 +72,7 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       // Condition don't need to be used since the object are already in here.
       const transformers = Meta.getTransformers(metadata, field.propertyName)
       const reversedTransformers = transformers.slice().reverse()
-      const transformedValue = useTransformer(reversedTransformers, instance[field.propertyName], instance, TransformerExecutionScope.OnWrite)
+      const transformedValue = useTransformer(reversedTransformers, instance[field.propertyName], instance, ExecutionScope.OnWrite)
       binWrite(finalRelationField, transformedValue)
 
       // TODO Some controller should include instruction on how to normalize the data
