@@ -1,6 +1,6 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, TransformerExecutionScope, Transform, Until } from '../decorators'
-import { InstantiableObject, PrimitiveSymbol, EOF } from '../types'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until } from '../decorators'
+import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
 import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor'
@@ -305,11 +305,11 @@ describe('Writing binary definition with Transformer decorators', () => {
       @Transform((value: number[]) => {
         const buf = new Uint8Array(value)
         return new TextDecoder().decode(buf)
-      }, { scope: TransformerExecutionScope.OnRead })
+      }, { scope: ExecutionScope.OnRead })
       @Transform((value: string) => {
         const buf = new TextEncoder().encode(value)
         return Array.from(buf)
-      }, { scope: TransformerExecutionScope.OnWrite })
+      }, { scope: ExecutionScope.OnWrite })
       @Until(EOF)
       @Relation(PrimitiveSymbol.u8)
       decodedString: string

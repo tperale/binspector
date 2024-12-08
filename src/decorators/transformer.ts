@@ -32,7 +32,7 @@
  *
  * By default, custom transformers are applied only during the reading phase.
  * To support binary encoding (writing phase), define an additional transformer
- * with a {@link TransformerExecutionScope} set to `OnWrite` or `OnBoth` via
+ * with a {@link ExecutionScope} set to `OnWrite` or `OnBoth` via
  * {@link TransformerOptions}.
  *
  * The {@link Transformer} category define various decorators to perform
@@ -49,20 +49,10 @@
  */
 import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
 import { relationExistsOrThrow } from '../error'
-import { type DecoratorType, type Context } from '../types'
+import { ExecutionScope, type DecoratorType, type Context } from '../types'
 import Meta from '../metadatas'
 
 export const TransformerSymbol = Symbol('transformer')
-
-/**
- * The execution scope defines in which part of the binary processing (read,
- * write or both) the transformer is applied.
- */
-export enum TransformerExecutionScope {
-  OnRead = 0x01,
-  OnWrite = 0x02,
-  OnBoth = 0x03,
-}
 
 /**
  * TransformerOptions.
@@ -80,13 +70,13 @@ export interface TransformerOptions {
    * Specifies whether the transformer function should be executed during
    * the read phase, the write phase, or both.
    */
-  scope: TransformerExecutionScope
+  scope: ExecutionScope
 }
 
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,
-  scope: TransformerExecutionScope.OnRead,
+  scope: ExecutionScope.OnRead,
 }
 
 /**
@@ -187,11 +177,11 @@ export function transformerDecoratorFactory<This, Value> (name: string, func: Tr
  *   @Transform((value: number[]) => {
  *     const buf = new Uint8Array(value)
  *     return new TextDecoder().decode(buf)
- *   }, { scope: TransformerExecutionScope.OnRead })
+ *   }, { scope: ExecutionScope.OnRead })
  *   @Transform((value: string) => {
  *     const buf = new TextEncoder().encode(value)
  *     return Array.from(buf)
- *   }, { scope: TransformerExecutionScope.OnWrite })
+ *   }, { scope: ExecutionScope.OnWrite })
  *   @Until(EOF)
  *   @Relation(PrimitiveSymbol.u8)
  *   decodedString: string;
@@ -238,7 +228,7 @@ export function Transform<This, Value> (transformFunction: TransformerFunction<T
 export function TransformScale<This, Value> (scale: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
     transformerDecoratorFactory('transform-scale', x => x * scale, opt)(_, context)
-    transformerDecoratorFactory('transform-scale', x => x / scale, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-scale', x => x / scale, { ...opt, scope: ExecutionScope.OnWrite })(_, context)
   }
 }
 
@@ -260,7 +250,7 @@ export function TransformScale<This, Value> (scale: number, opt?: Partial<Transf
 export function TransformOffset<This, Value> (off: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
     transformerDecoratorFactory('transform-offset', x => x + off, opt)(_, context)
-    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, scope: TransformerExecutionScope.OnWrite })(_, context)
+    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, scope: ExecutionScope.OnWrite })(_, context)
   }
 }
 
@@ -277,7 +267,7 @@ export function TransformOffset<This, Value> (off: number, opt?: Partial<Transfo
  *
  * @category Advanced Use
  */
-export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = TransformerExecutionScope.OnRead): any {
+export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
     if ((transformer.options.scope & scope) > 0) {
       if (Array.isArray(transformedTmpValue) && transformer.options.each) {
