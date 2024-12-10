@@ -49,9 +49,10 @@
  */
 import { ClassMetaDescriptor, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistsOrThrow } from '../error'
-import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext } from '../types'
+import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
+import { Relation } from './primitive'
 
 export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')
@@ -625,6 +626,58 @@ export function Endian<This> (endianness: BinaryCursorEndianness | ((instance: T
         }
       }
     }, opt)(_, context)
+  }
+}
+
+type ValueSetFunction<This, Value> = (instance: This) => Value
+
+/**
+ * `@ValueSet` decorator set the value of the decorated property based on
+ * a function passed as a parameter.
+ * This decorator don't read anything from the binary file and is just used
+ * to add more context to a class during the reading.
+ *
+ * @example
+ *
+ * In the following example `@ValueSet` is used to fetch the protocol type name
+ * based on an id read in by the binary definition.
+ * The `protocol_name` will just appear when the object is serialized and will
+ * gave the object more context.
+ *
+ * ```typescript
+ * const ID_TO_NAME = {
+ *   1: "Record",
+ *   ...
+ * }
+ *
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u8)
+ *   protocol_id: number
+ *
+ *   @ValueSet(_ => ID_TO_NAME[_.protocol_id] || 'UNKNOWN')
+ *   protocol_name: string
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {ValueSetFunction} setter Function that will store the return value in the decorated property.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
+ *
+ * @throws {@link Primitive.RelationAlreadyDefinedError} if a relation metadata is found.
+ */
+export function ValueSet<This, Value extends This[keyof This]> (setter: ValueSetFunction<This, Value>, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
+  return function (_: any, context: Context<This, Value>) {
+    const propertyName = context.name as keyof This
+    if (!Meta.isFieldDecorated(context.metadata, propertyName)) {
+      // Create an empty relation that wont be read.
+      Relation()(_, context)
+    }
+
+    postFunctionDecoratorFactory<This> ('value-set', (targetInstance) => {
+      targetInstance[propertyName] = setter(targetInstance)
+    }, { ...opt, scope: ExecutionScope.OnRead })(_, context)
   }
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
@@ -634,6 +634,19 @@ describe('Reading binary definition with PrePost decorators', () => {
     const curr = new BinaryReader(header)
     expect(binread(curr, Protocol)).toMatchObject({
       value: 0x01,
+    })
+    expect(curr.offset()).toStrictEqual(0)
+  })
+  it('should set a value into the decorated property without reading anything or declaring ', () => {
+    class Protocol {
+      @ValueSet(_ => 0xFF)
+      value: number
+    }
+
+    const header = new Uint8Array([0x01, 0x02, 0x03, 0x04]).buffer
+    const curr = new BinaryReader(header)
+    expect(binread(curr, Protocol)).toMatchObject({
+      value: 0xFF,
     })
     expect(curr.offset()).toStrictEqual(0)
   })
