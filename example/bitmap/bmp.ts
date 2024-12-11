@@ -1,11 +1,8 @@
 import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset } from '../../src'
 import {
-  OS21XBITMAPHEADER, OS22XBITMAPCOREHEADER, OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
+  OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header'
 import { printColour } from './renderer'
-// import {
-//   BitmapCompression
-// } from './compression'
 
 enum BitmapHeaderTypes {
   BM = 'BM',
@@ -56,8 +53,6 @@ export class Bitmap {
   bitmap_header_size: number
 
   @Choice('bitmap_header_size', {
-    12: OS21XBITMAPHEADER,
-    16: OS22XBITMAPCOREHEADER,
     64: OS22XBITMAPHEADER,
     40: BITMAPINFOHEADER,
     52: BITMAPV2INFOHEADER,
@@ -65,7 +60,7 @@ export class Bitmap {
     108: BITMAPV4INFOHEADER,
     124: BITMAPV5INFOHEADER,
   })
-  bitmap_header: OS21XBITMAPHEADER | OS22XBITMAPHEADER | OS22XBITMAPCOREHEADER | BITMAPINFOHEADER | BITMAPV2INFOHEADER | BITMAPV3INFOHEADER | BITMAPV4INFOHEADER | BITMAPV5INFOHEADER
+  bitmap_header: OS22XBITMAPHEADER | BITMAPINFOHEADER | BITMAPV2INFOHEADER | BITMAPV3INFOHEADER | BITMAPV4INFOHEADER | BITMAPV5INFOHEADER
 
   /* Present only in case the DIB header is the BITMAPINFOHEADER
    * and the Compression Method member is set to either BI_BITFIELDS
@@ -80,7 +75,6 @@ export class Bitmap {
 
   /* The gap size depend on the offset found in the BitmapFileHeader */
   /* Just use the `@Pre` decorator to move the cursor to the correct place */
-
   @Offset('file_header.offset')
   @Matrix('bitmap_header.width', 'bitmap_header.height', { alignment: 4 })
   @Choice('bitmap_header.bits_per_pixels', {
