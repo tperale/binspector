@@ -4,6 +4,7 @@ import { type Controller, ControllerSymbol } from './decorators/controller'
 import { type Transformer, TransformerSymbol } from './decorators/transformer'
 import { type Validator, ValidatorSymbol } from './decorators/validator'
 import { type BitField, BitFieldSymbol } from './decorators/bitfield'
+import { type Ctx, CtxSymbol } from './decorators/context'
 import { type PrePost, PreFunctionSymbol, PostFunctionSymbol, PreClassFunctionSymbol, PostClassFunctionSymbol, PrePostSymbols, PrePostClass } from './decorators/prepost'
 import { type DecoratorMetadataObject } from './types'
 
@@ -252,6 +253,22 @@ function setBitField<This> (
   return bitfields
 }
 
+function getContext<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Ctx<This>> {
+  return getMetadata(
+    metadata,
+    propertyKey,
+    CtxSymbol,
+  )
+}
+
+function setContext<This> (
+  metadata: DecoratorMetadataObject,
+  propertyKey: keyof This,
+  ctx: Ctx<This>,
+): Array<Ctx<This>> {
+  return setMetadata(metadata, propertyKey, ctx.type, ctx)
+}
+
 export default {
   getMetadata,
   setMetadata,
@@ -276,4 +293,6 @@ export default {
   getBitField,
   getBitFields,
   setBitField,
+  getContext,
+  setContext,
 }
