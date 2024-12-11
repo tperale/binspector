@@ -347,18 +347,6 @@ describe('@Controller: errors', () => {
       testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [], cur)
     }).toThrow(EOFError)
   })
-  it('@Count: recursiveGet should throw an error for non existing property', () => {
-    expect(() => {
-      class TestClass {
-        child = { count: 2 }
-
-        @Count('child.x', { primitiveCheck: false })
-        field: number
-      }
-
-      testController(TestClass, 'field', () => 1, [1, 1])
-    }).toThrow(ReferenceError)
-  })
   it('@Count: recursiveGet should throw an error when referencing a string in an arithmetic expression', () => {
     expect(() => {
       class TestClass {

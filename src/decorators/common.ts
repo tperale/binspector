@@ -67,6 +67,42 @@ export function createClassMetaDescriptor (type: symbol, name: string, metadata:
   }
 }
 
+type RecursiveKeyOf<TObj extends object> = {
+  [TKey in keyof TObj & (string | number)]:
+  TObj[TKey] extends any[]
+    ? `${TKey}`
+    : TObj[TKey] extends object
+      ? `${TKey}.${RecursiveKeyOf<TObj[TKey]>}`
+      : `${TKey}`
+}[keyof TObj & (string | number)]
+
+type NumericalString = `${number}`
+
+type RecursiveKeyWithOperations<TObj extends object, T extends string, U extends string = RecursiveKeyOf<TObj> | NumericalString> =
+  T extends U
+    ? T
+    : T extends `${U} + ${infer R}`
+      ? T extends `${infer F} + ${R}`
+        ? `${F} + ${RecursiveKeyWithOperations<TObj, R, Exclude<U, F>>}`
+        : never
+      : T extends `${U} - ${infer R}`
+        ? T extends `${infer F} - ${R}`
+          ? `${F} - ${RecursiveKeyWithOperations<TObj, R, Exclude<U, F>>}`
+          : never
+        : U
+
+type CommaSeparetedRecursiveKey<TObj extends object, T extends string, U extends string = RecursiveKeyOf<TObj>> =
+  T extends U
+    ? T
+    : T extends `${U},${infer R}`
+      ? T extends `${infer F},${R}`
+        ? `${F},${CommaSeparetedRecursiveKey<TObj, R, Exclude<U, F>>}`
+        : never
+      : U
+
+export type StringFormattedRecursiveKeyOf<T extends object, Args extends string> = Args extends RecursiveKeyWithOperations<T, Args> ? Args : RecursiveKeyWithOperations<T, Args>
+export type StringFormattedCommaSepRecursiveKeyOf<T extends object, Args extends string> = Args extends CommaSeparetedRecursiveKey<T, Args> ? Args : CommaSeparetedRecursiveKey<T, Args>
+
 /**
  * Chained accessor to get the value of `expr` for `obj`.
  *
@@ -77,7 +113,7 @@ export function createClassMetaDescriptor (type: symbol, name: string, metadata:
  * @throws {ReferenceError} if you attempt to access a non existing property.
  *
  */
-export function recursiveGet (obj: any, expr: string): any {
+export function recursiveGet<T extends object, Args extends string> (obj: T, expr: RecursiveKeyWithOperations<T, Args>): any {
   const _isOperation = (x: string): boolean => ['+', '-'].includes(x)
 
   const _get = (path: string): any => path.split('.').reduce((acc: any, key: string) => {
@@ -109,7 +145,7 @@ export function recursiveGet (obj: any, expr: string): any {
   }
 }
 
-export function commaSeparetedRecursiveGet (obj: any, args: string): any[] {
+export function commaSeparetedRecursiveGet<T extends object, Args extends string> (obj: T, args: CommaSeparetedRecursiveKey<T, Args>): any[] {
   const keys = args.split(',')
-  return keys.map(key => recursiveGet(obj, key.trim()))
+  return keys.map(key => recursiveGet(obj, key.trim() as RecursiveKeyWithOperations<T, typeof key>))
 }

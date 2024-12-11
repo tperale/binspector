@@ -33,7 +33,7 @@
  *
  * @module Primitive
  */
-import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet } from './common'
+import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet, StringFormattedCommaSepRecursiveKeyOf } from './common'
 import { RelationAlreadyDefinedError, WrongBitfieldClassImplementation } from '../error'
 import Meta from '../metadatas'
 import { type PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
@@ -111,8 +111,7 @@ export interface PrimitiveTypeProperty<This> extends PropertyMetaDescriptor<This
  *
  * @typeParam This The type of the class the decorator is applied to.
  */
-export type RelationParameters<This> = ((targetInstance: This) => any[]) | string
-
+export type RelationParameters<This extends object, Args extends string> = ((targetInstance: This) => any[]) | StringFormattedCommaSepRecursiveKeyOf<This, Args>
 /**
  * `RelationTypeProperty` are primitive type that holds information about
  * another binary type definition.
@@ -225,7 +224,7 @@ export function createPrimitiveTypeProperty<This> (metadata: DecoratorMetadataOb
  *
  * @category Advanced Use
  */
-export function createRelationTypeProperty<This, Target> (metadata: DecoratorMetadataObject, propertyKey: keyof This, relation: InstantiableObject<Target>, args?: RelationParameters<This>): RelationTypeProperty<This, Target> {
+export function createRelationTypeProperty<This extends object, Target, Args extends string> (metadata: DecoratorMetadataObject, propertyKey: keyof This, relation: InstantiableObject<Target>, args?: RelationParameters<This, Args>): RelationTypeProperty<This, Target> {
   const argsFunc = typeof args === 'string'
     ? (targetInstance: This) => commaSeparetedRecursiveGet(targetInstance, args)
     : args as ((targetInstance: This) => any[]) | undefined
@@ -344,7 +343,7 @@ export function createRelationTypeProperty<This, Target> (metadata: DecoratorMet
  *
  * @category Decorators
  */
-export function Relation<This, Target, Value> (relation?: InstantiableObject<Target> | PrimitiveSymbol, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function Relation<This extends object, Target, Value, Args extends string> (relation?: InstantiableObject<Target> | PrimitiveSymbol, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>): void {
     if (Meta.getBitFields(context.metadata).length > 0) {
       throw new WrongBitfieldClassImplementation(String(context.name))
@@ -360,7 +359,7 @@ export function Relation<This, Target, Value> (relation?: InstantiableObject<Tar
     } else if (isPrimitiveSymbol(relation)) {
       Meta.setField(context.metadata, createPrimitiveTypeProperty<This>(context.metadata, propertyName, relation))
     } else {
-      Meta.setField(context.metadata, createRelationTypeProperty<This, Target>(context.metadata, propertyName, relation, args))
+      Meta.setField(context.metadata, createRelationTypeProperty<This, Target, Args>(context.metadata, propertyName, relation, args))
     }
   }
 }

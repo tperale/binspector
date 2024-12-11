@@ -101,7 +101,7 @@ describe('@Condition: basic testing', () => {
       foo: number = 1
       bar: number = 2
       @Choice('foo', {
-        1: [TestArg, 'foo, bar'],
+        1: [TestArg, 'foo,bar'],
       })
       field: TestArg
     }

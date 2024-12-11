@@ -40,7 +40,7 @@
  *
  * @module Condition
  */
-import { recursiveGet, type PropertyMetaDescriptor, createPropertyMetaDescriptor } from './common'
+import { recursiveGet, type PropertyMetaDescriptor, createPropertyMetaDescriptor, StringFormattedRecursiveKeyOf } from './common'
 import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
 import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types'
 import { NoConditionMatched } from '../error'
@@ -87,7 +87,7 @@ export interface Condition<This> extends PropertyMetaDescriptor<This> {
  *
  * @category Advanced Use
  */
-export function conditionDecoratorFactory<This, Target, Value> (name: string, cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function conditionDecoratorFactory<This extends object, Target, Value, Args extends string> (name: string, cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>) {
     const propertyName = context.name as keyof This
     function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
@@ -125,7 +125,7 @@ export function conditionDecoratorFactory<This, Target, Value> (name: string, co
  *
  * @category Advanced Use
  */
-export function dynamicConditionDecoratorFactory<This, Target, Value> (name: string, func: DynamicGetterFunction<This, Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function dynamicConditionDecoratorFactory<This extends object, Target, Value, Args extends string> (name: string, func: DynamicGetterFunction<This, Target>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>) {
     const propertyName = context.name as keyof This
     function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
@@ -204,7 +204,7 @@ export function dynamicConditionDecoratorFactory<This, Target, Value> (name: str
  *
  * @category Decorators
  */
-export function IfThen<This, Target, Value> (cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function IfThen<This extends object, Target, Value, Args extends string> (cond: ConditionFunction<This>, then?: Primitive<Target>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return conditionDecoratorFactory('ifthen', cond, then, args)
 }
 
@@ -251,7 +251,7 @@ export function IfThen<This, Target, Value> (cond: ConditionFunction<This>, then
  *
  * @category Decorators
  */
-export function Else<This, Target, Value> (then?: Primitive<Target>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function Else<This extends object, Target, Value, Args extends string> (then?: Primitive<Target>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return conditionDecoratorFactory('else', () => true, then, args)
 }
 
@@ -430,7 +430,7 @@ export function Else<This, Target, Value> (then?: Primitive<Target>, args?: Rela
  *
  * @category Decorators
  */
-export function Choice<This, Value> (cmp: string | ((targetInstance: This) => any), match: Record<any, Primitive<any> | [Primitive<any>, RelationParameters<This>] | undefined>, args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function Choice<This extends object, Value, Args extends string> (cmp: StringFormattedRecursiveKeyOf<This, Args> | ((targetInstance: This) => any), match: Record<any, Primitive<any> | [Primitive<any>, RelationParameters<This, Args>] | undefined>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   const valueToCompare = typeof cmp === 'string' ? (targetInstance: This) => recursiveGet(targetInstance, cmp) : cmp
   // Mandatory to cast to String because the key is always a string even though you declare it as a number
   const decorators = Object.keys(match).map((key: keyof typeof match) => {
@@ -500,7 +500,7 @@ export function Choice<This, Value> (cmp: string | ((targetInstance: This) => an
  * @returns {DecoratorType<This, Value>} The property decorator function.
  * @category Decorators
  */
-export function Select<This, Value> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This>): DecoratorType<This, Value> {
+export function Select<This extends object, Value, Args extends string> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return dynamicConditionDecoratorFactory('select', getter, args)
 }
 
