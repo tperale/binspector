@@ -4,9 +4,10 @@ import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
+import { CtxGet, CtxSet } from '../decorators/context'
 
-function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ...args: any[]) {
-  return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition, ...args))
+function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ctx = {}, ...args: any[]) {
+  return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition, ctx, ...args))
 }
 
 function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
@@ -536,7 +537,7 @@ describe('Reading binary definition with PrePost decorators', () => {
       }
     }
 
-    expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol, BinaryCursorEndianness.BigEndian, 2).toMatchObject({
+    expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol, BinaryCursorEndianness.BigEndian, {}, 2).toMatchObject({
       value: 0x03,
     })
   })
@@ -649,6 +650,29 @@ describe('Reading binary definition with PrePost decorators', () => {
       value: 0xFF,
     })
     expect(curr.offset()).toStrictEqual(0)
+  })
+})
+
+describe('Reading binary definition with Ctx decorators', () => {
+  it('should ', () => {
+    class Protocol {
+      @CtxGet('Settings.Count')
+      data_type: number
+
+      @CtxSet('Settings.Value')
+      @Count('data_type')
+      @Relation(PrimitiveSymbol.u8)
+      foo: number
+    }
+
+    const ctx = { Settings: { Count: 3 } }
+
+    expectReadTest([0x01, 0x02, 0x03], Protocol, BinaryCursorEndianness.LittleEndian, ctx).toMatchObject({
+      data_type: 3,
+      foo: [1, 2, 3],
+    })
+
+    expect(ctx).toMatchObject({ Settings: { Count: 3, Value: [1, 2, 3] } })
   })
 })
 

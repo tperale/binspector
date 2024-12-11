@@ -21,6 +21,7 @@ import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
 import { usePrePost } from './decorators/prepost'
 import { useBitField } from './decorators/bitfield'
+import { useContextGet, useContextSet, CtxType } from './decorators/context'
 
 /**
  * binread.
@@ -44,7 +45,7 @@ import { useBitField } from './decorators/bitfield'
  * `ObjectDefinition` passed in param.
  * You can create self refering field by using conditionnal decorator.
  */
-export function binread<Target> (content: Cursor, ObjectDefinition: InstantiableObject<Target>, ...args: any[]): Target {
+export function binread<Target> (content: Cursor, ObjectDefinition: InstantiableObject<Target>, ctx = {}, ...args: any[]): Target {
   const ObjectDefinitionName = ObjectDefinition.name
   function getBinReader (field: PropertyType<Target>, instance: Target): ControllerReader {
     if (isPrimitiveRelation(field)) {
@@ -63,7 +64,7 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
         }
 
         try {
-          return binread(content, field.relation, ...[...finalArgs, instance])
+          return binread(content, field.relation, ctx, ...[...finalArgs, instance])
         } catch (error) {
           // We need to catch the EOF error because the binread function
           // can't return it so it just throw it EOFError.
@@ -105,6 +106,14 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
   Meta.getFields<Target>(metadata).forEach((field) => {
     usePrePost(Meta.getPre(metadata, field.propertyName), instance, content, ExecutionScope.OnRead)
 
+    const metaCtx = Meta.getContext(field.metadata, field.propertyName)
+
+    const ctxGetter = metaCtx.filter(x => x.func_type === CtxType.CtxGetter)
+    if (ctxGetter.length) {
+      instance[field.propertyName] = useContextGet(metaCtx, instance, ctx)
+      return
+    }
+
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
@@ -127,6 +136,7 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
       useValidators(Meta.getValidators(metadata, field.propertyName), transformedValue, instance, content)
 
       instance[field.propertyName] = transformedValue
+      useContextSet(metaCtx, transformedValue, instance, ctx)
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, content, ExecutionScope.OnRead)
   })
