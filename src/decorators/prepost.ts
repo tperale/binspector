@@ -47,7 +47,7 @@
  *
  * @module PrePost
  */
-import { ClassMetaDescriptor, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
+import { ClassMetaDescriptor, type PropertyMetaDescriptor, StringFormattedRecursiveKeyOf, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistsOrThrow } from '../error'
 import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
@@ -400,7 +400,7 @@ export function Post<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOp
  *
  * @category Decorators
  */
-export function Offset<This> (offset: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function Offset<This extends object, Args extends string> (offset: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
     const offCompute = typeof offset === 'string'
       ? recursiveGet(targetInstance, offset) as number
@@ -483,7 +483,7 @@ export function Offset<This> (offset: number | string | ((instance: This, cursor
  *
  * @category Decorators
  */
-export function Peek<This> (offset?: number | string | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function Peek<This extends object, Args extends string> (offset?: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return function (_: undefined, context: ClassAndPropertyDecoratorContext<This>) {
     preFunctionDecoratorFactory<This>('pre-peek', (targetInstance, cursor) => {
       const preOff = cursor.offset()
@@ -667,7 +667,7 @@ type ValueSetFunction<This, Value> = (instance: This) => Value
  *
  * @throws {@link Primitive.RelationAlreadyDefinedError} if a relation metadata is found.
  */
-export function ValueSet<This, Value extends This[keyof This]> (setter: ValueSetFunction<This, Value>, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
+export function ValueSet<This extends object, Value extends This[keyof This]> (setter: ValueSetFunction<This, Value>, opt?: Partial<PrePostOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
     const propertyName = context.name as keyof This
     if (!Meta.isFieldDecorated(context.metadata, propertyName)) {

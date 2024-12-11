@@ -50,7 +50,7 @@
  *
  * @module Controller
  */
-import { createPropertyMetaDescriptor, type PropertyMetaDescriptor, recursiveGet } from './common'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common'
 import { type Cursor } from '../cursor'
 import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
 import { relationExistsOrThrow, EOFError } from '../error'
@@ -97,6 +97,8 @@ export const ControllerOptionsDefault = {
  */
 export type ControllerFunction<This> = (targetInstance: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => any
 export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor, read: ControllerReader) => any
+
+type NumberOrRecursiveKey<This extends object, Args extends string> = number | StringFormattedRecursiveKeyOf<This, Args>
 
 /**
  * Controller type interface structure definition.
@@ -500,7 +502,7 @@ export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptio
  *
  * @category Decorators
  */
-export function Count<This, Value> (arg: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function Count<This extends object, Value, Args extends string> (arg: NumberOrRecursiveKey<This, Args>, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   function countController (
     currStateObject: This,
     cursor: Cursor,
@@ -542,14 +544,14 @@ export function Count<This, Value> (arg: number | string, opt?: Partial<Controll
  *
  * @category Decorators
  */
-export function Matrix<This, Value> (width: number | string, height: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function Matrix<This extends object, Value, Args extends string> (width: NumberOrRecursiveKey<This, Args>, height: NumberOrRecursiveKey<This, Args>, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   function matrixController (
     currStateObject: This,
     cursor: Cursor,
     read: ControllerReader,
     opt: ControllerOptions,
   ): any {
-    const getArg = (x: number | string): number => typeof x === 'string'
+    const getArg = (x: NumberOrRecursiveKey<This, Args>): number => typeof x === 'string'
       ? recursiveGet(currStateObject, x)
       : x
     const finalWidth = getArg(width)
@@ -614,7 +616,7 @@ export function Matrix<This, Value> (width: number | string, height: number | st
  *
  * @category Decorators
  */
-export function Size<This, Value> (size: number | string, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function Size<This extends object, Value, Args extends string> (size: NumberOrRecursiveKey<This, Args>, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   return controllerDecoratorFactory(
     'size',
     (currStateObject: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
@@ -669,7 +671,7 @@ export function Size<This, Value> (size: number | string, opt?: Partial<Controll
  *
  * @category Decorators
  */
-export function MapTo<This, Value> (arr: string | any[] | ((_: This) => any[]), opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
+export function MapTo<This extends object, Value, Args extends string> (arr: StringFormattedRecursiveKeyOf<This, Args> | any[] | ((_: This) => any[]), opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
   return controllerDecoratorFactory(
     'map',
     (currStateObject: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => {
