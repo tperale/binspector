@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -269,6 +269,19 @@ describe('Writing binary definition with PrePost decorators', () => {
 
       @Relation(PrimitiveSymbol.u8)
       first: number
+    }
+
+    decodeEncodeTest(Protocol, [0x01, 0x00, 0x03])
+  })
+
+  it('should move the cursor if the size is not met', () => {
+    class Protocol {
+      @EnsureSize(2)
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+
+      @Relation(PrimitiveSymbol.u8)
+      value_2: number
     }
 
     decodeEncodeTest(Protocol, [0x01, 0x00, 0x03])

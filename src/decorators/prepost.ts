@@ -504,6 +504,76 @@ export function Peek<This extends object, Args extends string> (offset?: number 
 }
 
 /**
+ * `@EnsureSize` decorator force the decorated property to meet a size
+ * constraint. If that size is not met the cursor will be moved.
+ *
+ * @example
+ *
+ * In the following example the structure of the bitfield is only known based
+ * on the value of the most significant bit. For this I use `@Peek` to check the
+ * content of the next value and then I properly read it in the correct form.
+ *
+ * ```typescript
+ * @EnsureSize('_size')
+ * class Block {
+ *   @NullTerminatedString()
+ *   @Relation(PrimitiveSymbol.char)
+ *   content: string
+ *
+ *   constructor(public _size: number) {}
+ * }
+ *
+ * class Protocol {
+ *   @Relation(PrimitiveSymbol.u16)
+ *   block_size: number
+ *
+ *   @Relation(PrimitiveSymbol.u32)
+ *   block_count: number
+ *
+ *   @Count('block_count')
+ *   @Relation(Block, 'block_size')
+ *   blocks: Block[]
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * If the size is known before parsing the file, use the alignment in the
+ * controller instead
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @param {number | string | ((instance: This, cursor: Cursor) => number)} [size]
+ * The size to move the cursor to before reading or writing the decorated property. It can be:
+ *   - A static number, indicating a fixed offset.
+ *   - A string that refer to a property of the current instance.
+ *   - A function that computes the offset dynamically based on the current instance and cursor.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
+ *
+ * @category Decorators
+ */
+export function EnsureSize<This extends object, Args extends string> (size: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+  return function (_: undefined, context: ClassAndPropertyDecoratorContext<This>) {
+    preFunctionDecoratorFactory<This>('pre-ensure', (targetInstance, cursor) => {
+      const preRead = cursor.offset()
+      const sizeCompute
+        = typeof size === 'number'
+          ? size
+          : typeof size === 'string'
+            ? Number(recursiveGet(targetInstance, size))
+            : size(targetInstance, cursor)
+      postFunctionDecoratorFactory<This>('post-ensure', (_, cursor) => {
+        const postRead = cursor.offset()
+        if ((postRead - preRead) !== sizeCompute) {
+          cursor.move(preRead + sizeCompute)
+        }
+      }, { ...opt, once: true })(_, context)
+    }, opt)(_, context)
+  }
+}
+
+/**
  * `@Endian` decorator change the endianness of the decorated property or class.
  * It allows you to control how binary data is serialized or deserialized, based
  * endianness that define the byte order of 16 and 32 bits integers.

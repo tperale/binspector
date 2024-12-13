@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { withBinspectorContext } from '../context'
@@ -650,6 +650,50 @@ describe('Reading binary definition with PrePost decorators', () => {
       value: 0xFF,
     })
     expect(curr.offset()).toStrictEqual(0)
+  })
+  it('should move the cursor if the size is not met', () => {
+    class Protocol {
+      _offset: number
+
+      @EnsureSize('_offset')
+      @Relation(PrimitiveSymbol.u8)
+      value: number
+
+      @Relation(PrimitiveSymbol.u8)
+      value_2: number
+
+      constructor (offset: number) {
+        this._offset = offset
+      }
+    }
+
+    expectReadTest([0x01, 0x02, 0x03, 0x04], Protocol, BinaryCursorEndianness.BigEndian, {}, 2).toMatchObject({
+      value: 0x01,
+      value_2: 0x03,
+    })
+  })
+  it('should move the cursor if the size is not met', () => {
+    @EnsureSize('_size')
+    class Block {
+      @Count(3)
+      @Relation(PrimitiveSymbol.u8)
+      content: string
+
+      constructor (public _size: number) {}
+    }
+
+    class Protocol {
+      block_size = 4
+
+      @Count(2)
+      @Relation(Block, 'block_size')
+      blocks: Block[]
+    }
+
+    expectReadTest([0x01, 0x02, 0x03, 0x00, 0x04, 0x05, 0x06, 0x00], Protocol, BinaryCursorEndianness.BigEndian, {}, 2).toMatchObject({
+      block_size: 4,
+      blocks: [{ content: [0x01, 0x02, 0x03] }, { content: [0x04, 0x05, 0x06] }]
+    })
   })
 })
 
