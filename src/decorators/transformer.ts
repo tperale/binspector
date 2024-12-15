@@ -127,18 +127,41 @@ export interface Transformer<This> extends PropertyMetaDescriptor<This> {
 export function transformerDecoratorFactory<This, Value> (name: string, func: TransformerFunction<This>, opt: Partial<TransformerOptions> = TransformerOptionsDefault): DecoratorType<This, Value> {
   const options = { ...TransformerOptionsDefault, ...opt }
 
-  return function (_: any, context: Context<This, Value>) {
-    if (options.primitiveCheck) {
-      relationExistsOrThrow(context.metadata, context)
-    }
+  return function (target: any, context: Context<This, Value>) {
+    if (context.kind == 'accessor') {
+      // const res: ClassAccessorDecoratorResult<This, Value> = {}
+      console.log('hello')
+      return {
+        get (this: This) {
+          console.log('ewf', this)
+          if (options.scope & ExecutionScope.OnRead) {
+            return func(target.get.call(this), this) as Value
+          } else {
+            return target.get.call(this)
+          }
+        },
+        set (this: This, value: Value) {
+          console.log('ll')
+          if (options.scope & ExecutionScope.OnWrite) {
+            target.set.call(this, func(value, this))
+          } else {
+            return target.set.call(this, value)
+          }
+        }
+      }
+    } else {
+      if (options.primitiveCheck) {
+        relationExistsOrThrow(context.metadata, context)
+      }
 
-    const transformer: Transformer<This> = {
-      ...createPropertyMetaDescriptor(TransformerSymbol, name, context.metadata, context.name as keyof This),
-      options,
-      transformer: func,
-    }
+      const transformer: Transformer<This> = {
+        ...createPropertyMetaDescriptor(TransformerSymbol, name, context.metadata, context.name as keyof This),
+        options,
+        transformer: func,
+      }
 
-    Meta.setTransformer(context.metadata, context.name, transformer)
+      Meta.setTransformer(context.metadata, context.name, transformer)
+    }
   }
 }
 
@@ -250,7 +273,7 @@ export function TransformScale<This, Value> (scale: number, opt?: Partial<Transf
 export function TransformOffset<This, Value> (off: number, opt?: Partial<TransformerOptions>): DecoratorType<This, Value> {
   return function (_: any, context: Context<This, Value>) {
     transformerDecoratorFactory('transform-offset', x => x + off, { ...opt, each: true })(_, context)
-    transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, each: true, scope: ExecutionScope.OnWrite })(_, context)
+    // transformerDecoratorFactory('transform-offset', x => x - off, { ...opt, each: true, scope: ExecutionScope.OnWrite })(_, context)
   }
 }
 

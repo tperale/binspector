@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { transformerDecoratorFactory, Transform, useTransformer } from '../transformer'
+import { transformerDecoratorFactory, Transform, useTransformer, TransformScale, TransformOffset } from '../transformer'
 import Meta from '../../metadatas'
 
 function testTransformer (TargetClass: new () => any, field: string, value: any, equal: any, preFunc?: (instance: any) => void): void {
@@ -67,6 +67,23 @@ describe('@Transformer: functions', () => {
     }
 
     testTransformer(TestClass, 'field', [104, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100], 'hello world')
+  })
+  it('should work with accessor decorated', () => {
+    class TestClass {
+      @TransformOffset(100)
+      accessor field: number = 100
+
+      constructor() {
+      }
+    }
+
+    // testTransformer(TestClass, 'field', 100, 200)
+    const instance = new TestClass()
+    // instance.field = 100
+
+    console.log(instance)
+
+    expect(instance.field).toStrictEqual(200)
   })
 })
 
