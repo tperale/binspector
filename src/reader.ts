@@ -64,7 +64,7 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
         }
 
         try {
-          return binread(content, field.relation, ctx, ...[...finalArgs, instance])
+          return binread(content, field.relation, ctx, ...finalArgs)
         } catch (error) {
           // We need to catch the EOF error because the binread function
           // can't return it so it just throw it EOFError.

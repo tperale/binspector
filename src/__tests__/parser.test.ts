@@ -2,7 +2,6 @@ import { describe, expect } from '@jest/globals'
 import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
-import { withBinspectorContext } from '../context'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
 import { CtxGet, CtxSet } from '../decorators/context'
 
@@ -76,26 +75,6 @@ describe('Reading binary content into js object', () => {
       size: number
 
       @Relation(Header, _ => [_.size])
-      relation: Header
-    }
-
-    expectReadTest([0x02, 0x01, 0x02], Protocol).toMatchObject({
-      size: 0x02,
-      relation: { buf: [0x01, 0x02] },
-    })
-  })
-  it('should pass the context to the sub-relation', () => {
-    class Header extends withBinspectorContext {
-      @Count('_ctx.size')
-      @Relation(PrimitiveSymbol.u8)
-      buf: number[]
-    }
-
-    class Protocol {
-      @Relation(PrimitiveSymbol.u8)
-      size: number
-
-      @Relation(Header)
       relation: Header
     }
 
