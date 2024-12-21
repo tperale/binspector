@@ -60,6 +60,14 @@ describe('@Ctx: functions', () => {
     const ctx = { foo: { bar: VALUE } }
     testContextGet(TestClass, 'data', ctx, VALUE)
   })
+  it('should get default context value', () => {
+    class TestClass {
+      @CtxGet('test.foo', 0)
+      data: number
+    }
+    const ctx = { }
+    testContextGet(TestClass, 'data', ctx, 0)
+  })
   it('should throw when accessing non existing properties', () => {
     class TestClass {
       @CtxGet('test.foo')
