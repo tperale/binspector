@@ -253,7 +253,7 @@ function setBitField<This> (
   return bitfields
 }
 
-function getContext<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Ctx<This>> {
+function getContext<This, Value> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Ctx<This, Value>> {
   return getMetadata(
     metadata,
     propertyKey,
@@ -261,11 +261,11 @@ function getContext<This> (metadata: DecoratorMetadataObject, propertyKey: keyof
   )
 }
 
-function setContext<This> (
+function setContext<This, Value> (
   metadata: DecoratorMetadataObject,
   propertyKey: keyof This,
-  ctx: Ctx<This>,
-): Array<Ctx<This>> {
+  ctx: Ctx<This, Value>,
+): Array<Ctx<This, Value>> {
   return setMetadata(metadata, propertyKey, ctx.type, ctx)
 }
 
