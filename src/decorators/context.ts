@@ -209,6 +209,44 @@ export function CtxSet<This extends object, Value> (keyGetter: CtxKeyFunction<Th
 }
 
 /**
+ * `@CtxAppend` decorator append the value of the decorated property into a
+ * shared 'context' during the reading phase.
+ *
+ * It works the same way as `@CtxSet` but will append the data to an array
+ * instead of an object property.
+ *
+ * @example
+ *
+*
+ * ```typescript
+ * class Record {
+ *   @CtxAppend('Content')
+ *   @Relation(PrimitiveSymbol.u8)
+ *   data: number
+ * }
+ *
+ * class Protocol {
+ *     @Until(EOF)
+ *     records: Record[]
+ * }
+ * ```
+ *
+ * @param {CtxKeyFunction<This>} keyGetter Either a string formatted as
+ * recursive key or a function that returns that string based on the
+ * instance value.
+ * @param {Partial<CtxOptions>} [opt] Optional configuration.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
+ *
+ * @category Decorators
+ */
+export function CtxAppend<This extends object, Value> (keyGetter: CtxKeyFunction<This> | string, opt?: Partial<CtxOptions>): DecoratorType<This, Value> {
+  return ctxPropertyFunctionDecoratorFactory<This, Value> ('ctx-set', CtxType.CtxSetter, keyGetter, undefined, {
+    ...opt,
+    base_type: 'array',
+  })
+}
+
+/**
  * useContextGet execute an array of `Ctx` decorator metadata.
  *
  * @typeParam This The type of the class the decorator is applied to.
@@ -272,18 +310,27 @@ export function useContextSet<This, Value> (metaCtx: Array<Ctx<This, Value>>, pr
     const lastKey = accessors[accessors.length - 1]
     const ref = accessors.slice(0, -1).reduce((acc: any, key: string) => {
       if (Object.prototype.hasOwnProperty.call(acc, key) === false) {
-        if (x.options.base_type == 'array') {
-          Object.defineProperty(acc, key, {
-            value: []
-          })
-        } else {
-          Object.defineProperty(acc, key, {
-            value: {}
-          })
-        }
+        Object.defineProperty(acc, key, {
+          value: {}
+        })
       }
       return acc[key]
     }, ctx)
-    ref[lastKey] = propertyValue
+
+    if (x.options.base_type == 'array') {
+      if (Object.prototype.hasOwnProperty.call(ref, lastKey) === false) {
+        Object.defineProperty(ref, lastKey, {
+          value: []
+        })
+      }
+
+      if (Array.isArray(propertyValue)) {
+        ref[lastKey] = ref[lastKey].concat(propertyValue)
+      } else {
+        ref[lastKey].push(propertyValue)
+      }
+    } else {
+      ref[lastKey] = propertyValue
+    }
   })
 }
