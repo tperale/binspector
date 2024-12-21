@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { CtxSet, CtxGet, useContextGet, useContextSet } from '../context'
+import { CtxSet, CtxGet, useContextGet, useContextSet, CtxAppend } from '../context'
 import Meta from '../../metadatas'
 
 function testContextGet (TargetClass: new () => any, field: string, ctx: object, expected: any) {
@@ -67,6 +67,24 @@ describe('@Ctx: functions', () => {
     }
     const ctx = { }
     testContextGet(TestClass, 'data', ctx, 0)
+  })
+  it('should append the value to an array', () => {
+    class TestClass {
+      @CtxAppend('foo')
+      data: number
+    }
+    const ctx: any = {}
+    testContextSet(TestClass, 'data', 0, ctx)
+    expect(ctx.foo).toEqual([0])
+  })
+  it('should concat the value to the existing array', () => {
+    class TestClass {
+      @CtxAppend('foo')
+      data: number[]
+    }
+    const ctx: any = { foo: [1, 2] }
+    testContextSet(TestClass, 'data', [3, 4], ctx)
+    expect(ctx.foo).toEqual([1, 2, 3, 4])
   })
   it('should throw when accessing non existing properties', () => {
     class TestClass {
