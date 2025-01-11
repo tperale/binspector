@@ -1,4 +1,4 @@
-export { PrimitiveSymbol, EOF } from './types'
+export { PrimitiveSymbol, ExecutionScope, EOF } from './types'
 export * from './cursor'
 export { binread } from './reader'
 export * from './writer'
