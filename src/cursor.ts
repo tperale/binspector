@@ -71,23 +71,24 @@ export class BinaryReader extends BinaryCursor {
   data: DataView
 
   _readPrimitive (primType: PrimitiveSymbol): string | number | bigint {
+    const endian = this.endianness === BinaryCursorEndianness.LittleEndian
     switch (primType) {
       case PrimitiveSymbol.u8:
         return this.data.getUint8(this.index)
       case PrimitiveSymbol.u16:
-        return this.data.getUint16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+        return this.data.getUint16(this.index, endian)
       case PrimitiveSymbol.u32:
-        return this.data.getUint32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+        return this.data.getUint32(this.index, endian)
       case PrimitiveSymbol.u64:
-        return this.data.getBigUint64(this.index)
+        return this.data.getBigUint64(this.index, endian)
       case PrimitiveSymbol.i8:
         return this.data.getInt8(this.index)
       case PrimitiveSymbol.i16:
-        return this.data.getInt16(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+        return this.data.getInt16(this.index, endian)
       case PrimitiveSymbol.i32:
-        return this.data.getInt32(this.index, this.endianness === BinaryCursorEndianness.LittleEndian)
+        return this.data.getInt32(this.index, endian)
       case PrimitiveSymbol.i64:
-        return this.data.getBigInt64(this.index)
+        return this.data.getBigInt64(this.index, endian)
       case PrimitiveSymbol.float32:
         return this.data.getFloat32(this.index)
       case PrimitiveSymbol.float64:
@@ -122,7 +123,7 @@ export class BinaryReader extends BinaryCursor {
 }
 
 export class BinaryWriter extends BinaryCursor {
-  data: Array<[number, PrimitiveSymbol, number, BinaryCursorEndianness]> = []
+  data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]> = []
 
   write (primitive: PrimitiveSymbol, value: number | string): void {
     const size = this._getPrimitiveSize(primitive)
@@ -145,30 +146,34 @@ export class BinaryWriter extends BinaryCursor {
   buffer (): ArrayBuffer {
     const buf = new DataView(new ArrayBuffer(this.length))
 
-    this.data.forEach(([value, primitive, index, endian]) => {
+    this.data.forEach(([value, primitive, index, _endian]) => {
+      const endian = _endian === BinaryCursorEndianness.LittleEndian
+
       switch (primitive) {
         case PrimitiveSymbol.u8:
-          buf.setUint8(index, value)
+          buf.setUint8(index, Number(value))
           break
         case PrimitiveSymbol.u16:
-          buf.setUint16(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          buf.setUint16(index, Number(value), endian)
           break
         case PrimitiveSymbol.u32:
-          buf.setUint32(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          buf.setUint32(index, Number(value), endian)
           break
-        // case .u64:
-        //   return [1, this.data.getBigUint64(this.index)];
+        case PrimitiveSymbol.u64:
+          buf.setBigUint64(index, BigInt(value), endian)
+          break
         case PrimitiveSymbol.i8:
-          buf.setInt8(index, value)
+          buf.setInt8(index, Number(value))
           break
         case PrimitiveSymbol.i16:
-          buf.setInt16(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          buf.setInt16(index, Number(value), endian)
           break
         case PrimitiveSymbol.i32:
-          buf.setInt32(index, value, endian === BinaryCursorEndianness.LittleEndian)
+          buf.setInt32(index, Number(value), endian)
           break
-        // case .i64:
-        //   return [1, this.data.getBigInt64(this.index)];
+        case PrimitiveSymbol.i64:
+          buf.setBigInt64(index, BigInt(value), endian)
+          break
       }
 
       return index + this._getPrimitiveSize(primitive)
