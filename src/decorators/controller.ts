@@ -417,60 +417,6 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
 }
 
 /**
- * `@NullTerminatedString` decorator reads a string from a binary stream until
- * the null-terminator (`\0`) character is encountered and exclude that
- * character from the final value.
- *
- * @example
- *
- * In the following example, the `@NullTerminatedString` decorator is used
- * in conjunction of the `@Until` decorator to read Null terminated strings
- * until the end of the file.
- *
- * ```typescript
- * class Protocol {
- *   @Until(EOF)
- *   @NullTerminatedString()
- *   @Relation(PrimitiveSymbol.char)
- *   data: string[]
- * }
- * ```
- *
- * @remarks
- *
- * This decorator is similar to `@Until('\0', { targetType: String })`.
- * The key difference is that `@NullTerminatedString` always drop the
- * null-terminator, whereas `@Until` includes the `\0` character as part of
- * the string.
- *
- * @typeParam This The type of the class the decorator is applied to.
- * @typeParam Value The type of the decorated property.
- *
- * @param {Partial<ControllerOptions>} [opt] Optional configuration.
- * @returns {DecoratorType<This, Value>} The property decorator function.
- *
- * @category Decorators
- */
-export function NullTerminatedString<This, Value> (opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
-  return controllerDecoratorFactory('nullterminatedstring', (
-    currStateObject: This,
-    cursor: Cursor,
-    read: ControllerReader,
-    opt: ControllerOptions,
-  ) => {
-    // Always extend the provided options with target type as String
-    const stringOpt = {
-      ...opt,
-      targetType: String,
-    }
-
-    // Drop the last character (null terminator)
-    const result = whileFunctionFactory((x: number | string | symbol) => x !== '\0')(currStateObject, cursor, read, stringOpt)
-    return result.slice(0, -1)
-  }, opt)
-}
-
-/**
  * `@Count` decorator defines a variable-length array based on a value you pass
  * as argument.
  *

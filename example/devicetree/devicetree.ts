@@ -51,7 +51,6 @@ class DTBReservedMap {
 
 class FDTBeginNode {
   @NullTerminatedString({ alignment: 4 })
-  @Relation(PrimitiveSymbol.char)
   name: string
 }
 
@@ -70,7 +69,6 @@ class FDTProp {
 
   @Peek('_string_off + nameoff')
   @NullTerminatedString()
-  @Relation(PrimitiveSymbol.char)
   property: string
 
   constructor (offset: number) {
@@ -185,7 +183,6 @@ export class DTB {
   @Offset('header.off_dt_strings')
   @Until(EOF)
   @NullTerminatedString()
-  @Relation(PrimitiveSymbol.char)
   strings: string[]
 
   asObject (): Record<string, any> {

@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16 } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
@@ -49,7 +49,7 @@ describe('Reading binary content into js object', () => {
   })
   it('should read character', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.char)
+      @Ascii
       character: string
     }
 
@@ -143,12 +143,12 @@ describe('Reading binary with controller', () => {
       @Uint8
       len: string
 
-      @Count('len', { targetType: String })
-      @Relation(PrimitiveSymbol.char)
+      @Count('len')
+      @Ascii
       field: string
 
       @Count('len')
-      @Relation(PrimitiveSymbol.char)
+      @Char
       array: string[]
     }
 
@@ -156,6 +156,51 @@ describe('Reading binary with controller', () => {
       len: 0x03,
       field: 'ABC',
       array: ['A', 'B', 'C'],
+    })
+  })
+  it('@NullTerminatedString: read null terminated string', () => {
+    class Protocol {
+      @NullTerminatedString()
+      field: string
+    }
+
+    expectReadTest([
+      0x68, 0x65, 0x6C, 0x6C,
+      0x6F, 0x00, 0x77, 0x6F,
+      0x72, 0x6C, 0x64, 0x00,
+    ], Protocol).toMatchObject({
+      field: 'hello'
+    })
+  })
+  it('@NullTerminatedString: create array of null terminated string', () => {
+    class Protocol {
+      @Until(EOF)
+      @NullTerminatedString()
+      field: string[]
+    }
+
+    expectReadTest([
+      0x68, 0x65, 0x6C, 0x6C,
+      0x6F, 0x00, 0x77, 0x6F,
+      0x72, 0x6C, 0x64, 0x00,
+    ], Protocol).toMatchObject({
+      field: ['hello', 'world']
+    })
+  })
+  it('@NullTerminatedString: create array of null terminated string with alignment', () => {
+    class Protocol {
+      @Until(EOF)
+      @NullTerminatedString({ alignment: 4 })
+      field: string[]
+    }
+
+    expectReadTest([
+      0x68, 0x65, 0x6C, 0x6C,
+      0x6F, 0x00, 0x00, 0x00,
+      0x77, 0x6F, 0x72, 0x6C,
+      0x64, 0x00, 0x00, 0x00
+    ], Protocol).toMatchObject({
+      field: ['hello', 'world']
     })
   })
   it('should work with while', () => {

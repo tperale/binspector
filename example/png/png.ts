@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32 } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii } from '../../src'
 
 enum PNGTypes {
   IHDR = 'IHDR',
@@ -124,8 +124,8 @@ class PNGChunk {
   length: number
 
   @Enum(PNGTypes)
-  @Count(4, { targetType: String })
-  @Relation(PrimitiveSymbol.char)
+  @Count(4)
+  @Ascii
   type: PNGTypes
 
   @Choice('type', {
