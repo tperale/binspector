@@ -143,12 +143,12 @@ describe('@Controller: functions', () => {
   })
   it('@Until: read until \0 is met', () => {
     class TestClass {
-      @Until('\0', { targetType: String, primitiveCheck: false })
+      @Until('\0', { primitiveCheck: false })
       field: string
     }
 
-    const iterator = testReader(['h', 'e', 'l', 'l', 'o', '\0'])
-    testController(TestClass, 'field', () => iterator.next().value, 'hello\0')
+    const iterator = testReader(['h', 'e', 'l', 'l', 'o', '\0', 'a'])
+    testController(TestClass, 'field', () => iterator.next().value, ['h', 'e', 'l', 'l', 'o', '\0'])
   })
   it('@Until: read until 3 is met', () => {
     class TestClass {
