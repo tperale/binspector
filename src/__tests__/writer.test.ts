@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16 } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -32,10 +32,10 @@ function decodeEncodeTest<Target> (ObjectDefinition: InstantiableObject<Target>,
 describe('Binary Writter testing', () => {
   it('should output a buffer', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -43,10 +43,10 @@ describe('Binary Writter testing', () => {
   })
   it('should output content of nested js object', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
 
       constructor (x: number, y: number) {
@@ -80,11 +80,11 @@ describe('Binary Writter testing', () => {
   })
   it('should work with controller', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       size: number
 
       @Count('size')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       buf: number[]
     }
 
@@ -92,15 +92,15 @@ describe('Binary Writter testing', () => {
   })
   it('should work with controller and subtype', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       size: number
 
       @Count('size')
@@ -112,7 +112,7 @@ describe('Binary Writter testing', () => {
   })
   it('should parse content as string', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       len: string
 
       @Count('len', { targetType: String })
@@ -130,7 +130,7 @@ describe('Binary Writter testing', () => {
     class Protocol {
       @Count(3)
       @Count(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       buf: number[]
     }
 
@@ -138,10 +138,10 @@ describe('Binary Writter testing', () => {
   })
   it('should work with chained controller (matrix))', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -204,7 +204,7 @@ describe('Writing binary with bitfields', () => {
       @Relation(BitField)
       bf: BitField
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -226,7 +226,7 @@ describe('Writing binary with bitfields', () => {
       @Relation(BitField)
       bf: BitField
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -238,7 +238,7 @@ describe('Writing binary definition with PrePost decorators', () => {
   it('should offset the cursor to the mentionned address', () => {
     class Protocol {
       @Offset(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
     }
 
@@ -247,14 +247,14 @@ describe('Writing binary definition with PrePost decorators', () => {
 
   it('should change the endianness and then set it back', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_1: number
 
       @Endian(BinaryCursorEndianness.LittleEndian)
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_2: number
 
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_3: number
     }
 
@@ -264,10 +264,10 @@ describe('Writing binary definition with PrePost decorators', () => {
   it('should peek the cursor to the mentionned address', () => {
     class Protocol {
       @Peek(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       first: number
     }
 
@@ -277,10 +277,10 @@ describe('Writing binary definition with PrePost decorators', () => {
   it('should move the cursor if the size is not met', () => {
     class Protocol {
       @EnsureSize(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value_2: number
     }
 
@@ -292,7 +292,7 @@ describe('Writing binary definition with Transformer decorators', () => {
   it('should work with TransformScale decorator', () => {
     class Protocol {
       @TransformScale(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       data: number
     }
 
@@ -302,12 +302,12 @@ describe('Writing binary definition with Transformer decorators', () => {
     class Protocol {
       @TransformOffset(-1)
       @TransformScale(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       data: number
 
       @TransformScale(2)
       @TransformOffset(-1)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       data2: number
     }
 
@@ -324,7 +324,7 @@ describe('Writing binary definition with Transformer decorators', () => {
         return Array.from(buf)
       }, { scope: ExecutionScope.OnWrite })
       @Until(EOF)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       decodedString: string
     }
 
@@ -335,7 +335,7 @@ describe('Writing binary definition with Transformer decorators', () => {
 describe('Writing binary definition with Condition decorators', () => {
   it('should work with choice decorator', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       type: number
 
       @Choice(_ => _.type, {

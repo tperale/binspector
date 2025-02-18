@@ -8,7 +8,7 @@ definition and decorators directly on your webapp.
 class ProtocolHeader {
   // Validate magic number
   @Match(0x0E)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   magic: number
 
   // Read the subtype relation multiple time
@@ -16,16 +16,16 @@ class ProtocolHeader {
   @Relation(PrimitiveSymbol.char)
   extension: string
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   len: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   string_map_offset: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   string_map_size: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   crc: number
 }
 
@@ -42,12 +42,12 @@ class RecordMessage {
 }
 
 class Record {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   id: number
 
   // Typescript enums are supported.
   @Enum(RecordTypes)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   type: RecordTypes
 
   // You can select the subtype that's gonna be {read,written} based on a
@@ -103,21 +103,22 @@ class Protocol {
 Imagine the following binary file definition.
 
 ```typescript
-import { Relation, Count } from 'binspector'
+import { Relation, Uint8, Count } from 'binspector'
 
 class Coord {
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   x: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   y: number
 }
 
 class Protocol {
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   len: number
 
   @Count('len')
+  @Relation(Coord)
   coords: Coord[]
 }
 ```

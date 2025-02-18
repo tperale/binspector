@@ -1,6 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, Bitfield } from '../decorators'
-import { PrimitiveSymbol } from '../types'
+import { Relation, Bitfield, Uint8 } from '../decorators'
 import { binread } from '../reader'
 import { BinaryReader } from '../cursor'
 import { jsonify } from '../utils'
@@ -12,10 +11,10 @@ describe('Reading binary content into js object', () => {
 
       _else = 2
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -44,7 +43,7 @@ describe('Reading binary content into js object', () => {
     }
 
     class Header {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       foo: number
 
       @Relation(BitField)
