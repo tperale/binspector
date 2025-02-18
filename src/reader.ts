@@ -16,7 +16,7 @@ import {
 } from './decorators/primitive'
 import { EOF, ExecutionScope, type InstantiableObject } from './types'
 import { useController, type ControllerReader } from './decorators/controller'
-import { useTransformer } from './decorators/transformer'
+import { TransformerExecLevel, useTransformer } from './decorators/transformer'
 import { useValidators } from './decorators/validator'
 import { useConditions } from './decorators/condition'
 import { usePrePost } from './decorators/prepost'
@@ -117,7 +117,9 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
     // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
-      const propertyReader = getBinReader(finalRelationField, instance)
+      const transformers = Meta.getTransformers(metadata, field.propertyName)
+      const propertyReader = (args?: any[]) =>
+        useTransformer(transformers, getBinReader(finalRelationField, instance)(args), instance, ExecutionScope.OnRead, TransformerExecLevel.PrimitiveTranformer)
       const controllers = Meta.getControllers(metadata, field.propertyName)
       const value = controllers.length > 0
         ? useController(controllers, instance, content, propertyReader)
@@ -130,7 +132,6 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
         throw new EOFError()
       }
 
-      const transformers = Meta.getTransformers(metadata, field.propertyName)
       const transformedValue = useTransformer(transformers, value, instance)
 
       useValidators(Meta.getValidators(metadata, field.propertyName), transformedValue, instance, content)
