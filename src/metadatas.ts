@@ -59,13 +59,14 @@ function getMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | number | symbol,
   metadataKey: MetadataSymbol,
+  reverse = false,
 ): T[] {
   // TODO Can be optionnal since its set on the set metadata
   if (metadata[metadataKey] === undefined) {
     metadata[metadataKey] = {}
   }
-  const meta = metadata[metadataKey][propertyKey]
-  return Array.isArray(meta) ? meta : []
+  const meta = (metadata[metadataKey][propertyKey] || []).slice()
+  return reverse ? meta.reverse() : meta
 }
 
 function removeMetadata<T> (
@@ -165,11 +166,12 @@ function setController<This> (
   return setMetadata(metadata, propertyKey, ControllerSymbol, controller)
 }
 
-function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<Transformer<This>> {
+function getTransformers<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This, reverse = false): Array<Transformer<This>> {
   return getMetadata(
     metadata,
     propertyKey,
     TransformerSymbol,
+    reverse
   )
 }
 
