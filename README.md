@@ -13,7 +13,7 @@ class ProtocolHeader {
 
   // Read the subtype relation multiple time
   @Count(4)
-  @Relation(PrimitiveSymbol.char)
+  @Ascii
   extension: string
 
   @Uint32
@@ -37,7 +37,7 @@ enum RecordTypes {
 
 class RecordMessage {
   @Until('\0')
-  @Relation(PrimitiveSymbol.char)
+  @Ascii
   message: string
 }
 
@@ -76,7 +76,6 @@ class Protocol {
   @Offset('header.string_map_offset')  
   @Size('header.string_map_size')  
   @NullTerminatedString()
-  @Relation(PrimitiveSymbol.char)
   strings: string[]
 }
 ```

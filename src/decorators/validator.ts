@@ -177,7 +177,7 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
  * ```typescript
  * class Header {
  *    @Match(0xFE)
- *    @Relation(PrimitiveSymbol.char)
+ *    @Relation(PrimitiveSymbol.u8)
  *    magic: number,
  * }
  * ```
@@ -188,7 +188,7 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
  * class Header {
  *    @Match([0xBE, 0xEF])
  *    @Count(2)
- *    @Relation(PrimitiveSymbol.char)
+ *    @Relation(PrimitiveSymbol.u8)
  *    magic: number[],
  * }
  * ```
@@ -208,8 +208,8 @@ export function Validate<This, Value> (validatingFunction: ValidatorFunction<Thi
  * ```typescript
  * class Header {
  *    @Match('.PNG')
- *    @Count(4, { targetType: String })
- *    @Relation(PrimitiveSymbol.char)
+ *    @Count(4)
+ *    @Ascii
  *    magic: string,
  * }
  * ```
@@ -282,7 +282,7 @@ export function Match<This, Value> (matchingValue: Value | Array<Value>, opt?: P
  * class Protocol {
  *   @Enum(ChunkType)
  *   @Count(4)
- *   @Relation(PrimitiveSymbol.char)
+ *   @Ascii
  *   type: ReadWrite
  * }
  * ```

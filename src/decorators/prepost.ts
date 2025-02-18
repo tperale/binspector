@@ -319,12 +319,10 @@ export function Pre<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOpt
  * // in the 'GLOBAL_STORAGE' variable.
  * @Post(_ => { GLOBAL_STORAGE[_.key] = _.value })
  * class Record {
- *   @NullTerminatedString
- *   @Relation(PrimitiveSymbol.char)
+ *   @NullTerminatedString()
  *   key: string
  *
- *   @NullTerminatedString
- *   @Relation(PrimitiveSymbol.char)
+ *   @NullTerminatedString()
  *   value: string
  * }
  *
@@ -517,7 +515,6 @@ export function Peek<This extends object, Args extends string> (offset?: number 
  * @EnsureSize('_size')
  * class Block {
  *   @NullTerminatedString()
- *   @Relation(PrimitiveSymbol.char)
  *   content: string
  *
  *   constructor(public _size: number) {}

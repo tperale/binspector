@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32 } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32, Ascii } from '../../src'
 import {
   OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header'
@@ -26,8 +26,8 @@ class RGB {
 
 class BitmapFileHeader {
   @Enum(BitmapHeaderTypes)
-  @Count(2, { targetType: String })
-  @Relation(PrimitiveSymbol.char)
+  @Count(2)
+  @Ascii
   type: BitmapHeaderTypes
 
   /* Size in bytes of the BMP file */
