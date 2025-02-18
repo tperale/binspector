@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16 } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -72,7 +72,7 @@ describe('Binary Writter testing', () => {
   })
   it('should read character', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.char)
+      @Ascii
       character: string
     }
 
@@ -115,12 +115,12 @@ describe('Binary Writter testing', () => {
       @Uint8
       len: string
 
-      @Count('len', { targetType: String })
-      @Relation(PrimitiveSymbol.char)
+      @Count('len')
+      @Ascii
       field: string
 
       @Count('len')
-      @Relation(PrimitiveSymbol.char)
+      @Char
       array: string[]
     }
 
@@ -153,17 +153,44 @@ describe('Binary Writter testing', () => {
 
     decodeEncodeTest(Protocol, [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])
   })
-  /** The following test is failing but writer are still usable except for those use cases
-   *  They will be kept commented until a solution is found.
+  it('should work with null temrinated string', () => {
+    class Protocol {
+      @NullTerminatedString()
+      buf: string[]
+    }
+
+    decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00])
+  })
+  /**
+   * Alignment not supported for now in the writer
+  it('should work with @NullTerminatedString and alignment', () => {
+    class Protocol {
+      @NullTerminatedString({ alignment: 4 })
+      buf: string[]
+    }
+
+    decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x00, 0x00])
+  })
+  */
   it('should work with chained controller that parse strings', () => {
     class Protocol {
       @Count(2)
       @NullTerminatedString()
-      @Relation(PrimitiveSymbol.char)
       buf: string[]
     }
 
-    decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x0, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00])
+    decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00])
+  })
+  /**
+   * Alignment not supported in the writer
+  it('should work with chained controller that parse strings with alignment', () => {
+    class Protocol {
+      @Count(2)
+      @NullTerminatedString({ alignment: 4 })
+      buf: string[]
+    }
+
+    decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x00, 0x00, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00, 0x00, 0x00])
   })
   */
 })
