@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16 } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
@@ -16,10 +16,10 @@ function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition:
 describe('Reading binary content into js object', () => {
   it('should create a new js object', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -27,10 +27,10 @@ describe('Reading binary content into js object', () => {
   })
   it('should create a new nested js object', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -62,7 +62,7 @@ describe('Reading binary content into js object', () => {
       _size: number
 
       @Count('_size')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       buf: number[]
 
       constructor (size: number) {
@@ -71,7 +71,7 @@ describe('Reading binary content into js object', () => {
     }
 
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       size: number
 
       @Relation(Header, _ => [_.size])
@@ -89,7 +89,7 @@ describe('Reading binary with validator', () => {
   it('should match field with number', () => {
     class Protocol {
       @Match(0x01)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -101,7 +101,7 @@ describe('Reading binary with validator', () => {
     class Protocol {
       @Match([0x01, 0x02])
       @Count(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number[]
     }
 
@@ -115,7 +115,7 @@ describe('Reading binary with controller', () => {
   it('should create u8 array field', () => {
     class Protocol {
       @Count(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       array: number[]
     }
 
@@ -125,11 +125,11 @@ describe('Reading binary with controller', () => {
   })
   it('should be able to use a variable with count decorator', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       len: number
 
       @Count('len')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -140,7 +140,7 @@ describe('Reading binary with controller', () => {
   })
   it('should parse content as string', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       len: string
 
       @Count('len', { targetType: String })
@@ -160,11 +160,11 @@ describe('Reading binary with controller', () => {
   })
   it('should work with while', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       something: string
 
       @While((x, _, curr: Protocol) => x !== curr.something)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       array: number[]
     }
 
@@ -178,7 +178,7 @@ describe('Reading binary with controller', () => {
       _size: number
 
       @Count('_size')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       data: number[]
 
       constructor (size: number) {
@@ -208,7 +208,7 @@ describe('Reading binary until EOF', () => {
   it('should read the primitive until the EOF', () => {
     class Header {
       @Until(EOF)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       coords: number[]
     }
 
@@ -218,10 +218,10 @@ describe('Reading binary until EOF', () => {
   })
   it('should read the relation until the EOF', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -237,13 +237,13 @@ describe('Reading binary until EOF', () => {
   })
   it('should throw an error if can\'t read the primitive', () => {
     class Header {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       z: number
     }
 
@@ -252,7 +252,7 @@ describe('Reading binary until EOF', () => {
   it('should throw an error if the condition didn\'t end properly', () => {
     class Header {
       @Count(4)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
     }
 
@@ -263,10 +263,10 @@ describe('Reading binary until EOF', () => {
 describe('Reading binary with conditions', () => {
   it('should support conditional reading', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -281,10 +281,10 @@ describe('Reading binary with conditions', () => {
   })
   it('should support conditional reading with in addition to controller', () => {
     class Coord {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
@@ -300,15 +300,15 @@ describe('Reading binary with conditions', () => {
   })
   it('should support conditional reading with enum', () => {
     class TwoDimension {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
     }
 
     class ThreeDimension extends TwoDimension {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       z: number
     }
 
@@ -319,7 +319,7 @@ describe('Reading binary with conditions', () => {
 
     class Header {
       @Enum(Dimension)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       dimension: Dimension
 
       @IfThen((curr: Header) => curr.dimension === Dimension.TwoDimension, TwoDimension)
@@ -333,7 +333,7 @@ describe('Reading binary with conditions', () => {
   })
   it('should leaving property blank', () => {
     class Data {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       type: number
 
       @IfThen(_ => _.type === 0x01, PrimitiveSymbol.u8)
@@ -358,7 +358,7 @@ describe('Reading binary with conditions', () => {
   })
   it('should work with choice decorator', () => {
     class Header {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       type: number
 
       @Choice(_ => _.type, {
@@ -382,10 +382,10 @@ describe('Reading binary with conditions', () => {
     class Coord {
       _scale: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       x: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       y: number
 
       constructor (scale: number) {
@@ -447,7 +447,7 @@ describe('Reading binary with bitfields', () => {
       @Relation(BitField)
       bf: BitField
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -476,7 +476,7 @@ describe('Reading binary with bitfields', () => {
       @Relation(BitField)
       bf: BitField
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       field: number
     }
 
@@ -495,7 +495,7 @@ describe('Reading binary definition with PrePost decorators', () => {
   it('should offset the cursor to the mentionned address', () => {
     class Protocol {
       @Offset(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
     }
 
@@ -508,7 +508,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     class Protocol {
       _offset: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
 
       constructor (offset: number) {
@@ -522,14 +522,14 @@ describe('Reading binary definition with PrePost decorators', () => {
   })
   it('should change the endianness and then set it back', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_1: number
 
       @Endian(BinaryCursorEndianness.LittleEndian)
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_2: number
 
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_3: number
     }
 
@@ -542,13 +542,13 @@ describe('Reading binary definition with PrePost decorators', () => {
   it('should change the endianness when defined as class decorator', () => {
     @Endian(BinaryCursorEndianness.LittleEndian)
     class Protocol {
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_1: number
 
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_2: number
 
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value_3: number
     }
 
@@ -560,11 +560,11 @@ describe('Reading binary definition with PrePost decorators', () => {
   })
   it('should change the endianness based on a value known at runtime', () => {
     class Protocol {
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       endian: number
 
       @Endian(_ => _.endian > 0 ? BinaryCursorEndianness.BigEndian : BinaryCursorEndianness.LittleEndian)
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value: number
     }
 
@@ -577,7 +577,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     class Protocol {
       _endian: number
 
-      @Relation(PrimitiveSymbol.u16)
+      @Uint16
       value: number
 
       constructor (endian: number) {
@@ -592,7 +592,7 @@ describe('Reading binary definition with PrePost decorators', () => {
   it('should peek the cursor to the mentionned address', () => {
     class Protocol {
       @Peek(2)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
     }
 
@@ -606,7 +606,7 @@ describe('Reading binary definition with PrePost decorators', () => {
   it('should peek the cursor to the next address', () => {
     class Protocol {
       @Peek()
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
     }
 
@@ -635,10 +635,10 @@ describe('Reading binary definition with PrePost decorators', () => {
       _offset: number
 
       @EnsureSize('_offset')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value: number
 
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       value_2: number
 
       constructor (offset: number) {
@@ -655,7 +655,7 @@ describe('Reading binary definition with PrePost decorators', () => {
     @EnsureSize('_size')
     class Block {
       @Count(3)
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       content: string
 
       constructor (public _size: number) {}
@@ -684,7 +684,7 @@ describe('Reading binary definition with Ctx decorators', () => {
 
       @CtxSet('Settings.Value')
       @Count('data_type')
-      @Relation(PrimitiveSymbol.u8)
+      @Uint8
       foo: number
     }
 

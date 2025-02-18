@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF } from '../../src'
+import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64 } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -10,42 +10,42 @@ enum DTBStructureBlockToken {
 
 class DTBHeader {
   @Match(0xd00dfeed)
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   magic: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   off_dt_struct: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   off_dt_strings: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   off_mem_rsvmap: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   version: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   last_comp_version: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   boot_cpuid_phys: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size_dt_strings: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size_dt_struct: number
 }
 
 class DTBReservedMap {
-  @Relation(PrimitiveSymbol.u64)
+  @Uint64
   address: number
 
-  @Relation(PrimitiveSymbol.u64)
+  @Uint64
   size: number
 }
 
@@ -58,14 +58,14 @@ class FDTBeginNode {
 class FDTProp {
   _string_off: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   len: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   nameoff: number
 
   @Count('len', { alignment: 4 })
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   name: number[]
 
   @Peek('_string_off + nameoff')
@@ -82,7 +82,7 @@ class DTBStructBlock {
   _string_off: number
 
   @Enum(DTBStructureBlockToken)
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   fdttype: DTBStructureBlockToken
 
   @Choice('fdttype', {

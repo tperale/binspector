@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32 } from '../../src'
 import {
   OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header'
@@ -14,13 +14,13 @@ enum BitmapHeaderTypes {
 }
 
 class RGB {
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   red: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   green: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   blue: number
 }
 
@@ -31,17 +31,17 @@ class BitmapFileHeader {
   type: BitmapHeaderTypes
 
   /* Size in bytes of the BMP file */
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   reserved_1: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   reserved_2: number
 
   /* Starting address of where the pixel array can be found: offset = 14 + <DIBHEADERSIZE> */
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   offset: number
 }
 
@@ -49,7 +49,7 @@ export class Bitmap {
   @Relation(BitmapFileHeader)
   file_header: BitmapFileHeader
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   bitmap_header_size: number
 
   @Choice('bitmap_header_size', {

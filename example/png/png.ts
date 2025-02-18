@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32 } from '../../src'
 
 enum PNGTypes {
   IHDR = 'IHDR',
@@ -19,37 +19,37 @@ enum IHDRColorType {
 }
 
 class PNGChunkIHDR {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   width: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   height: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   bit_depth: number
 
   @Enum(IHDRColorType)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   color_type: IHDRColorType
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   compression_method: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   filter_method: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   interlace_method: number
 }
 
 class RGB {
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   red: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   green: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   blue: number
 }
 
@@ -66,7 +66,7 @@ class PNGChunkPLTE {
 }
 
 class PNGChunkbKGD {
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   palette_index: number
 }
 
@@ -76,34 +76,34 @@ enum PhysUnit {
 }
 
 class PNGChunkpHYs {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   x: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   y: number
 
   @Enum(PhysUnit)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   unit: PhysUnit
 }
 
 class PNGChunktIME {
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   year: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   month: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   day: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   hour: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   minute: number
 
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   second: number
 }
 
@@ -111,7 +111,7 @@ class PNGChunkIDAT {
   _length: number
 
   @Count('_length')
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   data: number
 
   constructor (length: number) {
@@ -120,7 +120,7 @@ class PNGChunkIDAT {
 }
 
 class PNGChunk {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   length: number
 
   @Enum(PNGTypes)
@@ -140,14 +140,14 @@ class PNGChunk {
   data: PNGChunkIDAT | PNGChunkPLTE | PNGChunkbKGD | PNGChunkpHYs | PNGChunktIME | PNGChunkIHDR
 
   // @Crc(u32)
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   crc: number
 }
 
 export class PNG {
   @Match([137, 80, 78, 71, 13, 10, 26, 10])
   @Count(8)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   magic: number[]
 
   @Validate((chunks: PNGChunk[]) => chunks[0].type === PNGTypes.IHDR)

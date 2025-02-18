@@ -1,135 +1,135 @@
-import { PrimitiveSymbol, Relation, Count, Enum, Match } from '../../src'
+import { Count, Enum, Match, Uint8, Uint16, Uint32 } from '../../src'
 import { BitmapCompression } from './compression'
 
 export class OS21XBITMAPHEADER {
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   width: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   height: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   color_plane: number
 
   @Match([1, 4, 8, 24])
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   bits_per_pixels: number
 }
 
 export class OS22XBITMAPCOREHEADER {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   width: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   height: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   color_plane: number
 
   @Match([1, 4, 8, 24])
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   bits_per_pixels: number
 }
 
 export class OS22XBITMAPHEADER extends OS22XBITMAPCOREHEADER {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   compression: BitmapCompression
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   raw_bitmap_data_size: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   print_resolution_horizontal: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   print_resolution_vertical: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   palette_length: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   important_colors: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   units: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   reserved_1: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   reserved_2: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   recording: number
 
-  @Relation(PrimitiveSymbol.u16)
+  @Uint16
   rendering: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size_1: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   size_2: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   color_encoding: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   identifier: number
 }
 
 export class BITMAPINFOHEADER extends OS22XBITMAPCOREHEADER {
   @Enum(BitmapCompression)
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   compression: BitmapCompression
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   raw_bitmap_data_size: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   print_resolution_horizontal: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   print_resolution_vertical: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   palette_length: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   important_colors: number
 }
 
 export class BITMAPV2INFOHEADER extends BITMAPINFOHEADER {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   red_channel_bitmask: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   green_channel_bitmask: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   blue_channel_bitmask: number
 }
 
 export class BITMAPV3INFOHEADER extends BITMAPV2INFOHEADER {
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   alpha_channel_bitmask: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   windows_color_space: number
 }
 
 export class BITMAPV4INFOHEADER extends BITMAPV3INFOHEADER {
   @Count(24)
-  @Relation(PrimitiveSymbol.u8)
+  @Uint8
   color_space_endpoints: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   red_gamma: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   green_gamma: number
 
-  @Relation(PrimitiveSymbol.u32)
+  @Uint32
   blue_gamma: number
 }
 
