@@ -17,7 +17,7 @@ import {
 import { ExecutionScope, type InstantiableObject } from './types'
 import { usePrePost } from './decorators/prepost'
 import { useConditions } from './decorators/condition'
-import { useTransformer } from './decorators/transformer'
+import { TransformerExecAera, useTransformer } from './decorators/transformer'
 import { writeBitField } from './decorators/bitfield'
 
 /**
@@ -30,7 +30,7 @@ import { writeBitField } from './decorators/bitfield'
  *
  */
 export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
-  function binWrite (field: PropertyType<Target>, value: any): void {
+  function binWrite (field: PropertyType<Target>, value: any, transformers: any[]): void {
     const strToArray = (x: any): any => (typeof x === 'string' && x.length > 1) ? x.split('') : x
 
     const write = (field: PropertyType<Target>, value: any): void => {
@@ -46,10 +46,10 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
     const _value = strToArray(value)
     if (Array.isArray(_value)) {
       _value.flat(Infinity).flatMap(strToArray).forEach((x) => {
-        write(field, x)
+        write(field, useTransformer(transformers, x, instance, ExecutionScope.OnWrite, TransformerExecAera.PrimitiveTranformer))
       })
     } else {
-      write(field, _value)
+      write(field, useTransformer(transformers, _value, instance, ExecutionScope.OnWrite, TransformerExecAera.PrimitiveTranformer))
     }
   }
 
@@ -75,7 +75,7 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       const transformers = Meta.getTransformers(metadata, field.propertyName)
       const reversedTransformers = transformers.slice().reverse()
       const transformedValue = useTransformer(reversedTransformers, instance[field.propertyName], instance, ExecutionScope.OnWrite)
-      binWrite(finalRelationField, transformedValue)
+      binWrite(finalRelationField, transformedValue, reversedTransformers)
 
       // TODO Some controller should include instruction on how to normalize the data
       // For instance matrix should normalize the data into a single array

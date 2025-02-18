@@ -54,6 +54,11 @@ import Meta from '../metadatas'
 
 export const TransformerSymbol = Symbol('transformer')
 
+export enum TransformerExecAera {
+  PrimitiveTranformer,
+  PostControllerTransformer,
+}
+
 /**
  * TransformerOptions.
  */
@@ -64,6 +69,8 @@ export interface TransformerOptions {
   primitiveCheck: boolean
   /**
    * Applies the transformer function to each element if the value is an array.
+   *
+   * This option is only available for TransformerExecAera.PostControllerTransformer.
    */
   each: boolean
   /**
@@ -71,12 +78,20 @@ export interface TransformerOptions {
    * the read phase, the write phase, or both.
    */
   scope: ExecutionScope
+  /**
+   * A transformer function can either be applied just after the primitive has
+   * been read or after the controller has been executed.
+   * This option parameter specifies the aera the transformer function is
+   * executed.
+   */
+  aera: TransformerExecAera
 }
 
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,
   scope: ExecutionScope.OnRead,
+  aera: TransformerExecAera.PostControllerTransformer,
 }
 
 /**
@@ -267,9 +282,9 @@ export function TransformOffset<This, Value> (off: number, opt?: Partial<Transfo
  *
  * @category Advanced Use
  */
-export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead): any {
+export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead, aera = TransformerExecAera.PostControllerTransformer): any {
   return transformers.reduce((transformedTmpValue, transformer) => {
-    if ((transformer.options.scope & scope) > 0) {
+    if ((transformer.options.scope & scope) > 0 && transformer.options.aera === aera) {
       if (Array.isArray(transformedTmpValue) && transformer.options.each) {
         return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
       } else {
