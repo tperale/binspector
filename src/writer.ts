@@ -31,11 +31,9 @@ import { writeBitField } from './decorators/bitfield'
  */
 export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
   function binWrite (field: PropertyType<Target>, value: any, transformers: Array<Transformer<Target>>): void {
-    const strToArray = (x: any): any => (typeof x === 'string' && x.length > 1) ? x.split('') : x
-
     const write = (field: PropertyType<Target>, value: any): void => {
       if (isPrimitiveRelation(field)) {
-        cursor.write(field.primitive, value as number | string)
+        cursor.write(field.primitive, value as number)
       } else if (isRelation(field)) {
         binwrite(cursor, field.relation, value)
       } else {
@@ -43,13 +41,12 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       }
     }
 
-    const _value = strToArray(value)
-    if (Array.isArray(_value)) {
-      _value.flat(Infinity).flatMap(strToArray).forEach((x) => {
+    if (Array.isArray(value)) {
+      value.flat(Infinity).forEach((x) => {
         write(field, useTransformer(transformers, x, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
       })
     } else {
-      write(field, useTransformer(transformers, _value, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
+      write(field, useTransformer(transformers, value, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
     }
   }
 
@@ -79,7 +76,6 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
       // TODO Some controller should include instruction on how to normalize the data
       // For instance matrix should normalize the data into a single array
       // NullString should add back the \0
-      // targetType sin
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
   })
