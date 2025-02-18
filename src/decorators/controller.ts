@@ -74,10 +74,6 @@ export interface ControllerOptions {
    */
   primitiveCheck: boolean
   /**
-   * Define the target type for the controller to apply transformation.
-   */
-  targetType: InstantiableObject<unknown> | undefined
-  /**
    * Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
    */
   alignment: number
@@ -92,7 +88,6 @@ export interface ControllerOptions {
  */
 export const ControllerOptionsDefault = {
   primitiveCheck: true,
-  targetType: undefined,
   alignment: 0,
   peek: false,
 }
@@ -144,12 +139,9 @@ export interface Controller<This> extends PropertyMetaDescriptor<This> {
  * @category Advanced Use
  */
 export function controllerDecoratorFactory<This, Value> (name: string, func: ControllerFunction<This>, opt: Partial<ControllerOptions> = ControllerOptionsDefault): DecoratorType<This, Value> {
-  // TODO The targetType should be set using reflection if TypeScript ever support that feature.
-  const targetType: InstantiableObject<unknown> | undefined = opt.targetType
   const options = {
     ...ControllerOptionsDefault,
     ...opt,
-    ...{ targetType },
   }
 
   return function (_: undefined, context: Context<This, Value>) {
@@ -218,8 +210,7 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
         // If you attempt to read a primitive but reached the EOF.
         // EOF might be the only value we don't want to put inside the result array.
         // Other special character like `\0` is discutable.
-        const currValue = opt.targetType === String ? result.join('') : result
-        throw new EOFError(currValue)
+        throw new EOFError(result)
       }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject, cursor.offset(), startOffset)) {
@@ -234,7 +225,7 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
     if (opt.alignment > 0) {
       cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
     }
-    return opt.targetType === String ? result.join('') : result
+    return result
   }
 }
 
@@ -267,7 +258,7 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
       cursor.move(startOffset)
     }
 
-    return opt.targetType === String ? result.join('') : result
+    return result
   }
 }
 

@@ -11,7 +11,6 @@ export enum PrimitiveSymbol {
   i64,
   float32,
   float64,
-  char,
 }
 
 /**

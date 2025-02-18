@@ -7,7 +7,7 @@ export abstract class Cursor {
   abstract offset (): number
   abstract move (address: number): number
   abstract read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF
-  abstract write (primitive: PrimitiveSymbol, value: number | string): void
+  abstract write (primitive: PrimitiveSymbol, value: number): void
 
   forward (x: number): number {
     return this.move(this.offset() + x)
@@ -46,7 +46,6 @@ export abstract class BinaryCursor extends Cursor {
 
   _getPrimitiveSize (primType: PrimitiveSymbol): number {
     switch (primType) {
-      case PrimitiveSymbol.char:
       case PrimitiveSymbol.u8:
       case PrimitiveSymbol.i8:
         return 1
@@ -93,8 +92,6 @@ export class BinaryReader extends BinaryCursor {
         return this.data.getFloat32(this.index)
       case PrimitiveSymbol.float64:
         return this.data.getFloat64(this.index)
-      case PrimitiveSymbol.char:
-        return String.fromCharCode(this.data.getUint8(this.index))
       default:
         return 0
     }
@@ -125,16 +122,12 @@ export class BinaryReader extends BinaryCursor {
 export class BinaryWriter extends BinaryCursor {
   data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]> = []
 
-  write (primitive: PrimitiveSymbol, value: number | string): void {
+  write (primitive: PrimitiveSymbol, value: number): void {
     const size = this._getPrimitiveSize(primitive)
     const index = this.offset()
     const endian = this.getEndian()
 
-    if (primitive === PrimitiveSymbol.char || typeof value === 'string') {
-      this.data.push([String(value).charCodeAt(0), PrimitiveSymbol.u8, index, endian])
-    } else {
-      this.data.push([value, primitive, index, endian])
-    }
+    this.data.push([value, primitive, index, endian])
 
     this.forward(size)
   }
