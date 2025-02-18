@@ -55,8 +55,25 @@ import Meta from '../metadatas'
 export const TransformerSymbol = Symbol('transformer')
 
 /**
- * TransformerOptions.
+ * `TransformerExecLevel` defines the level at which a transformer function
+ * is executed.
  *
+ * @category Options
+ */
+export enum TransformerExecLevel {
+  /**
+   * Executes the transformer after reading a primitive property, before any
+   * controller is executed.
+   */
+  PrimitiveTranformer,
+  /**
+   * Executes the transformer after the controller has been fully executed
+   * (default behaviour).
+   */
+  PostControllerTransformer,
+}
+
+/**
  * @category Options
  */
 export interface TransformerOptions {
@@ -66,6 +83,8 @@ export interface TransformerOptions {
   primitiveCheck: boolean
   /**
    * Applies the transformer function to each element if the value is an array.
+   *
+   * This option is only available for TransformerExecLevel.PostControllerTransformer.
    */
   each: boolean
   /**
@@ -73,6 +92,24 @@ export interface TransformerOptions {
    * the read phase, the write phase, or both.
    */
   scope: ExecutionScope
+  /**
+   * Specifies the level at which a transformer function is executed.
+   *
+   * The option can either be:
+   *
+   *   - `TransformerExecLevel.PrimitiveTranformer`
+   *   - `TransformerExecLevel.PostControllerTransformer`
+   *
+   * Example of usage
+   *
+   * ```typescript
+   * class Protocol {
+   *   @Transform(String.fromCharCode, { level: TransformerExecLevel.PrimitiveTranformer })
+   *   field: string
+   * }
+   * ```
+   */
+  level: TransformerExecLevel
 }
 
 /**
@@ -82,6 +119,7 @@ export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,
   scope: ExecutionScope.OnRead,
+  level: TransformerExecLevel.PostControllerTransformer,
 }
 
 /**
@@ -272,15 +310,14 @@ export function TransformOffset<This, Value> (off: number, opt?: Partial<Transfo
  *
  * @category Advanced Use
  */
-export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead): any {
-  return transformers.reduce((transformedTmpValue, transformer) => {
-    if ((transformer.options.scope & scope) > 0) {
+export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead, level = TransformerExecLevel.PostControllerTransformer): any {
+  return transformers
+    .filter(t => (t.options.scope & scope) > 0 && t.options.level === level)
+    .reduce((transformedTmpValue, transformer) => {
       if (Array.isArray(transformedTmpValue) && transformer.options.each) {
         return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
       } else {
         return transformer.transformer(transformedTmpValue, targetInstance)
       }
-    }
-    return transformedTmpValue
-  }, propertyValue)
+    }, propertyValue)
 }
