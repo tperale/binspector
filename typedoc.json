@@ -7,7 +7,8 @@
     "./src/decorators/condition.ts",
     "./src/decorators/prepost.ts",
     "./src/decorators/bitfield.ts",
-    "./src/decorators/primitive.ts"
+    "./src/decorators/primitive.ts",
+    "./src/decorators/helper.ts"
   ],
   "highlightLanguages": ["c", "typescript"],
   "out": "docs",

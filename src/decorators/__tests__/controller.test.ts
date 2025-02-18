@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Count, While, Until, MapTo, Matrix, useController, ControllerReader, NullTerminatedString, Size } from '../controller'
+import { Count, While, Until, MapTo, Matrix, useController, ControllerReader, Size } from '../controller'
 import { Cursor, BinaryReader } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
 import { EOFError, RelationNotDefinedError } from '../../error'
@@ -272,33 +272,6 @@ describe('@Controller: functions w/ cursor', () => {
     ], cur)
 
     expect(cur.offset()).toStrictEqual(12)
-  })
-  it('@NullTerminatedString: read null terminated string', () => {
-    class TestClass {
-      @NullTerminatedString({ primitiveCheck: false })
-      field: string
-    }
-
-    const cur = new BinaryReader(new Uint8Array([
-      0x68, 0x65, 0x6C, 0x6C,
-      0x6F, 0x00, 0x77, 0x6F,
-      0x72, 0x6C, 0x64, 0x00,
-    ]).buffer)
-    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.char), 'hello', cur)
-  })
-  it('@NullTerminatedString: create array of null terminated string', () => {
-    class TestClass {
-      @Until(EOF, { primitiveCheck: false })
-      @NullTerminatedString({ primitiveCheck: false })
-      field: string
-    }
-
-    const cur = new BinaryReader(new Uint8Array([
-      0x68, 0x65, 0x6C, 0x6C,
-      0x6F, 0x00, 0x77, 0x6F,
-      0x72, 0x6C, 0x64, 0x00,
-    ]).buffer)
-    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.char), ['hello', 'world'], cur)
   })
   it('@Size: create an array of 3 byte size', () => {
     class TestClass {
