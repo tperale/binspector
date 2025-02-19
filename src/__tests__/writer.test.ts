@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32 } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -152,6 +152,65 @@ describe('Binary Writter testing', () => {
     }
 
     decodeEncodeTest(Protocol, [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])
+  })
+  it('@Utf8: support encoding', () => {
+    class Protocol {
+      @Until(EOF)
+      @Utf8
+      field: string
+    }
+
+    decodeEncodeTest(Protocol, [
+      0x47, 0x72, 0xc3, 0xb6, 0xc3, 0x9f, 0x65
+    ])
+  })
+  it('@Utf16: support encoding w/ BigEndian', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    decodeEncodeTest(Protocol, [
+      0x00, 0x47, 0x00, 0x72, 0x00, 0xf6, 0x00, 0xdf, 0x00, 0x65
+    ])
+  })
+  it('@Utf16: support encoding w/ overflow char', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    decodeEncodeTest(Protocol, [
+      0x00, 0x48, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0xd8, 0x3d, 0xde, 0x0a
+    ])
+  })
+  it('@Utf16: support encoding w/ overflow char & LittleEndian', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.LittleEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    decodeEncodeTest(Protocol, [
+      0x48, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0x00, 0x3d, 0xd8, 0x0a, 0xde
+    ])
+  })
+  it('@Utf32: support encoding', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf32
+      field: string
+    }
+
+    decodeEncodeTest(Protocol, [
+      0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x6f, 0x00, 0x00, 0x00, 0x20, 0x00, 0x01, 0xf6, 0x0a
+    ])
   })
   it('should work with null temrinated string', () => {
     class Protocol {

@@ -4,7 +4,7 @@
  *
  * @module Helper
  */
-import { Uint8 } from './primitive'
+import { Uint16, Uint32, Uint8 } from './primitive'
 import { Context, DecoratorType, ExecutionScope } from '../types'
 import { TransformerExecLevel, transformerDecoratorFactory } from './transformer'
 import { ControllerOptions, Until } from './controller'
@@ -101,4 +101,123 @@ export function NullTerminatedString<This extends object, Value> (opt?: Partial<
     transformerDecoratorFactory('transform-null-termination-read', x => x.slice(0, -1), { deepTransform: true, each: true })(_, context)
     transformerDecoratorFactory('transform-null-termination-write', x => x + '\0', { deepTransform: true, each: true, scope: ExecutionScope.OnWrite })(_, context)
   }
+}
+
+/**
+ * `@Utf8` defines the decorated property as an unsigned 8 bit integer encoded
+ * as an utf-8 string.
+ *
+ * @example
+ *
+ * Here in the following example the `@Until` controller is associated with the
+ * the `@Utf8` decorator.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Until(EOF)
+ *   @Utf8
+ *   foo: string
+ * }
+ * ```
+ *
+ * The typical use-case would be to have a generic space of a pre-defined size with a
+ * an utf encoded string.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Size(64)
+ *   @Utf8
+ *   foo: string
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * This decorator is supposed to be used in conjunction of a controller.
+*
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @category Decorators
+ */
+export function Utf8<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Uint8(_, context)
+  transformerDecoratorFactory('transform-utf8-read', x => new TextDecoder('utf-8').decode(new Uint8Array(x).filter(x => x !== 0x00).buffer), { deepTransform: true })(_, context)
+  transformerDecoratorFactory('transform-utf8-write', x => Array.from(new TextEncoder().encode(x)), { deepTransform: true, each: true, scope: ExecutionScope.OnWrite })(_, context)
+}
+
+/**
+ * `@Utf16` defines the decorated property as an unsigned 16 bit integer encoded
+ * as an utf-16 string.
+ *
+ * @example
+ *
+ * The typical use-case would be to have a generic space of a pre-defined size with a
+ * an utf encoded string.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Size(64)
+ *   @Utf16
+ *   foo: string
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * This decorator is supposed to be used in conjunction of a controller.
+*
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @category Decorators
+ */
+export function Utf16<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Uint16(_, context)
+  transformerDecoratorFactory('transform-utf16-read', x => String.fromCharCode(...x).trim(), { deepTransform: true })(_, context)
+  transformerDecoratorFactory('transform-utf16-write', x => x.split('').map((chr: string) => chr.charCodeAt(0)), { deepTransform: true, each: true, scope: ExecutionScope.OnWrite })(_, context)
+}
+
+/**
+ * `@Utf32` defines the decorated property as an unsigned 32 bit integer encoded
+ * as an utf-32 string.
+ *
+ * @example
+ *
+ * The typical use-case would be to have a generic space of a pre-defined size with a
+ * an utf encoded string.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Size(64)
+ *   @Utf32
+ *   foo: string
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * This decorator is supposed to be used in conjunction of a controller.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @category Decorators
+ */
+export function Utf32<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Uint32(_, context)
+  transformerDecoratorFactory('transform-utf32-read', x => x.map((code: number) => String.fromCodePoint(code)).join(''), { deepTransform: true })(_, context)
+  transformerDecoratorFactory('transform-utf32-write', (x) => {
+    const codes = [...Array(x.length).keys()].map((i: number) => x.codePointAt(i))
+
+    const result = []
+    for (let i = 0; i < codes.length; ++i) {
+      result.push(codes[i])
+      if (codes[i] > 0xFFFF) {
+        ++i
+      }
+    }
+
+    return result
+  }, { deepTransform: true, each: true, scope: ExecutionScope.OnWrite })(_, context)
 }
