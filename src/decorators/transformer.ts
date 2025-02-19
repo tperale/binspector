@@ -88,6 +88,26 @@ export interface TransformerOptions {
    */
   each: boolean
   /**
+   * Applies the transformer function to the deepest level of a nested array.
+   *
+   * For instance if a transformer receive the following nested array as argument:
+   *
+   * ```
+   * [
+   *   ['h', 'e', 'l', 'l', 'o'],
+   *   ['w', 'o', 'l', 'd'],
+   * ]
+   * ```
+   *
+   * Assuming we have a transformer function that join those inner array into strings:
+   * `@Transform(x => x.join(''), ...)`.
+   * The option `{ deepTransform: true, each: false }` options must be set to apply
+   * this transformer to each inner arrays.
+   *
+   * This option is only available for TransformerExecLevel.PostControllerTransformer.
+   */
+  deepTransform: boolean
+  /**
    * Specifies whether the transformer function should be executed during
    * the read phase, the write phase, or both.
    */
@@ -118,6 +138,7 @@ export interface TransformerOptions {
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,
+  deepTransform: false,
   scope: ExecutionScope.OnRead,
   level: TransformerExecLevel.PostControllerTransformer,
 }
@@ -311,10 +332,23 @@ export function TransformOffset<This, Value> (off: number, opt?: Partial<Transfo
  * @category Advanced Use
  */
 export function useTransformer<This> (transformers: Array<Transformer<This>>, propertyValue: any, targetInstance: This, scope = ExecutionScope.OnRead, level = TransformerExecLevel.PostControllerTransformer): any {
+  function deepTransform (transformer: Transformer<This>, value: any): any {
+    if (Array.isArray(value)) {
+      if (value.every(Array.isArray)) {
+        return value.map(x => deepTransform(transformer, x))
+      } else if (transformer.options.each) {
+        return value.map(x => transformer.transformer(x, targetInstance))
+      }
+    }
+    return transformer.transformer(value, targetInstance)
+  }
+
   return transformers
     .filter(t => (t.options.scope & scope) > 0 && t.options.level === level)
     .reduce((transformedTmpValue, transformer) => {
-      if (Array.isArray(transformedTmpValue) && transformer.options.each) {
+      if (transformer.options.deepTransform) {
+        return deepTransform(transformer, transformedTmpValue)
+      } else if (Array.isArray(transformedTmpValue) && transformer.options.each) {
         return transformedTmpValue.map(x => transformer.transformer(x, targetInstance))
       } else {
         return transformer.transformer(transformedTmpValue, targetInstance)
