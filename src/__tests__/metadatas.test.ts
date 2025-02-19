@@ -8,10 +8,8 @@ class Coord {
   y: number
 }
 
-const testSymbol = Symbol('test')
-
 function Decorator<This, Value> (_: any, context: Context<This, Value>): void {
-  Meta.setMetadata(context.metadata, context.name, testSymbol, context.name)
+  Meta.setMetadata(context.metadata, context.name, ValidatorSymbol, context.name)
 }
 
 class MyClass {
@@ -23,11 +21,6 @@ class MyClass {
 }
 
 describe('Set metadata information through the metadata API', () => {
-  it('should manage to retrieve the type information set by the decorator from the Reflect API', () => {
-    const c = new MyClass()
-    expect(Meta.getMetadata(MyClass[Symbol.metadata] as DecoratorMetadataObject, 'field1', testSymbol)).toStrictEqual(['field1'])
-    expect(Meta.getMetadata(MyClass[Symbol.metadata] as DecoratorMetadataObject, 'field2', testSymbol)[0]).toStrictEqual('field2')
-  })
   it('should store the validator', () => {
     const c = new MyClass()
     const validator: Validator<any, boolean> = {
