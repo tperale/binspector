@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32 } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
@@ -156,6 +156,78 @@ describe('Reading binary with controller', () => {
       len: 0x03,
       field: 'ABC',
       array: ['A', 'B', 'C'],
+    })
+  })
+  it('@Utf8: support encoding', () => {
+    class Protocol {
+      @Until(EOF)
+      @Utf8
+      field: string
+    }
+
+    expectReadTest([
+      0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0xf0, 0x9f, 0x98, 0x8a
+    ], Protocol).toMatchObject({
+      field: 'Hello 😊'
+    })
+  })
+  it('@Utf16: support encoding w/ overflow char', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    expectReadTest([
+      0x00, 0x48, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0xd8, 0x3d, 0xde, 0x0a
+    ], Protocol).toMatchObject({
+      field: 'Hello 😊'
+    })
+  })
+  /**
+   * This will fail for now
+  it('@Utf16: support encoding w/ overflow char', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    expectReadTest([
+      0x00, 0x48, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0xd8, 0x3d, 0xde, 0x0a, 0x00, 0x00, 0x00, 0x00
+    ], Protocol).toMatchObject({
+      field: 'Hello 😊'
+    })
+  })
+  */
+  it('@Utf16: support encoding w/ overflow char & LittleEndian', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.LittleEndian)
+      @Until(EOF)
+      @Utf16
+      field: string
+    }
+
+    expectReadTest([
+      0x48, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x6f, 0x00, 0x20, 0x00, 0x3d, 0xd8, 0x0a, 0xde
+    ], Protocol).toMatchObject({
+      field: 'Hello 😊'
+    })
+  })
+  it('@Utf32: support encoding', () => {
+    class Protocol {
+      @Endian(BinaryCursorEndianness.BigEndian)
+      @Until(EOF)
+      @Utf32
+      field: string
+    }
+
+    expectReadTest([
+      0x00, 0x00, 0x00, 0x48, 0x00, 0x00, 0x00, 0x65, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x6c, 0x00, 0x00, 0x00, 0x6f, 0x00, 0x00, 0x00, 0x20, 0x00, 0x01, 0xf6, 0x0a
+    ], Protocol).toMatchObject({
+      field: 'Hello 😊'
     })
   })
   it('@NullTerminatedString: read null terminated string', () => {
