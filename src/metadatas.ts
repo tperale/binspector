@@ -10,9 +10,20 @@ import { type DecoratorMetadataObject } from './types'
 
 import './symbol-polyfill'
 
+type MetadataSymbol = typeof BitFieldSymbol
+  | typeof PreClassFunctionSymbol
+  | typeof PreFunctionSymbol
+  | typeof ConditionSymbol
+  | typeof ControllerSymbol
+  | typeof TransformerSymbol
+  | typeof ValidatorSymbol
+  | typeof CtxSymbol
+  | typeof PostFunctionSymbol
+  | typeof PostClassFunctionSymbol
+
 function getClassMetadata<T> (
   metadata: DecoratorMetadataObject,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
 ): T[] {
   if (metadata[metadataKey] === undefined) {
     metadata[metadataKey] = []
@@ -23,7 +34,7 @@ function getClassMetadata<T> (
 
 function removeClassMetadata<T> (
   metadata: DecoratorMetadataObject,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
   rmValue: any,
 ): T[] {
   const metas = getClassMetadata(metadata, metadataKey)
@@ -34,7 +45,7 @@ function removeClassMetadata<T> (
 
 function setClassMetadata<T> (
   metadata: DecoratorMetadataObject,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
   newValue: any,
   reverse = false,
 ): T[] {
@@ -47,7 +58,7 @@ function setClassMetadata<T> (
 function getMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | number | symbol,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
 ): T[] {
   // TODO Can be optionnal since its set on the set metadata
   if (metadata[metadataKey] === undefined) {
@@ -60,7 +71,7 @@ function getMetadata<T> (
 function removeMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol | number,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
   rmValue: any,
 ): T[] {
   const metas = getMetadata(metadata, propertyKey, metadataKey)
@@ -72,7 +83,7 @@ function removeMetadata<T> (
 function setMetadata<T> (
   metadata: DecoratorMetadataObject,
   propertyKey: string | symbol | number,
-  metadataKey: symbol,
+  metadataKey: MetadataSymbol,
   newValue: any,
   reverse = false,
 ): T[] {
@@ -183,7 +194,7 @@ function setValidator<This, Value> (
   propertyKey: string | symbol,
   validator: Validator<This, Value>,
 ): Array<Validator<This, Value>> {
-  return setMetadata(metadata, propertyKey, validator.type, validator)
+  return setMetadata(metadata, propertyKey, ValidatorSymbol, validator)
 }
 
 function getPost<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): Array<PrePost<This>> {
@@ -266,7 +277,7 @@ function setContext<This, Value> (
   propertyKey: keyof This,
   ctx: Ctx<This, Value>,
 ): Array<Ctx<This, Value>> {
-  return setMetadata(metadata, propertyKey, ctx.type, ctx)
+  return setMetadata(metadata, propertyKey, CtxSymbol, ctx)
 }
 
 export default {

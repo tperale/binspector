@@ -58,7 +58,10 @@ export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')
 export const PreClassFunctionSymbol = Symbol('pre-class-function')
 export const PostClassFunctionSymbol = Symbol('post-class-function')
-export type PrePostSymbols = symbol
+export type PrePostSymbols = typeof PreFunctionSymbol
+  | typeof PostFunctionSymbol
+  | typeof PreClassFunctionSymbol
+  | typeof PostClassFunctionSymbol
 
 export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
