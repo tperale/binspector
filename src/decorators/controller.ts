@@ -65,6 +65,8 @@ export type ControllerReader = (arg?: any) => any
 
 /**
  * ControllerOptions.
+ *
+ * @category Options
  */
 export interface ControllerOptions {
   /**
@@ -85,6 +87,9 @@ export interface ControllerOptions {
   peek: boolean
 }
 
+/**
+ * @category Options
+ */
 export const ControllerOptionsDefault = {
   primitiveCheck: true,
   targetType: undefined,
