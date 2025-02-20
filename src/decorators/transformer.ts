@@ -56,6 +56,8 @@ export const TransformerSymbol = Symbol('transformer')
 
 /**
  * TransformerOptions.
+ *
+ * @category Options
  */
 export interface TransformerOptions {
   /**
@@ -73,6 +75,9 @@ export interface TransformerOptions {
   scope: ExecutionScope
 }
 
+/**
+ * @category Options
+ */
 export const TransformerOptionsDefault = {
   primitiveCheck: true,
   each: false,

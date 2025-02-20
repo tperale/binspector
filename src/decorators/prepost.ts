@@ -64,6 +64,8 @@ export type PrePostFunction<This> = (instance: This, cursor: Cursor) => void
 
 /**
  * PrePostOptions.
+ *
+ * @category Options
  */
 export interface PrePostOptions {
   /**
@@ -81,6 +83,9 @@ export interface PrePostOptions {
   scope: ExecutionScope
 }
 
+/**
+ * @category Options
+ */
 export const PrePostOptionsDefault = {
   primitiveCheck: true,
   once: false,

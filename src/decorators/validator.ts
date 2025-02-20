@@ -60,6 +60,9 @@ import Meta from '../metadatas'
 
 export const ValidatorSymbol = Symbol('validator')
 
+/**
+ * @category Options
+ */
 export interface ValidatorOptions {
   /**
    * Ensures that a relation exists before defining the Transformer decorator.
@@ -79,6 +82,9 @@ export interface ValidatorOptions {
   message: string // TODO | ((args: ValidatorErrorArguments) => string);
 }
 
+/**
+ * @category Options
+ */
 export const ValidatorOptionsDefault = {
   each: false,
   primitiveCheck: true,
