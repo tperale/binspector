@@ -61,6 +61,8 @@ export const BitFieldSymbol = Symbol('bitfield')
 
 /**
  * BitFieldOptions.
+ *
+ * @category Options
  */
 export interface BitFieldOptions {
   /**
@@ -69,6 +71,9 @@ export interface BitFieldOptions {
   primitiveCheck: boolean
 }
 
+/**
+ * @category Options
+ */
 export const BitFieldOptionsDefault = {
   primitiveCheck: true,
 }

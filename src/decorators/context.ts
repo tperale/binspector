@@ -17,11 +17,17 @@ export type GlobalCtx = object
 
 export type CtxKeyFunction<This> = (targetInstance: This) => string
 
+/**
+ * @category Options
+ */
 export enum CtxType {
   CtxGetter,
   CtxSetter,
 }
 
+/**
+ * @category Options
+ */
 export interface CtxOptions {
   /**
    * Ensures that a relation exists before defining the Transformer decorator.
@@ -29,6 +35,9 @@ export interface CtxOptions {
   base_type: 'array' | undefined
 }
 
+/**
+ * @category Options
+ */
 export const CtxOptionsDefault = {
   base_type: undefined,
 }
