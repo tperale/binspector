@@ -6,8 +6,8 @@ import { EOF, PrimitiveSymbol } from './types'
 export abstract class Cursor {
   abstract offset (): number
   abstract move (address: number): number
-  abstract read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF
-  abstract write (primitive: PrimitiveSymbol, value: number): void
+  abstract read (primitive: PrimitiveSymbol): number | bigint | typeof EOF
+  abstract write (primitive: PrimitiveSymbol, value: number | bigint): void
 
   forward (x: number): number {
     return this.move(this.offset() + x)
@@ -69,7 +69,7 @@ export abstract class BinaryCursor extends Cursor {
 export class BinaryReader extends BinaryCursor {
   data: DataView
 
-  _readPrimitive (primType: PrimitiveSymbol): string | number | bigint {
+  _readPrimitive (primType: PrimitiveSymbol): number | bigint {
     const endian = this.endianness === BinaryCursorEndianness.LittleEndian
     switch (primType) {
       case PrimitiveSymbol.u8:
@@ -89,19 +89,19 @@ export class BinaryReader extends BinaryCursor {
       case PrimitiveSymbol.i64:
         return this.data.getBigInt64(this.index, endian)
       case PrimitiveSymbol.float32:
-        return this.data.getFloat32(this.index)
+        return this.data.getFloat32(this.index, endian)
       case PrimitiveSymbol.float64:
-        return this.data.getFloat64(this.index)
+        return this.data.getFloat64(this.index, endian)
       default:
         return 0
     }
   }
 
-  write (_: PrimitiveSymbol, _2: number | string): void {
+  write (_: PrimitiveSymbol, _2: number | bigint): void {
     throw new Error('Shouldn\'t call "write" method on a BinaryReader object')
   }
 
-  read (primitive: PrimitiveSymbol): string | number | bigint | typeof EOF {
+  read (primitive: PrimitiveSymbol): number | bigint | typeof EOF {
     try {
       const value = this._readPrimitive(primitive)
       this.forward(this._getPrimitiveSize(primitive))
@@ -122,7 +122,7 @@ export class BinaryReader extends BinaryCursor {
 export class BinaryWriter extends BinaryCursor {
   data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]> = []
 
-  write (primitive: PrimitiveSymbol, value: number): void {
+  write (primitive: PrimitiveSymbol, value: number | bigint): void {
     const size = this._getPrimitiveSize(primitive)
     const index = this.offset()
     const endian = this.getEndian()
@@ -132,7 +132,7 @@ export class BinaryWriter extends BinaryCursor {
     this.forward(size)
   }
 
-  read (_: PrimitiveSymbol): string | number | bigint | typeof EOF {
+  read (_: PrimitiveSymbol): number | bigint | typeof EOF {
     throw new Error('Shouldn\'t call "read" method on a BinaryWriter object')
   }
 
@@ -166,6 +166,12 @@ export class BinaryWriter extends BinaryCursor {
           break
         case PrimitiveSymbol.i64:
           buf.setBigInt64(index, BigInt(value), endian)
+          break
+        case PrimitiveSymbol.float32:
+          buf.setFloat32(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.float64:
+          buf.setFloat64(index, Number(value), endian)
           break
       }
 
