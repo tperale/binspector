@@ -14,11 +14,11 @@ class TestCursor extends Cursor {
     return address
   }
 
-  read (_: PrimitiveSymbol): string | number | bigint | typeof EOF {
+  read (_: PrimitiveSymbol): | number | bigint | typeof EOF {
     return 0
   }
 
-  write (_: PrimitiveSymbol, _2: number | string): void {
+  write (_: PrimitiveSymbol, _2: number | bigint): void {
   }
 
   constructor () {
