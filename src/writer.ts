@@ -17,7 +17,7 @@ import {
 import { ExecutionScope, type InstantiableObject } from './types'
 import { usePrePost } from './decorators/prepost'
 import { useConditions } from './decorators/condition'
-import { Transformer, TransformerExecLevel, useTransformer } from './decorators/transformer'
+import { TransformerExecLevel, useTransformer } from './decorators/transformer'
 import { writeBitField } from './decorators/bitfield'
 
 /**
@@ -30,26 +30,6 @@ import { writeBitField } from './decorators/bitfield'
  *
  */
 export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
-  function binWrite (field: PropertyType<Target>, value: any, transformers: Array<Transformer<Target>>): void {
-    const write = (field: PropertyType<Target>, value: any): void => {
-      if (isPrimitiveRelation(field)) {
-        cursor.write(field.primitive, value as number)
-      } else if (isRelation(field)) {
-        binwrite(cursor, field.relation, value)
-      } else {
-        throw new UnknownPropertyType(field)
-      }
-    }
-
-    if (Array.isArray(value)) {
-      value.flat(Infinity).forEach((x) => {
-        write(field, useTransformer(transformers, x, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
-      })
-    } else {
-      write(field, useTransformer(transformers, value, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
-    }
-  }
-
   const metadata = ObjectDefinition[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
   if (metadata === undefined) {
     throw new Error('undefined')
@@ -68,14 +48,26 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
 
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
+      function write (field: PropertyType<Target>, value: any): void {
+        if (isPrimitiveRelation(field)) {
+          cursor.write(field.primitive, value as number)
+        } else if (isRelation(field)) {
+          binwrite(cursor, field.relation, value)
+        } else {
+          throw new UnknownPropertyType(field)
+        }
+      }
+
       // Condition don't need to be used since the object are already in here.
       const transformers = Meta.getTransformers(metadata, field.propertyName, true)
-      const transformedValue = useTransformer(transformers, instance[field.propertyName], instance, ExecutionScope.OnWrite)
-      binWrite(finalRelationField, transformedValue, transformers)
-
-      // TODO Some controller should include instruction on how to normalize the data
-      // For instance matrix should normalize the data into a single array
-      // NullString should add back the \0
+      const value = useTransformer(transformers, instance[field.propertyName], instance, ExecutionScope.OnWrite)
+      if (Array.isArray(value)) {
+        value.flat(Infinity).forEach((x) => {
+          write(finalRelationField, useTransformer(transformers, x, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
+        })
+      } else {
+        write(finalRelationField, useTransformer(transformers, value, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
+      }
     }
     usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
   })
