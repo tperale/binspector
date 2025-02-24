@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32, Ascii } from '../../src'
+import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src'
 import {
   OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header'
@@ -45,6 +45,7 @@ class BitmapFileHeader {
   offset: number
 }
 
+@Endian(BinaryCursorEndianness.LittleEndian)
 export class Bitmap {
   @Relation(BitmapFileHeader)
   file_header: BitmapFileHeader
