@@ -4,7 +4,7 @@
  *
  * @module Helper
  */
-import { Uint16, Uint32, Uint8 } from './primitive'
+import { Relation, RelationParameters, Uint16, Uint32, Uint8 } from './primitive'
 import { Context, DecoratorType, ExecutionScope } from '../types'
 import { TransformerExecLevel, transformerDecoratorFactory } from './transformer'
 import { ControllerOptions, Until } from './controller'
@@ -220,4 +220,56 @@ export function Utf32<This extends object, Value> (_: undefined, context: Contex
 
     return result
   }, { deepTransform: true, each: true, scope: ExecutionScope.OnWrite })(_, context)
+}
+
+/**
+ * `@Flatten` decorator defines a relation and extract a single property from
+ * the nested relation.
+ * The decorator 'flatten' the structure during the reading phase and
+ * reconstruct it during the writing phase.
+ *
+ * @example
+ *
+ * In the following example `@Flatten` is used to create array of string while
+ * also applying operation to that inner in string in the `ProtocolString`
+ * definition.
+ * The `ProtocolString` parse null terminated strings but ensure the size of
+ * a string block is always of 64 bytes.
+ *
+ * ```typescript
+ * class ProtocolString {
+ *   @EnsureSize(64)
+ *   @NullTerminatedString()
+ *   data: string
+ * }
+ *
+ * class Protocol {
+ *   @Until(EOF)
+ *   @Flatten(ProtocolString, 'data')
+ *   strings: string[]
+ * }
+ * ```
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Relation The relation class type.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {new () => Relation} relation The relation type that contains the
+ * nested property.
+ * @param {keyof Relation} property The property inside the relation that
+ * should be extracted when reading and re-encapsulated when writing.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
+ *
+ * @category Decorators
+ */
+export function Flatten<This extends object, Relation, Value, Args extends string> (relation: new (args?: any) => Relation, property: keyof Relation, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
+  return function (_: any, context: Context<This, Value>) {
+    Relation(relation, args)(_, context)
+    transformerDecoratorFactory('transform-flatten-read', x => x[property], { each: true, deepTransform: true })(_, context)
+    transformerDecoratorFactory('transform-flatten-write', (x) => {
+      const rel = new relation()
+      rel[property] = x
+      return rel
+    }, { each: true, scope: ExecutionScope.OnWrite })(_, context)
+  }
 }
