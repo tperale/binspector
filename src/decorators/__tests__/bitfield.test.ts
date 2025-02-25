@@ -1,5 +1,3 @@
-import { describe, expect } from '@jest/globals'
-
 import { useBitField, Bitfield } from '../bitfield'
 import { BinaryReader } from '../../cursor'
 import { WrongBitfieldClassImplementation } from '../../error'

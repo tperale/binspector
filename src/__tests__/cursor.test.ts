@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { BinaryCursorEndianness, BinaryReader, BinaryWriter } from '../cursor'
 import { EOF, PrimitiveSymbol } from '../types'
 
@@ -35,9 +34,7 @@ function testReadWriteEquality (arr: number[], sequence: PrimitiveSymbol[], endi
 
   const buf_out = new Uint8Array(bw.buffer())
 
-  for (let i = 0; i != buf_in.byteLength; i++) {
-    expect(buf_in[i]).toStrictEqual(buf_out[i])
-  }
+  expect(buf_in).toBeEqualArrayBuffer(buf_out)
 }
 
 describe('Tests BinaryReader', () => {

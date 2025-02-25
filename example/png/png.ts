@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii } from '../../src'
+import { Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src'
 
 enum PNGTypes {
   IHDR = 'IHDR',
@@ -144,6 +144,7 @@ class PNGChunk {
   crc: number
 }
 
+@Endian(BinaryCursorEndianness.BigEndian)
 export class PNG {
   @Match([137, 80, 78, 71, 13, 10, 26, 10])
   @Count(8)

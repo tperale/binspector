@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { useConditions, IfThen, Else, Choice } from '../condition'
 import { type RelationTypeProperty, type PrimitiveTypeProperty } from '../primitive'
 import Meta from '../../metadatas'
