@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
@@ -138,7 +137,7 @@ describe('Reading binary with controller', () => {
       field: [0x02, 0x03, 0x04],
     })
   })
-  it('should parse content as string', () => {
+  it('should read content as string', () => {
     class Protocol {
       @Uint8
       len: string

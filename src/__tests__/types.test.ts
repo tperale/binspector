@@ -1,5 +1,3 @@
-import { describe, expect } from '@jest/globals'
-
 describe('Primitive file types', () => {
   it('the enum should hold the different fields', () => {
     enum Type {

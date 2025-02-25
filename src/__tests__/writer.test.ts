@@ -1,26 +1,14 @@
-import { describe, expect } from '@jest/globals'
 import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
 import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor'
 
-function areArrayBufferEqual (buf1: ArrayBuffer, buf2: ArrayBuffer) {
-  if (buf1.byteLength != buf2.byteLength) return false
-  const arr1 = new Uint8Array(buf1)
-  const arr2 = new Uint8Array(buf2)
-
-  for (let i = 0; i != buf1.byteLength; i++) {
-    if (arr1[i] != arr2[i]) return false
-  }
-
-  return true
-}
-
 function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
   const writtenBuf = new BinaryWriter(endian)
   binwrite(writtenBuf, ObjectDefinition, instance)
-  expect(areArrayBufferEqual(writtenBuf.buffer(), Uint8Array.from(buf))).toEqual(true)
+
+  expect(writtenBuf.buffer()).toBeEqualArrayBuffer(Uint8Array.from(buf))
 }
 
 function decodeEncodeTest<Target> (ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
