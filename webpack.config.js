@@ -5,6 +5,7 @@ module.exports = {
   entry: {
     binspector: path.resolve(__dirname, 'src') + '/index.ts',
   },
+  devtool: 'inline-source-map',
   module: {
     rules: [
       {
