@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, PrimitiveSymbol, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64 } from '../../src'
+import { NullTerminatedString, Choice, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64, Padding } from '../../src'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -50,7 +50,8 @@ class DTBReservedMap {
 }
 
 class FDTBeginNode {
-  @NullTerminatedString({ alignment: 4 })
+  @Padding(4)
+  @NullTerminatedString()
   name: string
 }
 
@@ -63,7 +64,8 @@ class FDTProp {
   @Uint32
   nameoff: number
 
-  @Count('len', { alignment: 4 })
+  @Padding(4)
+  @Count('len')
   @Uint8
   name: number[]
 
