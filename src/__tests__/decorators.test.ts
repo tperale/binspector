@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { Match, Count, Relation } from '../decorators'
 import { ValidatorSymbol } from '../decorators/validator'
 import { PrimitiveSymbol } from '../types'
@@ -19,7 +18,6 @@ describe('Testing the usage of decorator to create metadata about property', () 
   }
 
   it('should retrieve the member of the instance in the same order of definition', () => {
-    const testMatchInstance = new TestMatch()
     const fields = Meta.getFields(TestMatch[Symbol.metadata] as DecoratorMetadataObject)
     expect(fields.map(x => x.propertyName)).toStrictEqual([
       'test',
@@ -28,7 +26,6 @@ describe('Testing the usage of decorator to create metadata about property', () 
     ])
   })
   it('should retrieve the correct metadata content', () => {
-    const testMatchInstance = new TestMatch()
     const testMatchPropertyMetadatas = Meta.getValidators(
       TestMatch[Symbol.metadata] as DecoratorMetadataObject,
       'test',

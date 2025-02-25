@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { BinDump } from '../hexdump'
 import { BinaryReader } from '../cursor'
 

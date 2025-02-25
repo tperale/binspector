@@ -1,4 +1,3 @@
-import { describe, expect } from '@jest/globals'
 import { Relation } from '../primitive'
 import { RelationAlreadyDefinedError } from '../../error'
 import { PrimitiveSymbol, type DecoratorMetadataObject } from '../../types'

@@ -1,4 +1,3 @@
-import { describe } from '@jest/globals'
 import { useValidators, Enum, Match, Validate } from '../validator'
 import Meta from '../../metadatas'
 
