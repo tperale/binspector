@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, Post, Pre, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32 } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
@@ -259,10 +259,16 @@ describe('Reading binary with controller', () => {
       field: ['hello', 'world']
     })
   })
-  it('@NullTerminatedString: create array of null terminated string with alignment', () => {
+  it('@NullTerminatedString: create array of null terminated string with padding', () => {
+    class ProtocolString {
+      @Padding(4)
+      @NullTerminatedString()
+      str: string
+    }
+
     class Protocol {
       @Until(EOF)
-      @NullTerminatedString({ alignment: 4 })
+      @Flatten(ProtocolString, 'str')
       field: string[]
     }
 
