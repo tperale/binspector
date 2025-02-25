@@ -1,5 +1,5 @@
 import { describe, expect } from '@jest/globals'
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32 } from '../decorators'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
 import { binwrite } from '../writer'
 import { binread } from '../reader'
@@ -220,17 +220,15 @@ describe('Binary Writter testing', () => {
 
     decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00])
   })
-  /**
-   * Alignment not supported for now in the writer
-  it('should work with @NullTerminatedString and alignment', () => {
+  it('should work with @NullTerminatedString and padding', () => {
     class Protocol {
-      @NullTerminatedString({ alignment: 4 })
+      @Padding(4)
+      @NullTerminatedString()
       buf: string[]
     }
 
     decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x00, 0x00])
   })
-  */
   it('should work with chained controller that parse strings', () => {
     class Protocol {
       @Count(2)
@@ -240,18 +238,21 @@ describe('Binary Writter testing', () => {
 
     decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00])
   })
-  /**
-   * Alignment not supported in the writer
-  it('should work with chained controller that parse strings with alignment', () => {
+  it('should work with chained controller that parse strings with padding', () => {
+    class ProtocolString {
+      @Padding(4)
+      @NullTerminatedString()
+      str: string
+    }
+
     class Protocol {
       @Count(2)
-      @NullTerminatedString({ alignment: 4 })
+      @Flatten(ProtocolString, 'str')
       buf: string[]
     }
 
     decodeEncodeTest(Protocol, [0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x00, 0x00, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x00, 0x00, 0x00])
   })
-  */
 })
 
 describe('Writing binary with bitfields', () => {

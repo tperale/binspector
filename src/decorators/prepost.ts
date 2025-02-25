@@ -541,11 +541,6 @@ export function Peek<This extends object, Args extends string> (offset?: number 
  * }
  * ```
  *
- * @remarks
- *
- * If the size is known before parsing the file, use the alignment in the
- * controller instead
- *
  * @typeParam This The type of the class the decorator is applied to.
  *
  * @param {number | string | ((instance: This, cursor: Cursor) => number)} [size]
@@ -753,6 +748,50 @@ export function ValueSet<This extends object, Value extends This[keyof This]> (s
     postFunctionDecoratorFactory<This> ('value-set', (targetInstance) => {
       targetInstance[propertyName] = setter(targetInstance)
     }, { ...opt, scope: ExecutionScope.OnRead })(_, context)
+  }
+}
+
+/**
+ * `@Padding` ensures that the total size of the decorated property aligns to
+ * a multiple of the specified padding value. After reading or writing the
+ * property, the cursor is advanced forward if necessary to maintain alignment.
+ *
+ * @example
+ *
+ * In the following example the `data` property is padded so the length (after
+ * read or write) is a multiple of 4.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Uint32
+ *   length: number
+ *
+ *   @Padding(4)
+ *   @Count('length')
+ *   @Uint8
+ *   data: number[]
+ * }
+ * ```
+ *
+ * @param {number} padding The total size of the decorated property will be
+ * adjusted to be a multiple of this value.
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
+ *
+ * @category Decorators
+ */
+export function Padding<This extends object> (padding: number, opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+  return function (_: any, context: ClassAndPropertyDecoratorContext<This>) {
+    if (padding > 0) {
+      preFunctionDecoratorFactory<This>('pre-padding', (_, cursor) => {
+        const startOffset = cursor.offset()
+        postFunctionDecoratorFactory<This>('post-padding', (_, cursor) => {
+          const endOffset = cursor.offset()
+          const toMove = (padding - ((endOffset - startOffset) % padding)) % padding
+          cursor.forward(toMove)
+        }, { ...opt, once: true })(_, context)
+      })(_, context)
+    }
   }
 }
 
