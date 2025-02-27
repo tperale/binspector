@@ -24,6 +24,11 @@ class RGB {
   blue: number
 }
 
+class RGBQ extends RGB {
+  @Uint8
+  reserved: number
+}
+
 class BitmapFileHeader {
   @Enum(BitmapHeaderTypes)
   @Count(2)
@@ -70,9 +75,9 @@ export class Bitmap {
   /* extra_bit_masks */
 
   @Count('bitmap_header.palette_length')
-  @IfThen((instance: Bitmap) => instance.bitmap_header.bits_per_pixels <= 8, RGB)
+  @IfThen((instance: Bitmap) => instance.bitmap_header.bits_per_pixels <= 8, RGBQ)
   @Else()
-  color_table: RGB[]
+  color_table: RGBQ[]
 
   /* The gap size depend on the offset found in the BitmapFileHeader */
   /* Just use the `@Pre` decorator to move the cursor to the correct place */
