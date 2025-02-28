@@ -52,7 +52,7 @@ import { relationExistsOrThrow } from '../error'
 import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
 import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
 import Meta from '../metadatas'
-import { Relation } from './primitive'
+import { isRelation, Relation } from './primitive'
 
 export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')
@@ -124,6 +124,32 @@ export interface PrePostClass<This> extends ClassMetaDescriptor {
   func: PrePostFunction<This>
 }
 
+function _prePostBuildMeta<This> (context: ClassAndPropertyDecoratorContext<This>, name: string, typeSym: PrePostSymbols, func: PrePostFunction<This>, options: PrePostOptions): PrePost<This> | PrePostClass<This> {
+  const prePostFunction = {
+    ...context.kind === 'class'
+      ? createClassMetaDescriptor(typeSym, name, context.metadata, context.name as string)
+      : createPropertyMetaDescriptor(typeSym, name, context.metadata, context.name as keyof This),
+    options,
+    func,
+  }
+
+  if (options.once) {
+    if (context.kind === 'class') {
+      prePostFunction.func = (instance: This, cursor: Cursor) => {
+        func(instance, cursor)
+        Meta.removePrePost(context.metadata, typeSym, prePostFunction)
+      }
+    } else {
+      prePostFunction.func = (instance: This, cursor: Cursor) => {
+        func(instance, cursor)
+        Meta.removePrePost(context.metadata, typeSym, prePostFunction, context.name as keyof This)
+      }
+    }
+  }
+
+  return prePostFunction
+}
+
 /**
  * `prePostFunctionDecoratorFactory` function returns a decorator function
  * that can be applied to properties.
@@ -150,18 +176,7 @@ function prePostFunctionDecoratorFactory<This> (name: string, typeSym: PrePostSy
     }
 
     const propertyName = context.name as keyof This
-    const prePostFunction: PrePost<This> = {
-      ...createPropertyMetaDescriptor(typeSym, name, context.metadata, propertyName),
-      options,
-      func,
-    }
-
-    if (options.once) {
-      prePostFunction.func = (instance: This, cursor: Cursor) => {
-        func(instance, cursor)
-        Meta.removePrePost(context.metadata, typeSym, prePostFunction, propertyName)
-      }
-    }
+    const prePostFunction = _prePostBuildMeta(context, name, typeSym, func, options) as PrePost<This>
 
     Meta.setPrePost(context.metadata, typeSym, prePostFunction, propertyName)
   }
@@ -188,18 +203,7 @@ function prePostClassFunctionDecoratorFactory<This> (name: string, typeSym: PreP
   const options = { ...PrePostOptionsDefault, ...opt }
 
   return function (_: new() => This, context: ClassDecoratorContext<new (...args: any) => This>) {
-    const prePostFunction: PrePostClass<This> = {
-      ...createClassMetaDescriptor(typeSym, name, context.metadata, context.name as string),
-      options,
-      func,
-    }
-
-    if (options.once) {
-      prePostFunction.func = (instance: This, cursor: Cursor) => {
-        func(instance, cursor)
-        Meta.removePrePost(context.metadata, typeSym, prePostFunction)
-      }
-    }
+    const prePostFunction = _prePostBuildMeta(context, name, typeSym, func, options) as PrePostClass<This>
 
     Meta.setPrePost(context.metadata, typeSym, prePostFunction)
   }
@@ -792,6 +796,56 @@ export function Padding<This extends object> (padding: number, opt?: Partial<Pre
         }, { ...opt, once: true })(_, context)
       })(_, context)
     }
+  }
+}
+
+/**
+ * `@SharePropertiesWithRelation` assigns all properties from the current
+ * instance to the associated relation instance.
+ *
+ * @remarks
+ *
+ * You should probably not use this decorator as it will break typescript type
+ * system.
+ * If you need to pass information to the associated relation please use
+ * constructors.
+ * This decorator has in the context of re-writting the `Matrix` decorator please
+ * see the implementation of that decorator to understand the use-case of this.
+ *
+ * @param {Partial<PrePostOptions>} [opt] Optional configution.
+ * @returns {DecoratorType} The class or property decorator function.
+ *
+ * @category Decorators
+ */
+export function SharePropertiesWithRelation<This extends object> (opt?: Partial<PrePostOptions>): DecoratorType<This, unknown> {
+  return function (_: any, context: Context<This, unknown>) {
+    const propertyName = context.name as keyof This
+
+    const associatedRelation = Meta.getField(context.metadata, propertyName)
+    if (associatedRelation === undefined || !isRelation(associatedRelation)) {
+      throw new Error('No relation defined')
+    }
+
+    const associatedMeta = associatedRelation.relation[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
+
+    Pre((x: This) => {
+      const innerPreMeta = _prePostBuildMeta(context, 'pre-inner-share-properties-with-relation', PreFunctionSymbol, (inner: any) => {
+        // The following `{ ...x, ...inner }` will assign every property
+        // of the `x` instance to the virtual `inner` one except for the one
+        // that has already been defined in the `inner` instance.
+        // During the write process the `Flatten` decorator will already
+        // defines a property.
+        Object.assign(inner, { ...x, ...inner })
+      }, { ...PrePostOptionsDefault, ...opt })
+      Meta.setPrePost(associatedMeta, PreClassFunctionSymbol, innerPreMeta)
+
+      Post(() => {
+        // We need to remove explicitely the decorator that assigns the
+        // properties to the relation once it has been read because we will
+        // re-assign another one with a different instance on another read.
+        Meta.removePrePost(associatedMeta, PreClassFunctionSymbol, innerPreMeta)
+      }, { once: true })(_, context)
+    })(_, context)
   }
 }
 
