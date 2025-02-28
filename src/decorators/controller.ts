@@ -50,9 +50,9 @@
  *
  * @module Controller
  */
-import { createPropertyMetaDescriptor, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common'
+import { createPropertyMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common'
 import { type Cursor } from '../cursor'
-import { EOF, type DecoratorType, type InstantiableObject, type Context } from '../types'
+import { EOF, type DecoratorType, type Context } from '../types'
 import { relationExistsOrThrow, EOFError } from '../error'
 import Meta from '../metadatas'
 
@@ -97,8 +97,6 @@ export const ControllerOptionsDefault = {
  */
 export type ControllerFunction<This> = (targetInstance: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions) => any
 export type OptionlessControllerFunction = (targetInstance: any, cursor: Cursor, read: ControllerReader) => any
-
-type NumberOrRecursiveKey<This extends object, Args extends string> = number | StringFormattedRecursiveKeyOf<This, Args>
 
 /**
  * Controller type interface structure definition.
@@ -470,44 +468,6 @@ export function Count<This extends object, Value, Args extends string> (arg: Num
   }
 
   return controllerDecoratorFactory('count', countController, opt)
-}
-
-/**
- * `@Matrix` decorator creates a two-dimensional array based on the specified
- * width and height arguments.
- *
- * @typeParam This The type of the class the decorator is applied to.
- * @typeParam Value The type of the decorated property.
- *
- * @param {number | string} width
- * @param {number | string} height
- * @param {Partial<ControllerOptions>} [opt] Optional configuration.
- * @returns {DecoratorType<This, Value>} The property decorator function.
- *
- * @category Decorators
- */
-export function Matrix<This extends object, Value, Args extends string> (width: NumberOrRecursiveKey<This, Args>, height: NumberOrRecursiveKey<This, Args>, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
-  function matrixController (
-    currStateObject: This,
-    cursor: Cursor,
-    read: ControllerReader,
-    opt: ControllerOptions,
-  ): any {
-    const getArg = (x: NumberOrRecursiveKey<This, Args>): number => typeof x === 'string'
-      ? recursiveGet(currStateObject, x)
-      : x
-    const finalWidth = getArg(width)
-    const finalHeight = getArg(height)
-
-    if (typeof finalWidth !== 'number' || typeof finalHeight !== 'number') {
-      throw Error('End type should be a number')
-    }
-
-    const lineRead = (): any => whileFunctionFactory((_, i: number) => i < finalWidth)(currStateObject, cursor, read, opt)
-    return whileFunctionFactory((_, i: number) => i < finalHeight)(currStateObject, cursor, lineRead, opt)
-  }
-
-  return controllerDecoratorFactory('matrix', matrixController, opt)
 }
 
 /**

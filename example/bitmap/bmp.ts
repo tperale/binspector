@@ -82,7 +82,7 @@ export class Bitmap {
   /* The gap size depend on the offset found in the BitmapFileHeader */
   /* Just use the `@Pre` decorator to move the cursor to the correct place */
   @Offset('file_header.offset')
-  @Matrix('bitmap_header.width', 'bitmap_header.height', { alignment: 4 })
+  @Matrix('bitmap_header.width', 'bitmap_header.height', 4)
   @Choice('bitmap_header.bits_per_pixels', {
     8: PrimitiveSymbol.u8,
     24: RGB,

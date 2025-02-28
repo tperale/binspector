@@ -1,4 +1,4 @@
-import { Count, While, Until, MapTo, Matrix, useController, ControllerReader, Size } from '../controller'
+import { Count, While, Until, MapTo, useController, ControllerReader, Size } from '../controller'
 import { Cursor, BinaryReader } from '../../cursor'
 import { PrimitiveSymbol, EOF } from '../../types'
 import { EOFError, RelationNotDefinedError } from '../../error'
@@ -158,18 +158,7 @@ describe('@Controller: functions', () => {
     const iterator = testReader([1, 2, 3])
     testController(TestClass, 'field', () => iterator.next().value, [1, 2, 3])
   })
-  it('@Matrix: should retrieve a matrix line', () => {
-    class TestClass {
-      @Matrix(4, 2, { primitiveCheck: false })
-      field: number
-    }
-
-    testController(TestClass, 'field', () => 1, [
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-    ])
-  })
-  it('@Matrix: recreate the Matrix decorator using Controller chaining', () => {
+  it('@Count: recreate the Matrix decorator using Controller chaining', () => {
     class TestClass {
       @Count(2, { primitiveCheck: false })
       @Count(4, { primitiveCheck: false })
@@ -252,25 +241,6 @@ describe('@Controller: functions w/ cursor', () => {
     expect(cur.offset()).toStrictEqual(0)
     expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(0x03)
     expect(cur.offset()).toStrictEqual(1)
-  })
-  it('@Matrix: should retrieve a matrix with each line aligned to 4 bytes', () => {
-    class TestClass {
-      @Matrix(3, 3, { primitiveCheck: false, alignment: 4 })
-      field: number
-    }
-
-    const cur = new BinaryReader(new Uint8Array([
-      0x01, 0x02, 0x03, 0x04,
-      0x05, 0x06, 0x07, 0x08,
-      0x09, 0x0A, 0x0B, 0x0C,
-    ]).buffer)
-    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [
-      [0x01, 0x02, 0x03],
-      [0x05, 0x06, 0x07],
-      [0x09, 0x0A, 0x0B],
-    ], cur)
-
-    expect(cur.offset()).toStrictEqual(12)
   })
   it('@Size: create an array of 3 byte size', () => {
     class TestClass {
