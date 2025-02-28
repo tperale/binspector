@@ -8,7 +8,7 @@ function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableO
   const writtenBuf = new BinaryWriter(endian)
   binwrite(writtenBuf, ObjectDefinition, instance)
 
-  expect(writtenBuf.buffer()).toBeEqualArrayBuffer(Uint8Array.from(buf))
+  expect(new Uint8Array(writtenBuf.buffer())).toBeEqualArrayBuffer(Uint8Array.from(buf))
 }
 
 function decodeEncodeTest<Target> (ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
@@ -124,7 +124,7 @@ describe('Binary Writter testing', () => {
 
     decodeEncodeTest(Protocol, [0x01, 0x02, 0x03, 0x04, 0x05, 0x06])
   })
-  it('should work with chained controller (matrix))', () => {
+  it('@Matrix: with chained relation', () => {
     class Coord {
       @Uint8
       x: number
@@ -136,10 +136,47 @@ describe('Binary Writter testing', () => {
     class Protocol {
       @Matrix(2, 2)
       @Relation(Coord)
-      buf: Coord[]
+      buf: Coord[][]
     }
 
     decodeEncodeTest(Protocol, [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])
+  })
+  it('@Matrix: with alignment', () => {
+    class Protocol {
+      @Matrix(3, 2, 4)
+      @Uint8
+      field: number[][]
+    }
+
+    decodeEncodeTest(Protocol, [0x1, 0x2, 0x3, 0x0, 0x5, 0x6, 0x7, 0x0])
+  })
+  it('@Matrix: with reference to other properties', () => {
+    class Protocol {
+      width = 3
+      height = 2
+
+      @Matrix('width', 'height', 4)
+      @Uint8
+      field: number[][]
+    }
+
+    decodeEncodeTest(Protocol, [0x1, 0x2, 0x3, 0x0, 0x5, 0x6, 0x7, 0x0])
+  })
+  it('@Matrix: with reference to other properties', () => {
+    class Protocol {
+      width = 3
+      height = 2
+      choice = 1
+
+      @Matrix('width', 'height', 4)
+      @Choice('choice', {
+        1: PrimitiveSymbol.u8,
+        2: PrimitiveSymbol.u16
+      })
+      field: number[][]
+    }
+
+    decodeEncodeTest(Protocol, [0x1, 0x2, 0x3, 0x0, 0x5, 0x6, 0x7, 0x0])
   })
   it('@Utf8: support encoding', () => {
     class Protocol {

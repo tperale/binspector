@@ -4,10 +4,13 @@
  *
  * @module Helper
  */
-import { Relation, RelationParameters, Uint16, Uint32, Uint8 } from './primitive'
+import { PropertyType, Relation, RelationParameters, Uint16, Uint32, Uint8 } from './primitive'
 import { Context, DecoratorType, ExecutionScope } from '../types'
 import { TransformerExecLevel, transformerDecoratorFactory } from './transformer'
-import { ControllerOptions, Until } from './controller'
+import { ControllerOptions, Count, Until } from './controller'
+import { NumberOrRecursiveKey } from './common'
+import { Padding, Post, Pre, preFunctionDecoratorFactory, PreFunctionSymbol, SharePropertiesWithRelation } from './prepost'
+import Meta from '../metadatas'
 
 /**
  * `@Char` defines the decorated as an unsigned 8 bit integer and transform
@@ -271,5 +274,67 @@ export function Flatten<This extends object, Relation, Value, Args extends strin
       rel[property] = x
       return rel
     }, { each: true, scope: ExecutionScope.OnWrite })(_, context)
+  }
+}
+
+/**
+ * `@Matrix` decorator creates a two-dimensional array based on the specified
+ * width and height arguments.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @param {NumberOrRecursiveKey<This, Args>} width The width of the matrix, which can be a numeric value or a computed key.
+ * @param {NumberOrRecursiveKey<This, Args>} height The height of the matrix, determining the number of elements.
+ * @param {number} padding Optional padding value applied to each row of the matrix.
+ * @returns {DecoratorType<This, Value>} The property decorator function.
+ *
+ * @category Decorators
+ */
+export function Matrix<This extends object, Value, Args extends string> (width: NumberOrRecursiveKey<This, Args>, height: NumberOrRecursiveKey<This, Args>, padding = 0): DecoratorType<This, Value> {
+  function __createMeta (_1: any, _2: any) {}
+
+  return function (_: any, context: Context<This, Value>) {
+    // I need to decorate the class to make sure the metadata are
+    // created. The decorator doesn't do anything
+    @__createMeta
+    class _Inner {
+      /**
+      * The _Inner class will define something similar
+      * to the following that allows to apply padding to each line
+      * and makes it easy for the writer to re-write the data.
+      *
+      * @Padding(padding)
+      * @Count(width)
+      * @Relation(...)
+      * data: number
+      */
+    }
+
+    const name = context.name as keyof This
+    const field = Meta.getField(context.metadata, name)
+    const innerMeta = _Inner[Symbol.metadata] as DecoratorMetadataObject
+    const _InnerContext = {
+      ...context,
+      metadata: innerMeta
+    }
+
+    // Remove the relation defined for the decorated property
+    // and move it to the inner class.
+    Meta.setField(_InnerContext.metadata, { ...field, metadata: innerMeta } as PropertyType<_Inner>)
+    Meta.removeField(context.metadata, name)
+
+    Meta.getConditions(context.metadata, name).forEach(cond => Meta.setCondition(innerMeta, name, {
+      ...cond,
+      metadata: innerMeta
+    }))
+
+    Padding(padding)(_, _InnerContext)
+    Count(width)(_, _InnerContext)
+
+    Flatten(_Inner, _InnerContext.name as keyof _Inner)(_, context)
+    Count(height)(_, context)
+
+    SharePropertiesWithRelation()(_, context)
   }
 }
