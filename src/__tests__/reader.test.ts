@@ -1,4 +1,4 @@
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten, Matrix } from '../decorators'
 import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
 import { binread } from '../reader'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor'
@@ -322,6 +322,17 @@ describe('Reading binary with controller', () => {
         _size: 2,
         data: [2, 3],
       }],
+    })
+  })
+  it('should work `@Matrix`', () => {
+    class TestClass {
+      @Matrix(3, 2, 4)
+      @Uint8
+      field: number[][]
+    }
+
+    expectReadTest([0x1, 0x2, 0x3, 0x0, 0x5, 0x6, 0x7, 0x0], TestClass).toMatchObject({
+      field: [[0x1, 0x2, 0x3], [0x5, 0x6, 0x7]]
     })
   })
 })

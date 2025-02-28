@@ -115,6 +115,15 @@ function setField<This> (
   return fields
 }
 
+function removeField<This> (
+  metadata: DecoratorMetadataObject,
+  propertyKey: keyof This
+): Array<PropertyType<This>> {
+  const fields = getFields(metadata).filter(x => x.propertyName !== propertyKey)
+  metadata[FieldSymbol] = fields
+  return fields
+}
+
 function isFieldDecorated<This> (metadata: DecoratorMetadataObject, propertyKey: keyof This): boolean {
   return getField(metadata, propertyKey) !== undefined
 }
@@ -288,6 +297,7 @@ export default {
   getField,
   getFields,
   setField,
+  removeField,
   isFieldDecorated,
   getClassPre,
   getPre,

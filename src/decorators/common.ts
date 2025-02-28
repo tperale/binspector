@@ -102,6 +102,7 @@ type CommaSeparetedRecursiveKey<TObj extends object, T extends string, U extends
 
 export type StringFormattedRecursiveKeyOf<T extends object, Args extends string> = Args extends RecursiveKeyWithOperations<T, Args> ? Args : RecursiveKeyWithOperations<T, Args>
 export type StringFormattedCommaSepRecursiveKeyOf<T extends object, Args extends string> = Args extends CommaSeparetedRecursiveKey<T, Args> ? Args : CommaSeparetedRecursiveKey<T, Args>
+export type NumberOrRecursiveKey<This extends object, Args extends string> = number | StringFormattedRecursiveKeyOf<This, Args>
 
 /**
  * Chained accessor to get the value of `expr` for `obj`.
