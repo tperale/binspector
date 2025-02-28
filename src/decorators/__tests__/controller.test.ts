@@ -181,32 +181,6 @@ describe('@Controller: functions', () => {
 })
 
 describe('@Controller: functions w/ cursor', () => {
-  it('@Count: read 2 bytes with 4 bytes alignment', () => {
-    class TestClass {
-      @Count(2, { primitiveCheck: false, alignment: 4 })
-      field: number
-    }
-
-    const cur = new BinaryReader(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
-    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2], cur)
-
-    expect(cur.offset()).toStrictEqual(4)
-    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
-    expect(cur.offset()).toStrictEqual(5)
-  })
-  it('@Count: read 4 bytes with 4 bytes alignment', () => {
-    class TestClass {
-      @Count(4, { primitiveCheck: false, alignment: 4 })
-      field: number
-    }
-
-    const cur = new BinaryReader(new Uint8Array([0x01, 0x02, 0x01, 0x01, 0x05]).buffer)
-    testControllerCursor(TestClass, 'field', () => cur.read(PrimitiveSymbol.u8), [1, 2, 1, 1], cur)
-
-    expect(cur.offset()).toStrictEqual(4)
-    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(5)
-    expect(cur.offset()).toStrictEqual(5)
-  })
   it('@Until: read using "peek" to move back the cursor', () => {
     class TestClass {
       @Until(0x05, { primitiveCheck: false, peek: true })

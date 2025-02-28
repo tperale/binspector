@@ -74,10 +74,6 @@ export interface ControllerOptions {
    */
   primitiveCheck: boolean
   /**
-   * Define the memory address alignment. After performing the read the controller will be moved to be a multiple of "alignment". If this value is equal to 0 it won't change the alignment.
-   */
-  alignment: number
-  /**
    * Move the cursor back to its previous position when the controller condition is met.
    */
   peek: boolean
@@ -88,7 +84,6 @@ export interface ControllerOptions {
  */
 export const ControllerOptionsDefault = {
   primitiveCheck: true,
-  alignment: 0,
   peek: false,
 }
 
@@ -219,10 +214,6 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
         break
       }
     }
-    const endOffset = cursor.offset()
-    if (opt.alignment > 0) {
-      cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
-    }
     return result
   }
 }
@@ -245,12 +236,6 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
     const startOffset = cursor.offset()
 
     const result = array.map(read)
-
-    const endOffset = cursor.offset()
-
-    if (opt.alignment > 0) {
-      cursor.forward((opt.alignment - ((endOffset - startOffset) % opt.alignment)) % opt.alignment)
-    }
 
     if (opt.peek) {
       cursor.move(startOffset)
