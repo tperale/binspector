@@ -129,7 +129,7 @@ import { binread, BinaryReader } from 'binspector'
 
 const buf = new Uint8Array([0x02, 0x01, 0x02, 0x03, 0x04]).buffer
 
-binread(new BinaryHeader(buf), Protocol) // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
+binread(new BinaryReader(buf), Protocol) // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 ```
 
 ### Writing objects to bytes buffer
