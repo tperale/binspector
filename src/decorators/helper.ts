@@ -71,6 +71,41 @@ export function Ascii<This extends object, Value> (_: undefined, context: Contex
 }
 
 /**
+ * `@NullTerminated` decorator is made to be used with the `@Utf{8,16,32}`
+ * decorators to read the string until a `0` is encountered.
+ * Because decoding an array of utf{8,16,32} character will drop this `0`
+ * this decorator make sure to add it again to the array when writing an utf
+ * encoded string.
+ *
+ * @example
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Utf8
+ *   @NullTerminated // Should be closer to the property than `Utf8`
+ *   name: string
+ *
+ *   @Until(EOF)
+ *   @Utf16
+ *   @NullTerminated
+ *   name: string[] // Create an array of null terminated utf16 strings
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * You can't use this decorator with `@Ascii` decorator. Use
+ * `@NullTerminatedString` instead.
+ *
+ * @category Decorators
+ */
+export function NullTerminated<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Until(0, { primitiveCheck: false })(_, context)
+  transformerDecoratorFactory('transform-null-termination-read', x => x.slice(0, -1), { deepTransform: true, primitiveCheck: false })(_, context)
+  transformerDecoratorFactory('transform-null-termination-write', x => [...x, 0], { deepTransform: true, scope: ExecutionScope.OnWrite, primitiveCheck: false })(_, context)
+}
+
+/**
  * `@NullTerminatedString` decorator reads a string from a binary stream until
  * the null-terminator (`\0`) character is encountered and exclude that
  * character from the final value.
