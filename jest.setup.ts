@@ -11,15 +11,15 @@ declare global {
 }
 
 function equalArrayBuffer (buf1: ArrayBuffer, buf2: ArrayBuffer) {
-  if (buf1.byteLength !== buf2.byteLength) {
+  const arr1 = new Uint8Array(buf1)
+  const arr2 = new Uint8Array(buf2)
+
+  if (arr1.byteLength !== arr2.byteLength) {
     return {
-      message: () => `Buffer length not matching ${buf1.byteLength} !== ${buf2.byteLength}`,
+      message: () => `Buffer length not matching ${arr1.byteLength} !== ${arr2.byteLength} | ${arr1} !== ${arr2}`,
       pass: false
     }
   }
-
-  const arr1 = new Uint8Array(buf1)
-  const arr2 = new Uint8Array(buf2)
 
   for (let i = 0; i != buf1.byteLength; i++) {
     if (arr1[i] !== arr2[i]) return {
