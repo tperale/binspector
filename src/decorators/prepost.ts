@@ -50,7 +50,7 @@
 import { ClassMetaDescriptor, type PropertyMetaDescriptor, StringFormattedRecursiveKeyOf, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistsOrThrow } from '../error'
 import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
-import { type Cursor, type BinaryCursorEndianness, BinaryCursor } from '../cursor'
+import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor'
 import Meta from '../metadatas'
 import { isRelation, Relation } from './primitive'
 
@@ -290,7 +290,7 @@ export function postFunctionDecoratorFactory<This> (name: string, func: PrePostF
  * @Pre((_, cursor) => { console.log(`${_.constructor.name} : ${cursor.offset()}`) })
  * class Protocol {
  *   @Pre((_, cursor) => { console.log(`${_.constructor.name} : ${cursor.offset()}`) })
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   foo: number
  * }
  * ```
@@ -388,7 +388,7 @@ export function Post<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOp
  *
  * ```typescript
  * class ProtocolHeader {
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   address: number
  * }
  *
@@ -453,7 +453,7 @@ export function Offset<This extends object, Args extends string> (offset: number
  *   // Use `@Peek` to check the MSB but restore the cursor position
  *   @Peek()
  *   @Transform(x => x & 0x80)
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   peeked: number
  *
  *   @IfThen(_ => _.peeked > 0, BitfieldA)
@@ -467,11 +467,11 @@ export function Offset<This extends object, Args extends string> (offset: number
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   offset: number
  *
  *   @Peek((instance, cursor) => cursor.offset() + instance.offset)
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   peeked: number
  * }
  * ```
@@ -533,10 +533,10 @@ export function Peek<This extends object, Args extends string> (offset?: number 
  * }
  *
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u16)
+ *   @Uint16
  *   block_size: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   block_count: number
  *
  *   @Count('block_count')
@@ -578,9 +578,9 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
 }
 
 /**
- * `@Endian` decorator change the endianness of the decorated property or class.
- * It allows you to control how binary data is serialized or deserialized, based
- * endianness that define the byte order of 16 and 32 bits integers.
+ * `@Endian` decorator change the endianness dynamically of the decorated
+ * property or class and then set it back to the previous endianness once
+ * the decorated property/class has been fully processed.
  *
  * @example
  *
@@ -591,10 +591,10 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
  * ```typescript
  * class Protocol {
  *   @Endian(BinaryCursorEndianness.LittleEndian)
- *   @Relation(PrimitiveSymbol.u16)
+ *   @Uint16
  *   little_endian: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   big_endian: number
  * }
  * ```
@@ -606,10 +606,10 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
  *
  * ```typescript
  * class SubProtocol {
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   foo: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   bar: number
  * }
  *
@@ -617,26 +617,9 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
  *   @Endian(BinaryCursorEndianness.LittleEndian)
  *   @Relation(SubProtocol)
  *   sub_type: SubProtocol
- * }
- * ```
  *
- * **Set the endianness of an entire type definition**
- *
- * It's also possible to apply `@Endian` decorator on top of a class
- * declaration to change the endianness of all its properties.
- *
- * In the following example, the `Protocol` type definition that
- * include two unsigned 32bits integer: `foo` and `bar`, will use big-endian
- * byte order.
- *
- * ```typescript
- * @Endian(BinaryCursorEndianness.BigEndian)
- * class Protocol {
- *   @Relation(PrimitiveSymbol.u32)
- *   foo: number
- *
- *   @Relation(PrimitiveSymbol.u32)
- *   bar: number
+ *   @Uint32
+ *   big_endian: number // Because the default endianness is big endian this value will be read as a big endian number
  * }
  * ```
  *
@@ -654,10 +637,10 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
  * class Protocol {
  *   _value: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   foo: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   bar: number
  *
  *   constructor(value: number) {
@@ -668,16 +651,23 @@ export function EnsureSize<This extends object, Args extends string> (size: numb
  *
  * @remarks
  *
- * Because of the current architecture of the library, if multiple `@Endian`
- * that are based on values known at runtime are run in parallel it could
- * potentially mess up the result because they will all populate the 'post'
- * property metadata.
+ * - The `@Endian` decorator is used to change endianness dynamically or based
+ *   on values known at runtime. If you want to describe the endianness of a
+ *   protocol that won't change use {@link LittleEndian} and {@link BigEndian}.
+ *
+ * - Because of the current architecture of the library, if multiple `@Endian`
+ *   that are based on values known at runtime are run in parallel it could
+ *   potentially mess up the result because they will all populate the 'post'
+ *   property metadata.
  *
  * @typeParam This The type of the class the decorator is applied to.
  *
  * @param {BinaryCursorEndianness | ((instance: This) => BinaryCursorEndianness)} endianness The endianness to apply, or a function that return the endianness based on the instance value.
  * @param {Partial<PrePostOptions>} [opt] Optional configution.
  * @returns {DecoratorType} The class or property decorator function.
+ *
+ * @see {@link LittleEndian}
+ * @see {@link BigEndian}
  *
  * @category Decorators
  */
@@ -703,6 +693,102 @@ export function Endian<This> (endianness: BinaryCursorEndianness | ((instance: T
   }
 }
 
+/**
+ * `@LittleEndian` decorator set the endianness of a decorated class or
+ * property to little endian.
+ *
+ * @example
+ *
+ * **Set the endianness of an entire type definition**
+ *
+ * Use the `@LittleEndian` decorator on top of a class
+ * declaration to change the endianness of all its properties.
+ *
+ * In the following example, the `Protocol` type definition that
+ * include two unsigned 32bits integer: `foo` and `bar`, will use little-endian
+ * byte order.
+ *
+ * ```typescript
+ * @LittleEndian
+ * class Protocol {
+ *   @Uint32
+ *   foo: number
+ *
+ *   @Uint32
+ *   bar: number
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * - The difference with {@link Endian} is that this decorator is not dynamic.
+ *   The endianness won't be set back to it's previous value after the
+ *   decorated class/property is read.
+ *
+ * - When working with recursive binary definition be sure to use this decorator
+ *   instead of {@link Endian}.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @see {@link BigEndian}
+ * @see {@link Endian}
+ *
+ * @category Decorators
+ */
+export function LittleEndian<This> (_: any, context: ClassAndPropertyDecoratorContext<This>): void {
+  prePostClassAndPropertyFunctionDecoratorFactory<This> ('LittleEndian', PreFunctionSymbol, (_, cursor: BinaryCursor) => {
+    cursor.setEndian(BinaryCursorEndianness.LittleEndian)
+  })(_, context)
+}
+
+/**
+ * `@BigEndian` decorator set the endianness of a decorated class or
+ * property to big endian.
+ *
+ * @example
+ *
+ * **Set the endianness of an entire type definition**
+ *
+ * Use the `@BigEndian` decorator on top of a class
+ * declaration to change the endianness of all its properties.
+ *
+ * In the following example, the `Protocol` type definition that
+ * include two unsigned 32bits integer: `foo` and `bar`, will use big-endian
+ * byte order.
+ *
+ * ```typescript
+ * @BigEndian
+ * class Protocol {
+ *   @Uint32
+ *   foo: number
+ *
+ *   @Uint32
+ *   bar: number
+ * }
+ * ```
+ *
+ * @remarks
+ *
+ * - The difference with {@link Endian} is that this decorator is not dynamic.
+ *   The endianness won't be set back to it's previous value after the
+ *   decorated class/property is read.
+ *
+ * - When working with recursive binary definition be sure to use this decorator
+ *   instead of {@link Endian}.
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ *
+ * @see {@link BigEndian}
+ * @see {@link Endian}
+ *
+ * @category Decorators
+ */
+export function BigEndian<This> (_: any, context: ClassAndPropertyDecoratorContext<This>): void {
+  prePostClassAndPropertyFunctionDecoratorFactory<This> ('BigEndian', PreFunctionSymbol, (_, cursor: BinaryCursor) => {
+    cursor.setEndian(BinaryCursorEndianness.BigEndian)
+  })(_, context)
+}
+
 type ValueSetFunction<This, Value> = (instance: This) => Value
 
 /**
@@ -725,7 +811,7 @@ type ValueSetFunction<This, Value> = (instance: This) => Value
  * }
  *
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   protocol_id: number
  *
  *   @ValueSet(_ => ID_TO_NAME[_.protocol_id] || 'UNKNOWN')
