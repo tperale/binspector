@@ -54,8 +54,8 @@ export const DynamicConditionSymbol = Symbol('dynamic-condition-symbol')
  * It receive the instance of the non finalized object in its current state and return a boolean.
  */
 export type ConditionFunction<This> = (targetInstance: This) => boolean
-export type DynamicGetterFunction<This, Value> = (targetInstance: This) => Primitive<Value>
-export type DynamicConditionFunction<This, Value> = (targetInstance: This) => PrimitiveTypeProperty<This> | RelationTypeProperty<This, Value>
+export type DynamicGetterFunction<This, Value> = (targetInstance: This) => Primitive<Value> | undefined
+export type DynamicConditionFunction<This, Value> = (targetInstance: This) => PrimitiveTypeProperty<This> | RelationTypeProperty<This, Value> | undefined
 
 /**
  * `Condition`
@@ -120,7 +120,8 @@ export function conditionDecoratorFactory<This extends object, Target, Value, Ar
  * @typeParam Value The type of the decorated property.
  *
  * @param {string} name Name of the controller decorator.
- * @param {ConditionFunction} func Condition to control the relation to read.
+ * @param {DynamicGetterFunction} func Condition to control the relation to read.
+ * @param {RelationParameters<This>} [args]
  * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Advanced Use
@@ -128,8 +129,10 @@ export function conditionDecoratorFactory<This extends object, Target, Value, Ar
 export function dynamicConditionDecoratorFactory<This extends object, Target, Value, Args extends string> (name: string, func: DynamicGetterFunction<This, Target>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
   return function (_: undefined, context: Context<This, Value>) {
     const propertyName = context.name as keyof This
-    function createRelation (relationOrPrimitive: Primitive<Target>): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> {
-      if (isPrimitiveSymbol(relationOrPrimitive)) {
+    function createRelation (relationOrPrimitive: Primitive<Target> | undefined): PrimitiveTypeProperty<This> | RelationTypeProperty<This, Target> | undefined {
+      if (relationOrPrimitive === undefined) {
+        return undefined
+      } else if (isPrimitiveSymbol(relationOrPrimitive)) {
         return createPrimitiveTypeProperty(context.metadata, propertyName, relationOrPrimitive)
       } else { // Check has constructor
         return createRelationTypeProperty(context.metadata, propertyName, relationOrPrimitive, args)
@@ -398,8 +401,8 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * @remarks
  *
- * Use `@Choice` with the `@Else` decorator  to pass a {@link Primitive} by
- * default (see {@link Else})
+ * - Use `@Choice` with the `@Else` decorator to pass a {@link Primitive} by
+ *   default (see {@link Else})
  *
  * ```typescript
  * class Protocol {
@@ -414,6 +417,9 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  * }
  * ```
  *
+ * - If you are working with recursive types definition you should use the
+ *   `@Select` decorator instead (for more informations see {@link Select}).
+ *
  * @typeParam This The type of the class the decorator is applied to.
  * @typeParam Value The type of the decorated property.
  *
@@ -424,8 +430,8 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  * @param {Record<any, Primitive<any> | [Primitive<any>, RelationParameters<This>] | undefined>} match
  * A record where keys are compared against the evaluated `cmp` value, and
  * values define the corresponding relations.
- * @param {RelationParameters<This>} args The arguments to pass to the matching
-* relation definition (see {@link Primitive.RelationParameters})
+ * @param {RelationParameters<This>} [args] The arguments to pass to the matching
+ * relation definition (see {@link Primitive.RelationParameters})
  * @returns {DecoratorType<This, Value>} The property decorator function.
  *
  * @category Decorators
@@ -469,15 +475,17 @@ export function Choice<This extends object, Value, Args extends string> (cmp: St
  * `Protocol` instance.
  *
  * ```typescript
+ * class SubProtocol {
+ *   ...
+ * }
+ *
  * const DEFINITION = {
  *    0: {
  *      1: SubProtocol,
  *      ...
+ *      0xFF: undefined // Return undefined if shouldn't read anything
  *    },
  *    ...
- * }
- *
- * class SubProtocol {
  * }
  *
  * class Protocol {
@@ -488,20 +496,52 @@ export function Choice<This extends object, Value, Args extends string> (cmp: St
  *   bar: number
  *
  *   @Select(_ => DEFINITION[_.foo][_.bar])
- *   sub_protocol
+ *   sub_protocol: any
+ * }
+ * ```
+ *
+ * A use case where the `@Select` decorator is mandatory is when working with
+ * recursive type definition. Because of the way circular dependencies works in
+ * TS you can't reference statically a class that has not already been defined.
+ * A workaround to this is to use lazy getter with the `@Select` decorator.
+ *
+ * ```typescript
+ * class Element {
+ *   @Uint8
+ *   type: number
+ *
+ *   @Select(_ => ({
+ *     0x00: () => undefined,
+ *     0x01: () => Protocol,
+ *     0x02: () => PrimitiveSymbol.u8,
+ *     0x03: () => PrimitiveSymbol.u16,
+ *     0x04: () => PrimitiveSymbol.u32,
+ *   }[_.type]()))
+ *   data: any
+ * }
+ * class Protocol {
+ *   @Uint32
+ *   length: number
+ *
+ *   @Size('length')
+ *   @Relation(Element)
+ *   elements: Element[]
  * }
  * ```
  *
  * @typeParam This The type of the class the decorator is applied to.
  * @typeParam Value The type of the decorated property.
  *
- * @param {((targetInstance: This) => Primitive<any>)} getter
- * @param {RelationParameters<This>} args
+ * @param {DynamicGetterFunction<This, any>} getter A function that receive the
+ * current object instance as parameter and returns a Primitive.
+ * @param {RelationParameters<This>} [args] The arguments to pass to the matching
+ * relation definition (see {@link Primitive.RelationParameters})
  * @returns {DecoratorType<This, Value>} The property decorator function.
+ *
  * @category Decorators
  */
-export function Select<This extends object, Value, Args extends string> (getter: ((targetInstance: This) => Primitive<any>), args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
-  return dynamicConditionDecoratorFactory('select', getter, args)
+export function Select<This extends object, Value, Args extends string> (getter: DynamicGetterFunction<This, any>, args?: RelationParameters<This, Args>): DecoratorType<This, Value> {
+  return dynamicConditionDecoratorFactory<This, Value, Value, Args>('select', getter, args)
 }
 
 /**
