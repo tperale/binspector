@@ -11,10 +11,10 @@
     "./src/decorators/helper.ts"
   ],
   "highlightLanguages": ["c", "typescript"],
-  "out": "docs",
+  "out": "dist/docs",
   "excludeExternals": true,
   "includeVersion": true,
   "exclude": ["**/__test__/*.test.ts*"],
   "plugin": ["typedoc-plugin-mermaid"],
-  "projectDocuments": ["src/decorators/*.md"]
+  "projectDocuments": ["docs/Getting-Started-With-Binspector.md", "docs/Case-Study-*.md"]
 }
