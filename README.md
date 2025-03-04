@@ -1,17 +1,24 @@
 # 🕵️ binspector, your binary file assistant
 
-A _truly_ declarative library for binary file and protocol definition
-written in typescript. Read & Write binary files based on class
-definition and decorators directly on your webapp.
+A _truly declarative_ TypeScript library to help you create binary file and
+protocol definitions.
+
+- 🚀 __Declarative__ – Define binary structures using __decorators__.
+- 🔄 __Read & Write Support__ – Seamlessly __parse & serialize__ binary data.
+- ⬆️  __Extensible__ - Write __custom__ decorators.
+- 🧩 __Typed__ – Leverage TypeScript’s type system for validation.
+- 🌍 __Works in the Browser__ – Use Binspector for frontend or backend binary processing.
+- 📦 __Zero Dependencies__ – No external dependencies.
+
+## 📌 What does it looks like ?
+
+See [examples](https://github.com/tperale/binspector/tree/main/example) for
+real files formats.
 
 ```typescript
 class ProtocolHeader {
-  // Validate magic number
-  @Match(0x0E)
-  @Uint8
-  magic: number
-
-  // Read the subtype relation multiple time
+  // Ensure the header starts with specific magic number
+  @Match(".bin")
   @Count(4)
   @Ascii
   extension: string
@@ -24,9 +31,6 @@ class ProtocolHeader {
 
   @Uint32
   string_map_size: number
-
-  @Uint32
-  crc: number
 }
 
 enum RecordTypes {
@@ -36,8 +40,11 @@ enum RecordTypes {
 }
 
 class RecordMessage {
-  @Until('\0')
-  @Ascii
+  @Uint32
+  size: number
+
+  @Size('size')
+  @Utf8
   message: string
 }
 
@@ -45,13 +52,12 @@ class Record {
   @Uint32
   id: number
 
-  // Typescript enums are supported.
+  // Supports TypesSript enums
   @Enum(RecordTypes)
   @Uint8
   type: RecordTypes
 
-  // You can select the subtype that's gonna be {read,written} based on a
-  // condition
+  // Dynamically select a subtype based on `type`
   @Choice('type', {
     [RecordTypes.RecordMsg]: RecordMessage,
     [RecordTypes.RecordStart]: undefined,
@@ -61,18 +67,17 @@ class Record {
 }
 
 class Protocol {
-  // Refer to other object as subtype
+  // Nested structure with a reference to another class
   @Relation(ProtocolHeader)
   header: ProtocolHeader
 
-  // Refer to properties directly to use dynamic value 
+  // Use values from previously read properties
   @Count('header.len')
   @Relation(Record)
   records: Record
 
-  // Jump to an arbitrary address to continue reading the file
-  // Here null terminated strings would keep being read until the overall size
-  // is reached
+  // Jump to an arbitrary offset and read data until size is reached
+  // to create an array of strings
   @Offset('header.string_map_offset')  
   @Size('header.string_map_size')  
   @NullTerminatedString()
@@ -80,26 +85,32 @@ class Protocol {
 }
 ```
 
-## Features
+## 🚀 Features
 
-* It's a class ! Write method that will directly handle the binary
-  content from the definition.
-* The binary file definition is re-used for typescript type checking.
-* Extensible. Binary readers based on DSL are hard to extend.
-* Support parsing and serialisation of binary file definition.
-* It works on the browser. You can create binary file decoder and encoder on
-  your webapp frontend without depending on other library on your server.
-* Support the common operation done on binary files.
-  * Endianness
-  * Matching magic numbers
-  * Bit fields and enum
-  * Reference other structure
-  * Conditions
-* No dependencies
+- ✔ Declarative Class-Based Approach – Define binary structures as TypeScript classes.
+- ✔ Leverages TypeScript's Type System – No need to write separate type definitions.
+- ✔ Fully Extensible – Unlike DSL-based libraries, Binspector is easily extensible to create custom decorators.
+- ✔ Supports Complex Binary Operations:
+  - Endianness
+  - Magic numbers and enums validation
+  - Conditional parsing
+  - Bitfields
+  - Nested Structure & recursive references
+  - Dynamic offset, variable length properties
+  - String encodings (UTF-8, UTF-16, UTF-32, ASCII)
+  - Shared context
 
-## Usage
+## 📦 Installation
 
-Imagine the following binary file definition.
+Install __Binspector__ from [npm](https://www.npmjs.com/package/binspector):
+
+```text
+> npm install binspector
+```
+
+## 📁 Usage
+
+Here’s a simple example of reading and writing a binary coordinate system.
 
 ```typescript
 import { Relation, Uint8, Count } from 'binspector'
@@ -122,34 +133,29 @@ class Protocol {
 }
 ```
 
-### Reading bytes buffer into objects
+### 🔍 Reading an ArrayBuffer into Objects
 
 ```typescript
 import { binread, BinaryReader } from 'binspector'
 
 const buf = new Uint8Array([0x02, 0x01, 0x02, 0x03, 0x04]).buffer
 
-binread(new BinaryReader(buf), Protocol) // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
+binread(new BinaryReader(buf), Protocol)
+// => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 ```
 
-### Writing objects to bytes buffer
+### ✍️  Writing Objects to ArrayBuffer
 
 ```typescript
 import { binwrite, BinaryWriter } from 'binspector'
 
 const obj = { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 
-binwrite(new BinaryWriter(), Protocol, obj).buffer() // => [0x02, 0x01, 0x02, 0x03, 0x04]
+binwrite(new BinaryWriter(), Protocol, obj).buffer()
+// => [0x02, 0x01, 0x02, 0x03, 0x04]
 ```
 
-## Installation
+## 📖 Learn more
 
-```text
-> npm install binspector
-```
-
-Generate the documentation with the following command.
-
-```text
-> npx typedoc --options typedoc.json
-```
+- 📚 Documentation: [Getting Started](https://tperale.github.io/binspector/documents/Getting-Started-With-Binspector.html)
+- 📂 Examples: [/example](https://github.com/tperale/binspector/tree/main/example)
