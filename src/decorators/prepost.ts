@@ -47,7 +47,7 @@
  *
  * @module PrePost
  */
-import { ClassMetaDescriptor, type PropertyMetaDescriptor, StringFormattedRecursiveKeyOf, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
+import { ClassMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
 import { relationExistsOrThrow } from '../error'
 import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
 import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor'
@@ -404,13 +404,13 @@ export function Post<This> (func: PrePostFunction<This>, opt?: Partial<PrePostOp
  * ```
  * @typeParam This The type of the class the decorator is applied to.
  *
- * @param {number | string} offset
+ * @param {NumberOrRecursiveKey<This, Args> | (instance: This, cursor: Cursor) => number} offset Arbitrary position in the file to move the cursor
  * @param {Partial<PrePostOptions>} [opt] Optional configution.
  * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
-export function Offset<This extends object, Args extends string> (offset: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function Offset<This extends object, Args extends string> (offset: NumberOrRecursiveKey<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return preFunctionDecoratorFactory('offset', (targetInstance, cursor) => {
     const offCompute = typeof offset === 'string'
       ? recursiveGet(targetInstance, offset) as number
@@ -483,17 +483,18 @@ export function Offset<This extends object, Args extends string> (offset: number
  *
  * @typeParam This The type of the class the decorator is applied to.
  *
- * @param {number | string | ((instance: This, cursor: Cursor) => number)} [offset]
+ * @param {NumberOrRecursiveKey<This, Args> | ((instance: This, cursor: Cursor) => number)} [offset]
  * The offset to move the cursor to before reading or writing the decorated property. It can be:
  *   - A static number, indicating a fixed offset.
  *   - A string that refer to a property of the current instance.
  *   - A function that computes the offset dynamically based on the current instance and cursor.
+ *   - Undefined, the cursor will be set back to its original position after read/write.
  * @param {Partial<PrePostOptions>} [opt] Optional configution.
  * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
-export function Peek<This extends object, Args extends string> (offset?: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function Peek<This extends object, Args extends string> (offset?: NumberOrRecursiveKey<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return function (_: undefined, context: ClassAndPropertyDecoratorContext<This>) {
     preFunctionDecoratorFactory<This>('pre-peek', (targetInstance, cursor) => {
       const preOff = cursor.offset()
@@ -519,9 +520,10 @@ export function Peek<This extends object, Args extends string> (offset?: number 
  *
  * @example
  *
- * In the following example the structure of the bitfield is only known based
- * on the value of the most significant bit. For this I use `@Peek` to check the
- * content of the next value and then I properly read it in the correct form.
+ * In the following example the structure of the `Block` is fixed based on
+ * a property known at runtime.
+ * The `@EnsureSize` decorator move the cursor to always move the cursor
+ * to the correct position after read or write.
  *
  * ```typescript
  * @EnsureSize('_size')
@@ -547,17 +549,17 @@ export function Peek<This extends object, Args extends string> (offset?: number 
  *
  * @typeParam This The type of the class the decorator is applied to.
  *
- * @param {number | string | ((instance: This, cursor: Cursor) => number)} [size]
- * The size to move the cursor to before reading or writing the decorated property. It can be:
- *   - A static number, indicating a fixed offset.
- *   - A string that refer to a property of the current instance.
+ * @param {NumberOrRecursiveKey<This, Args> | ((instance: This, cursor: Cursor) => number)} size
+ * The size of the decorated property or class.
+ *   - A static number, indicating a fixed size.
+ *   - A string that refer to a property of type number.
  *   - A function that computes the offset dynamically based on the current instance and cursor.
  * @param {Partial<PrePostOptions>} [opt] Optional configution.
  * @returns {DecoratorType} The class or property decorator function.
  *
  * @category Decorators
  */
-export function EnsureSize<This extends object, Args extends string> (size: number | StringFormattedRecursiveKeyOf<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
+export function EnsureSize<This extends object, Args extends string> (size: NumberOrRecursiveKey<This, Args> | ((instance: This, cursor: Cursor) => number), opt?: Partial<PrePostOptions>): ClassAndPropertyDecoratorType<This> {
   return function (_: undefined, context: ClassAndPropertyDecoratorContext<This>) {
     preFunctionDecoratorFactory<This>('pre-ensure', (targetInstance, cursor) => {
       const preRead = cursor.offset()
