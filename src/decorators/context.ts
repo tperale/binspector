@@ -7,7 +7,7 @@
  * @module Context
  */
 import { Context, DecoratorType } from '../types'
-import { createPropertyMetaDescriptor, PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common'
+import { createPropertyMetaDescriptor, PropertyMetaDescriptor } from './common'
 import { Relation } from './primitive'
 import Meta from '../metadatas'
 
