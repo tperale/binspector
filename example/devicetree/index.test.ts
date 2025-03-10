@@ -1,6 +1,6 @@
 import { test } from '@jest/globals'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
 import { DTB } from './devicetree'
 
 test('Testing DTB "am335x-bone.dtb" read/write equality', async () => {
