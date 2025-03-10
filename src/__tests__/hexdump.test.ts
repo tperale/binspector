@@ -1,8 +1,8 @@
+import { promises as fs } from 'node:fs'
+import path from 'node:path'
+
 import { BinDump } from '../hexdump'
 import { BinaryReader } from '../cursor'
-
-import { promises as fs } from 'fs'
-import path from 'path'
 
 describe('Using the hexdump', () => {
   it('should display the binary', () => {
