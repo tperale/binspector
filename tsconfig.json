@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "./dist/lib/",
     "sourceMap": true,
     "noImplicitAny": true,
-    "module": "commonjs",
     "declaration": true,
+    "module": "commonJS",
     "target": "es2022",
     "allowJs": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "strictNullChecks": true,
     "downlevelIteration": true,
