@@ -111,9 +111,11 @@ export class BinaryReader extends BinaryCursor {
     }
   }
 
-  constructor (array: ArrayBuffer, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+  constructor (array: Uint8Array | ArrayBufferLike, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
     super()
-    this.data = new DataView(array)
+    this.data = ArrayBuffer.isView(array)
+      ? new DataView(array.buffer, array.byteOffset, array.byteLength)
+      : new DataView(array)
     this.endianness = endian
     this.length = this.data.byteLength
   }
@@ -136,7 +138,7 @@ export class BinaryWriter extends BinaryCursor {
     throw new Error('Shouldn\'t call "read" method on a BinaryWriter object')
   }
 
-  buffer (): ArrayBuffer {
+  buffer (): ArrayBufferLike {
     const buf = new DataView(new ArrayBuffer(this.length))
 
     this.data.forEach(([value, primitive, index, _endian]) => {
