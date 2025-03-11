@@ -1,7 +1,7 @@
-import { Relation } from '../primitive'
-import { RelationAlreadyDefinedError } from '../../error'
-import { PrimitiveSymbol, type DecoratorMetadataObject } from '../../types'
-import Meta from '../../metadatas'
+import { Relation } from '../primitive.ts'
+import { RelationAlreadyDefinedError } from '../../error.ts'
+import { PrimitiveSymbol, type DecoratorMetadataObject } from '../../types.ts'
+import Meta from '../../metadatas.ts'
 
 describe('Testing the usage of decorator to create metadata about property', () => {
   it('should retrieve the member of the instance in the same order of definition', () => {

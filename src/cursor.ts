@@ -1,4 +1,4 @@
-import { EOF, PrimitiveSymbol } from './types'
+import { EOF, PrimitiveSymbol } from './types.ts'
 
 /**
  * Cursor

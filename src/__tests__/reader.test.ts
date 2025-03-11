@@ -1,8 +1,8 @@
-import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten, Matrix } from '../decorators'
-import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types'
-import { binread } from '../reader'
-import { BinaryReader, BinaryCursorEndianness } from '../cursor'
-import { CtxGet, CtxSet } from '../decorators/context'
+import { Relation, While, Count, Until, MapTo, Match, Enum, IfThen, Else, Choice, Bitfield, Offset, Endian, Peek, ValueSet, EnsureSize, Uint8, Uint16, Ascii, NullTerminatedString, Char, Utf8, Utf16, Utf32, Padding, Flatten, Matrix } from '../decorators/index.ts'
+import { EOF, PrimitiveSymbol, type InstantiableObject } from '../types.ts'
+import { binread } from '../reader.ts'
+import { BinaryReader, BinaryCursorEndianness } from '../cursor.ts'
+import { CtxGet, CtxSet } from '../decorators/context.ts'
 
 function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ctx = {}, ...args: any[]) {
   return expect(binread(new BinaryReader(new Uint8Array(buffer).buffer, endian), ObjectDefinition, ctx, ...args))

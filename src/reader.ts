@@ -5,23 +5,23 @@
  *
  * @module reader
  */
-import { type Cursor } from './cursor'
-import { EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error'
-import Meta from './metadatas'
+import { type Cursor } from './cursor.ts'
+import { EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error.ts'
+import Meta from './metadatas.ts'
 import {
   isRelation,
   isPrimitiveRelation,
   isUnknownProperty,
   type PropertyType,
-} from './decorators/primitive'
-import { EOF, ExecutionScope, type InstantiableObject } from './types'
-import { useController, type ControllerReader } from './decorators/controller'
-import { TransformerExecLevel, useTransformer } from './decorators/transformer'
-import { useValidators } from './decorators/validator'
-import { useConditions } from './decorators/condition'
-import { usePrePost } from './decorators/prepost'
-import { useBitField } from './decorators/bitfield'
-import { useContextGet, useContextSet, CtxType } from './decorators/context'
+} from './decorators/primitive.ts'
+import { EOF, ExecutionScope, type InstantiableObject } from './types.ts'
+import { useController, type ControllerReader } from './decorators/controller.ts'
+import { TransformerExecLevel, useTransformer } from './decorators/transformer.ts'
+import { useValidators } from './decorators/validator.ts'
+import { useConditions } from './decorators/condition.ts'
+import { usePrePost } from './decorators/prepost.ts'
+import { useBitField } from './decorators/bitfield.ts'
+import { useContextGet, useContextSet, CtxType } from './decorators/context.ts'
 
 /**
  * binread.

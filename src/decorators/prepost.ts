@@ -47,12 +47,12 @@
  *
  * @module PrePost
  */
-import { ClassMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common'
-import { relationExistsOrThrow } from '../error'
-import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types'
-import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor'
-import Meta from '../metadatas'
-import { isRelation, Relation } from './primitive'
+import { ClassMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, createClassMetaDescriptor, createPropertyMetaDescriptor, recursiveGet } from './common.ts'
+import { relationExistsOrThrow } from '../error.ts'
+import { ExecutionScope, type ClassAndPropertyDecoratorType, type ClassAndPropertyDecoratorContext, type DecoratorType, type Context } from '../types.ts'
+import { type Cursor, BinaryCursor, BinaryCursorEndianness } from '../cursor.ts'
+import Meta from '../metadatas.ts'
+import { isRelation, Relation } from './primitive.ts'
 
 export const PreFunctionSymbol = Symbol('pre-function')
 export const PostFunctionSymbol = Symbol('post-function')

@@ -1,4 +1,4 @@
-import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, BinaryWriter } from '../../src'
+import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, BinaryWriter } from '../../src/index.ts'
 
 // When calling JSON.stringify on a BigInt an error will be raised by default
 // We need to define the serializer for this type.
@@ -218,7 +218,7 @@ export class Bson {
     return binwrite(new BinaryWriter(), Bson, this).buffer()
   }
 
-  static from (buf: ArrayBuffer) {
+  static from (buf: ArrayBufferLike) {
     return binread(new BinaryReader(buf), Bson)
   }
 }

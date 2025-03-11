@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64, Padding, Endian, BinaryCursorEndianness } from '../../src'
+import { NullTerminatedString, Choice, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64, Padding, Endian, BinaryCursorEndianness } from '../../src/index.ts'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,

@@ -50,11 +50,11 @@
  *
  * @module Controller
  */
-import { createPropertyMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common'
-import { type Cursor } from '../cursor'
-import { EOF, type DecoratorType, type Context } from '../types'
-import { relationExistsOrThrow, EOFError } from '../error'
-import Meta from '../metadatas'
+import { createPropertyMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common.ts'
+import { type Cursor } from '../cursor.ts'
+import { EOF, type DecoratorType, type Context } from '../types.ts'
+import { relationExistsOrThrow, EOFError } from '../error.ts'
+import Meta from '../metadatas.ts'
 
 export const ControllerSymbol = Symbol('controller')
 

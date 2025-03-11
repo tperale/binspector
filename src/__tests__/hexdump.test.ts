@@ -1,8 +1,9 @@
-import { promises as fs } from 'node:fs'
+import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
-import { BinDump } from '../hexdump'
-import { BinaryReader } from '../cursor'
+import { BinDump } from '../hexdump.ts'
+import { BinaryReader } from '../cursor.ts'
 
 describe('Using the hexdump', () => {
   it('should display the binary', () => {
@@ -17,9 +18,12 @@ describe('Using the hexdump', () => {
     console.log(new BinDump(curr).show())
     expect(true).toBe(true)
   })
-  it('should display the binary', async () => {
-    const data = await fs.readFile(path.join(__dirname, '../../example/devicetree/am335x-bone.dtb'))
-    const curr = new BinaryReader(data.buffer)
+  it('should display the binary', () => {
+    const filename = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../example/devicetree/am335x-bone.dtb')
+    const data = fs.readFileSync(filename)
+    const arr = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+
+    const curr = new BinaryReader(arr)
     const bd = new BinDump(curr)
     console.log(bd.at(0x154A))
     console.log(bd.at(0x10450))

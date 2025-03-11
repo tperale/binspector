@@ -1,7 +1,7 @@
-import { Relation, Bitfield, Uint8 } from '../decorators'
-import { binread } from '../reader'
-import { BinaryReader } from '../cursor'
-import { jsonify } from '../utils'
+import { Relation, Bitfield, Uint8 } from '../decorators/index.ts'
+import { binread } from '../reader.ts'
+import { BinaryReader } from '../cursor.ts'
+import { jsonify } from '../utils.ts'
 
 describe('Reading binary content into js object', () => {
   it('should create a new nested js object', () => {

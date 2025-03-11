@@ -52,11 +52,11 @@
  *
  * @module Validator
  */
-import { type Cursor } from '../cursor'
-import { type DecoratorType, type Context } from '../types'
-import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
-import { relationExistsOrThrow, ValidationTestFailed } from '../error'
-import Meta from '../metadatas'
+import { type Cursor } from '../cursor.ts'
+import { type DecoratorType, type Context } from '../types.ts'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common.ts'
+import { relationExistsOrThrow, ValidationTestFailed } from '../error.ts'
+import Meta from '../metadatas.ts'
 
 export const ValidatorSymbol = Symbol('validator')
 

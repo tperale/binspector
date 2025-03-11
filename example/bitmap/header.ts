@@ -1,5 +1,5 @@
-import { Count, Enum, Match, Uint8, Uint16, Uint32 } from '../../src'
-import { BitmapCompression } from './compression'
+import { Count, Enum, Match, Uint8, Uint16, Uint32 } from '../../src/index.ts'
+import { BitmapCompression } from './compression.ts'
 
 export class OS21XBITMAPHEADER {
   @Uint16

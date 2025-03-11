@@ -40,11 +40,11 @@
  *
  * @module Condition
  */
-import { recursiveGet, type PropertyMetaDescriptor, createPropertyMetaDescriptor, StringFormattedRecursiveKeyOf } from './common'
-import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive'
-import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types'
-import { NoConditionMatched } from '../error'
-import Meta from '../metadatas'
+import { recursiveGet, type PropertyMetaDescriptor, createPropertyMetaDescriptor, StringFormattedRecursiveKeyOf } from './common.ts'
+import { type PrimitiveTypeProperty, type RelationTypeProperty, type RelationParameters, Relation, createPrimitiveTypeProperty, createRelationTypeProperty } from './primitive.ts'
+import { isPrimitiveSymbol, type DecoratorType, type Primitive, type Context } from '../types.ts'
+import { NoConditionMatched } from '../error.ts'
+import Meta from '../metadatas.ts'
 
 export const ConditionSymbol = Symbol('condition-symbol')
 export const DynamicConditionSymbol = Symbol('dynamic-condition-symbol')

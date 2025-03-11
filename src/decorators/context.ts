@@ -6,10 +6,10 @@
  *
  * @module Context
  */
-import { Context, DecoratorType } from '../types'
-import { createPropertyMetaDescriptor, PropertyMetaDescriptor } from './common'
-import { Relation } from './primitive'
-import Meta from '../metadatas'
+import { Context, DecoratorType } from '../types.ts'
+import { createPropertyMetaDescriptor, PropertyMetaDescriptor } from './common.ts'
+import { Relation } from './primitive.ts'
+import Meta from '../metadatas.ts'
 
 export const CtxSymbol = Symbol('context')
 

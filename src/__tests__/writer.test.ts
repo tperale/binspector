@@ -1,8 +1,8 @@
-import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators'
-import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types'
-import { binwrite } from '../writer'
-import { binread } from '../reader'
-import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor'
+import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTerminatedString, TransformScale, TransformOffset, Transform, Until, EnsureSize, Uint8, Uint16, Ascii, Char, Utf8, Utf16, Utf32, Padding, Flatten } from '../decorators/index.ts'
+import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types.ts'
+import { binwrite } from '../writer.ts'
+import { binread } from '../reader.ts'
+import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor.ts'
 
 function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
   const writtenBuf = new BinaryWriter(endian)

@@ -1,5 +1,5 @@
-import { BinaryCursorEndianness, BinaryReader, BinaryWriter } from '../cursor'
-import { EOF, PrimitiveSymbol } from '../types'
+import { BinaryCursorEndianness, BinaryReader, BinaryWriter } from '../cursor.ts'
+import { EOF, PrimitiveSymbol } from '../types.ts'
 
 function testBinaryReader<T extends readonly [] | readonly PrimitiveSymbol[]> (arr: number[], sequence: T, result: { [K in keyof T]: number | bigint }, endian = BinaryCursorEndianness.BigEndian): BinaryReader {
   const buf = Uint8Array.from(arr).buffer

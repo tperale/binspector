@@ -1,8 +1,8 @@
-import { Count, While, Until, MapTo, useController, ControllerReader, Size } from '../controller'
-import { Cursor, BinaryReader } from '../../cursor'
-import { PrimitiveSymbol, EOF } from '../../types'
-import { EOFError, RelationNotDefinedError } from '../../error'
-import Meta from '../../metadatas'
+import { Count, While, Until, MapTo, useController, ControllerReader, Size } from '../controller.ts'
+import { Cursor, BinaryReader } from '../../cursor.ts'
+import { PrimitiveSymbol, EOF } from '../../types.ts'
+import { EOFError, RelationNotDefinedError } from '../../error.ts'
+import Meta from '../../metadatas.ts'
 
 class TestCursor extends Cursor {
   offset (): number {

@@ -47,10 +47,10 @@
  *
  * @module Transformer
  */
-import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common'
-import { relationExistsOrThrow } from '../error'
-import { ExecutionScope, type DecoratorType, type Context } from '../types'
-import Meta from '../metadatas'
+import { createPropertyMetaDescriptor, type PropertyMetaDescriptor } from './common.ts'
+import { relationExistsOrThrow } from '../error.ts'
+import { ExecutionScope, type DecoratorType, type Context } from '../types.ts'
+import Meta from '../metadatas.ts'
 
 export const TransformerSymbol = Symbol('transformer')
 

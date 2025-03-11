@@ -1,7 +1,7 @@
-import { Match, Count, Relation } from '../decorators'
-import { ValidatorSymbol } from '../decorators/validator'
-import { PrimitiveSymbol } from '../types'
-import Meta from '../metadatas'
+import { Match, Count, Relation } from '../decorators/index.ts'
+import { ValidatorSymbol } from '../decorators/validator.ts'
+import { PrimitiveSymbol } from '../types.ts'
+import Meta from '../metadatas.ts'
 
 describe('Testing the usage of decorator to create metadata about property', () => {
   class TestMatch {

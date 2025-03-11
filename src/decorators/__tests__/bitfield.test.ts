@@ -1,8 +1,8 @@
-import { useBitField, Bitfield } from '../bitfield'
-import { BinaryReader } from '../../cursor'
-import { WrongBitfieldClassImplementation } from '../../error'
-import Meta from '../../metadatas'
-import { Relation } from '../primitive'
+import { useBitField, Bitfield } from '../bitfield.ts'
+import { BinaryReader } from '../../cursor.ts'
+import { WrongBitfieldClassImplementation } from '../../error.ts'
+import Meta from '../../metadatas.ts'
+import { Relation } from '../primitive.ts'
 
 function testBitfield (TargetClass: new () => any, content: number[], match: any) {
   const instance = new TargetClass()
