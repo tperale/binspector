@@ -1,13 +1,13 @@
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { Bitmap } from './bmp'
 
 test('Testing Bitmap "sample.bmp" read/write equality', async () => {
-  const data = await fs.readFile(path.join(__dirname, 'sample.bmp'))
-  expect(data.buffer).binReadWriteEquality(Bitmap)
+  const filename = path.join(path.dirname(fileURLToPath(import.meta.url)), 'sample.bmp')
+  expect(filename).fileReadWriteEquality(Bitmap)
 })
 
 test('Testing Bitmap "lena.bmp" read/write equality', async () => {
-  const data = await fs.readFile(path.join(__dirname, 'lena.bmp'))
-  expect(data.buffer).binReadWriteEquality(Bitmap)
+  const filename = path.join(path.dirname(fileURLToPath(import.meta.url)), 'lena.bmp')
+  expect(filename).fileReadWriteEquality(Bitmap)
 })

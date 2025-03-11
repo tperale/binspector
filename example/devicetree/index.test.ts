@@ -1,9 +1,8 @@
-import { test } from '@jest/globals'
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { DTB } from './devicetree'
 
 test('Testing DTB "am335x-bone.dtb" read/write equality', async () => {
-  const data = await fs.readFile(path.join(__dirname, 'am335x-bone.dtb'))
-  expect(data.buffer).binReadWriteEquality(DTB)
+  const filename = path.join(path.dirname(fileURLToPath(import.meta.url)), 'am335x-bone.dtb')
+  expect(filename).fileReadWriteEquality(DTB)
 })

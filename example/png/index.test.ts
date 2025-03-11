@@ -1,9 +1,8 @@
-import { test } from '@jest/globals'
-import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { PNG } from './png'
 
-test('Testing PNG "sample.png" read/write equality', async () => {
-  const data = await fs.readFile(path.join(__dirname, 'sample.png'))
-  expect(data.buffer).binReadWriteEquality(PNG)
+test('Testing PNG "sample.png" read/write equality', () => {
+  const filename = path.join(path.dirname(fileURLToPath(import.meta.url)), 'sample.png')
+  expect(filename).fileReadWriteEquality(PNG)
 })

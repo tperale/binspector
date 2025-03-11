@@ -7,6 +7,7 @@ declare global {
     interface Matchers<R> {
       toBeEqualArrayBuffer (expected: Uint8Array): R
       binReadWriteEquality (ObjectDefinition: any): R
+      fileReadWriteEquality (ObjectDefinition: any): R
     }
   }
 }
