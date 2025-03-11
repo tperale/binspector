@@ -13,8 +13,13 @@ module.exports = {
   ],
   testEnvironment: 'node',
   transform: {
-    "^.+.tsx?$": ["ts-jest", {
-      tsconfig: "tsconfig.test.json"
+    '^.+.tsx?$': ['ts-jest', {
+      tsconfig: "tsconfig.test.json",
+      babelConfig: {
+        plugins: [
+          ["@babel/plugin-proposal-decorators", { version: "2023-11" }],
+        ],
+      },
     }],
   },
   verbose: true,
