@@ -4,13 +4,13 @@
  *
  * @module Helper
  */
-import { PropertyType, Relation, RelationParameters, Uint16, Uint32, Uint8 } from './primitive'
-import { Context, DecoratorType, ExecutionScope } from '../types'
-import { TransformerExecLevel, transformerDecoratorFactory } from './transformer'
-import { ControllerOptions, Count, Until } from './controller'
-import { NumberOrRecursiveKey } from './common'
-import { Padding, Post, Pre, preFunctionDecoratorFactory, PreFunctionSymbol, SharePropertiesWithRelation } from './prepost'
-import Meta from '../metadatas'
+import { PropertyType, Relation, RelationParameters, Uint16, Uint32, Uint8 } from './primitive.ts'
+import { Context, DecoratorType, ExecutionScope } from '../types.ts'
+import { TransformerExecLevel, transformerDecoratorFactory } from './transformer.ts'
+import { ControllerOptions, Count, Until } from './controller.ts'
+import { NumberOrRecursiveKey } from './common.ts'
+import { Padding, SharePropertiesWithRelation } from './prepost.ts'
+import Meta from '../metadatas.ts'
 
 /**
  * `@Char` defines the decorated as an unsigned 8 bit integer and transform

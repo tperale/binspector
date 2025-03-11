@@ -1,5 +1,5 @@
-import { transformerDecoratorFactory, Transform, useTransformer } from '../transformer'
-import Meta from '../../metadatas'
+import { transformerDecoratorFactory, Transform, useTransformer } from '../transformer.ts'
+import Meta from '../../metadatas.ts'
 
 function testTransformer (TargetClass: new () => any, field: string, value: any, equal: any, preFunc?: (instance: any) => void): void {
   const instance = new TargetClass()

@@ -1,4 +1,4 @@
-import { Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src'
+import { Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src/index.ts'
 
 enum PNGTypes {
   IHDR = 'IHDR',

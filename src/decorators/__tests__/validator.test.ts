@@ -1,5 +1,5 @@
-import { useValidators, Enum, Match, Validate } from '../validator'
-import Meta from '../../metadatas'
+import { useValidators, Enum, Match, Validate } from '../validator.ts'
+import Meta from '../../metadatas.ts'
 
 function testValidator (TargetClass: new () => any, field: string, preFunc?: (instance: any) => void): void {
   const instance = new TargetClass()

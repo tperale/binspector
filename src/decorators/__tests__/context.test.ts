@@ -1,5 +1,5 @@
-import { CtxSet, CtxGet, useContextGet, useContextSet, CtxAppend } from '../context'
-import Meta from '../../metadatas'
+import { CtxSet, CtxGet, useContextGet, useContextSet, CtxAppend } from '../context.ts'
+import Meta from '../../metadatas.ts'
 
 function testContextGet (TargetClass: new () => any, field: string, ctx: object, expected: any) {
   const instance = new TargetClass()

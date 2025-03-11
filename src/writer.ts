@@ -5,20 +5,20 @@
  *
  * @module reader
  */
-import { BinaryWriter } from './cursor'
-import { UnknownPropertyType } from './error'
-import Meta from './metadatas'
+import { BinaryWriter } from './cursor.ts'
+import { UnknownPropertyType } from './error.ts'
+import Meta from './metadatas.ts'
 import {
   isRelation,
   isUnknownProperty,
   isPrimitiveRelation,
   type PropertyType,
-} from './decorators/primitive'
-import { ExecutionScope, type InstantiableObject } from './types'
-import { usePrePost } from './decorators/prepost'
-import { useConditions } from './decorators/condition'
-import { TransformerExecLevel, useTransformer } from './decorators/transformer'
-import { writeBitField } from './decorators/bitfield'
+} from './decorators/primitive.ts'
+import { ExecutionScope, type InstantiableObject } from './types.ts'
+import { usePrePost } from './decorators/prepost.ts'
+import { useConditions } from './decorators/condition.ts'
+import { TransformerExecLevel, useTransformer } from './decorators/transformer.ts'
+import { writeBitField } from './decorators/bitfield.ts'
 
 /**
  * binwrite.

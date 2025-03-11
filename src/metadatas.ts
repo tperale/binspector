@@ -1,14 +1,14 @@
-import { type PropertyType } from './decorators/primitive'
-import { type Condition, ConditionSymbol } from './decorators/condition'
-import { type Controller, ControllerSymbol } from './decorators/controller'
-import { type Transformer, TransformerSymbol } from './decorators/transformer'
-import { type Validator, ValidatorSymbol } from './decorators/validator'
-import { type BitField, BitFieldSymbol } from './decorators/bitfield'
-import { type Ctx, CtxSymbol } from './decorators/context'
-import { type PrePost, PreFunctionSymbol, PostFunctionSymbol, PreClassFunctionSymbol, PostClassFunctionSymbol, PrePostSymbols, PrePostClass } from './decorators/prepost'
-import { type DecoratorMetadataObject } from './types'
+import { type PropertyType } from './decorators/primitive.ts'
+import { type Condition, ConditionSymbol } from './decorators/condition.ts'
+import { type Controller, ControllerSymbol } from './decorators/controller.ts'
+import { type Transformer, TransformerSymbol } from './decorators/transformer.ts'
+import { type Validator, ValidatorSymbol } from './decorators/validator.ts'
+import { type BitField, BitFieldSymbol } from './decorators/bitfield.ts'
+import { type Ctx, CtxSymbol } from './decorators/context.ts'
+import { type PrePost, PreFunctionSymbol, PostFunctionSymbol, PreClassFunctionSymbol, PostClassFunctionSymbol, PrePostSymbols, PrePostClass } from './decorators/prepost.ts'
+import { type DecoratorMetadataObject } from './types.ts'
 
-import './symbol-polyfill'
+import './symbol-polyfill.ts'
 
 type MetadataSymbol = typeof BitFieldSymbol
   | typeof PreClassFunctionSymbol

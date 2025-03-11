@@ -1,6 +1,6 @@
-import { useConditions, IfThen, Else, Choice } from '../condition'
-import { type RelationTypeProperty, type PrimitiveTypeProperty } from '../primitive'
-import Meta from '../../metadatas'
+import { useConditions, IfThen, Else, Choice } from '../condition.ts'
+import { type RelationTypeProperty, type PrimitiveTypeProperty } from '../primitive.ts'
+import Meta from '../../metadatas.ts'
 
 function testCondition<This> (TargetClass: new (...args: any) => This, relation: any, post?: (relation: PrimitiveTypeProperty<This> | RelationTypeProperty<This, any> | undefined, instance: This) => void, field: keyof This = 'field' as keyof This) {
   const instance = new TargetClass()

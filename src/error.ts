@@ -1,7 +1,7 @@
-import Meta from './metadatas'
-import { type Cursor } from './cursor'
-import { PropertyType } from './decorators'
-import { type Context, type DecoratorMetadataObject } from './types'
+import Meta from './metadatas.ts'
+import { type Cursor } from './cursor.ts'
+import { PropertyType } from './decorators/index.ts'
+import { type Context, type DecoratorMetadataObject } from './types.ts'
 
 export class EOFError extends Error {
   value: any

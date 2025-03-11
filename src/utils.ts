@@ -1,8 +1,8 @@
 /**
  * @module reader
  */
-import Meta from './metadatas'
-import { isPrimitiveRelation } from './decorators/primitive'
+import Meta from './metadatas.ts'
+import { isPrimitiveRelation } from './decorators/primitive.ts'
 
 /**
  * JSONify

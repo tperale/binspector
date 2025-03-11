@@ -1,4 +1,4 @@
-import { type BinaryReader } from './cursor'
+import { type BinaryReader } from './cursor.ts'
 
 interface HexdumpOptions {
   lineLength: number

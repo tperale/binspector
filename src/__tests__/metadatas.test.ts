@@ -1,6 +1,6 @@
-import Meta from '../metadatas'
-import { ValidatorSymbol, type Validator, ValidatorOptionsDefault } from '../decorators/validator'
-import { type Context } from '../types'
+import Meta from '../metadatas.ts'
+import { ValidatorSymbol, type Validator, ValidatorOptionsDefault } from '../decorators/validator.ts'
+import { type Context } from '../types.ts'
 
 class Coord {
   x: number

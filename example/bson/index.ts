@@ -1,11 +1,11 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { Bson } from './bson'
+import { Bson } from './bson.ts'
 
 const USAGE = `
 Usage:
 
-> deno --unstable-sloppy-imports index.ts <file>.bson
+> deno run index.ts <file>.bson
 `
 
 if (process.argv[1] === import.meta.filename) {

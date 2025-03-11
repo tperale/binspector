@@ -51,11 +51,11 @@
  *
  * @module Bitfield
  */
-import { type PropertyMetaDescriptor, createPropertyMetaDescriptor } from './common'
-import { type Cursor, type BinaryWriter } from '../cursor'
-import { WrongBitfieldClassImplementation } from '../error'
-import { type DecoratorType, PrimitiveSymbol, type Context } from '../types'
-import Meta from '../metadatas'
+import { type PropertyMetaDescriptor, createPropertyMetaDescriptor } from './common.ts'
+import { type Cursor, type BinaryWriter } from '../cursor.ts'
+import { WrongBitfieldClassImplementation } from '../error.ts'
+import { type DecoratorType, PrimitiveSymbol, type Context } from '../types.ts'
+import Meta from '../metadatas.ts'
 
 export const BitFieldSymbol = Symbol('bitfield')
 

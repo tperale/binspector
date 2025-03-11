@@ -3,12 +3,12 @@
  *
  * @module decorators
  */
-export * from './validator'
-export * from './controller'
-export * from './condition'
-export * from './primitive'
-export * from './prepost'
-export * from './bitfield'
-export * from './transformer'
-export * from './context'
-export * from './helper'
+export * from './validator.ts'
+export * from './controller.ts'
+export * from './condition.ts'
+export * from './primitive.ts'
+export * from './prepost.ts'
+export * from './bitfield.ts'
+export * from './transformer.ts'
+export * from './context.ts'
+export * from './helper.ts'

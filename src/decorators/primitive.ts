@@ -33,10 +33,10 @@
  *
  * @module Primitive
  */
-import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet, StringFormattedCommaSepRecursiveKeyOf } from './common'
-import { RelationAlreadyDefinedError, WrongBitfieldClassImplementation } from '../error'
-import Meta from '../metadatas'
-import { PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types'
+import { type PropertyMetaDescriptor, createPropertyMetaDescriptor, commaSeparetedRecursiveGet, StringFormattedCommaSepRecursiveKeyOf } from './common.ts'
+import { RelationAlreadyDefinedError, WrongBitfieldClassImplementation } from '../error.ts'
+import Meta from '../metadatas.ts'
+import { PrimitiveSymbol, isPrimitiveSymbol, type InstantiableObject, type DecoratorType, type Context, type DecoratorMetadataObject } from '../types.ts'
 
 const PrimitiveTypePropertySymbol = Symbol('primitive')
 
