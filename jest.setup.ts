@@ -1,19 +1,17 @@
+import * as fs from 'node:fs'
 import { binread, binwrite, BinaryReader, BinaryWriter } from './src'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
-      toBeEqualArrayBuffer (expected: ArrayBuffer): R
+      toBeEqualArrayBuffer (expected: Uint8Array): R
       binReadWriteEquality (ObjectDefinition: any): R
     }
   }
 }
 
-function equalArrayBuffer (buf1: ArrayBuffer, buf2: ArrayBuffer) {
-  const arr1 = new Uint8Array(buf1)
-  const arr2 = new Uint8Array(buf2)
-
+function equalArrayBuffer (arr1: Uint8Array, arr2: Uint8Array) {
   if (arr1.byteLength !== arr2.byteLength) {
     return {
       message: () => `Buffer length not matching ${arr1.byteLength} !== ${arr2.byteLength} | ${arr1} !== ${arr2}`,
@@ -21,7 +19,7 @@ function equalArrayBuffer (buf1: ArrayBuffer, buf2: ArrayBuffer) {
     }
   }
 
-  for (let i = 0; i != buf1.byteLength; i++) {
+  for (let i = 0; i != arr1.byteLength; i++) {
     if (arr1[i] !== arr2[i]) return {
       message: () => `Buffer not matching '${arr1[i]} !== ${arr2[i]}' at position ${i}`,
       pass: false
@@ -35,16 +33,26 @@ function equalArrayBuffer (buf1: ArrayBuffer, buf2: ArrayBuffer) {
 }
 
 expect.extend({
-  toBeEqualArrayBuffer (buf1: ArrayBuffer, buf2: ArrayBuffer) {
-    return equalArrayBuffer(buf1, buf2)
+  toBeEqualArrayBuffer (arr1: Uint8Array, arr2: Uint8Array) {
+    return equalArrayBuffer(arr1, arr2)
   },
-  binReadWriteEquality (buf: ArrayBuffer, ObjectDefinition: any) {
-    const decoded = binread(new BinaryReader(buf), ObjectDefinition)
+  binReadWriteEquality (arr: ArrayBuffer, ObjectDefinition: any) {
+    const decoded = binread(new BinaryReader(arr), ObjectDefinition)
 
     const writtenBuf = new BinaryWriter()
     binwrite(writtenBuf, ObjectDefinition, decoded)
 
-    return equalArrayBuffer(buf, writtenBuf.buffer())
+    return equalArrayBuffer(new Uint8Array(arr), new Uint8Array(writtenBuf.buffer()))
+  },
+  fileReadWriteEquality (filename: string, ObjectDefinition: any) {
+    const data = fs.readFileSync(filename)
+
+    const decoded = binread(new BinaryReader(data), ObjectDefinition)
+
+    const writtenBuf = new BinaryWriter()
+    binwrite(writtenBuf, ObjectDefinition, decoded)
+
+    return equalArrayBuffer(data, new Uint8Array(writtenBuf.buffer()))
   },
 })
 
