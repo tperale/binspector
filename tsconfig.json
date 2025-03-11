@@ -4,8 +4,8 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "declaration": true,
-    "module": "commonJS",
-    "target": "es2022",
+    "module": "esnext",
+    "target": "esnext",
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
@@ -13,7 +13,7 @@
     "strictNullChecks": true,
     "downlevelIteration": true,
     "skipLibCheck": true,
-    "lib": ["es2022", "esnext.decorators", "dom"],
+    "lib": ["esnext", "esnext.decorators", "dom"],
     "types": []
   },
   "include": [
