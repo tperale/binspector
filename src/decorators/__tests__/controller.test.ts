@@ -25,7 +25,7 @@ class TestCursor extends Cursor {
   }
 }
 
-function * testReader (list: any[]): Generator<any> {
+function* testReader (list: any[]): Generator<any> {
   for (const x of list) {
     yield x
   }
