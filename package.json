@@ -40,7 +40,7 @@
   "homepage": "https://tperale.github.io/binspector/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tperale/binspector"
+    "url": "https://github.com/tperale/binspector.git"
   },
   "keywords": [
     "parser",
