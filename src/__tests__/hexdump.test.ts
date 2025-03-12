@@ -1,6 +1,6 @@
-import fs from 'node:fs'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import path from 'node:path'
 
 import { BinDump } from '../hexdump.ts'
 import { BinaryReader } from '../cursor.ts'
