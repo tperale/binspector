@@ -9,7 +9,6 @@
     "allowJs": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
-    "esModuleInterop": true,
     "strictNullChecks": true,
     "downlevelIteration": true,
     "skipLibCheck": true,

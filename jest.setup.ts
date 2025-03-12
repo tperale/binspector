@@ -1,5 +1,5 @@
 import * as fs from 'node:fs'
-import { binread, binwrite, BinaryReader, BinaryWriter } from './src'
+import { binread, binwrite, BinaryReader, BinaryWriter } from './src/index'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
