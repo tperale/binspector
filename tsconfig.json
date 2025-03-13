@@ -2,16 +2,13 @@
   "compilerOptions": {
     "outDir": "./dist/lib/",
     "sourceMap": true,
-    "noImplicitAny": true,
     "declaration": true,
     "module": "esnext",
     "target": "esnext",
-    "allowJs": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
+    "noImplicitAny": true,
     "strictNullChecks": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
     "lib": ["esnext", "esnext.decorators", "dom"],
     "types": []
   },
