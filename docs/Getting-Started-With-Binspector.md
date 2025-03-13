@@ -88,11 +88,11 @@ To parse the content of a file formatted as the `Protocol` definition you will
 use the following code.
 
 ```typescript
-import { BinaryReader, binread } 
-import { promises as fs } from 'fs'
-import path from 'path'
+import { BinaryReader, binread } from 'binspector'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 
-const data = await fs.readFile(path.join(__dirname, 'file.bin')).buffer
+const data = fs.readFileSync(path.join(import.meta.dirname, 'file.bin'))
 const protocol = binread(new BinaryReader(data), Protocol)
 ```
 
@@ -156,7 +156,7 @@ The following code snippets shows how to serialize an object into a binary
 buffer based on a Binspector definition. That buffer is then saved into a file.
 
 ```typescript
-import { BinaryWriter, binwrite } 
+import { BinaryWriter, binwrite } from 'binspector'
 import { promises as fs } from 'fs'
 import path from 'path'
 
