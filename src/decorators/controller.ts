@@ -262,14 +262,14 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  *
  * ```typescript
  * class BinObject {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   len: number
  *
  *   @Count('len')
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   blob: number[]
  * }
  *
@@ -288,11 +288,11 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
  * ```typescript
  * class Protocol {
  *   @While((elem) => elem !== 0x00, { peek: true })
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   array: number[]
  *
  *   @Match(0x00)
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   end_elem: number
  * }
  * ```
@@ -336,7 +336,7 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  * ```typescript
  * class BinProtocol {
  *   @Until(EOF)
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   array: number[]
  * }
  * ```
@@ -404,11 +404,11 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   len: Number
  *
  *   @Count('len')
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   vec: Number
  * }
  * ```
@@ -475,7 +475,7 @@ export function Count<This extends object, Value, Args extends string> (arg: Num
  * ```typescript
  * class Protocol {
  *   @Size(16)
- *   @Relation(PrimitiveSymbol.u16)
+ *   @Uint16
  *   data: number[] // Will contain 8 numbers
  * }
  * ```
@@ -488,7 +488,7 @@ export function Count<This extends object, Value, Args extends string> (arg: Num
  *   _size: number = 16
  *
  *   @Size('_size')
- *   @Relation(PrimitiveSymbol.u16)
+ *   @Uint16
  *   data: number[]
  * }
  * ```
@@ -534,7 +534,7 @@ export function Size<This extends object, Value, Args extends string> (size: Num
  *   _size: number
  *
  *   @Count('_size')
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   data: number[]
  *
  *   constructor(size: number) {
