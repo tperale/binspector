@@ -167,7 +167,7 @@ export function dynamicConditionDecoratorFactory<This extends object, Target, Va
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
  *   @IfThen(instance => instance.type === 0x01, PrimitiveSymbol.u16)
@@ -233,7 +233,7 @@ export function IfThen<This extends object, Target, Value, Args extends string> 
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
  *   @IfThen(_ => _.type === 0x01, PrimitiveSymbol.u16)
@@ -292,7 +292,7 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * ```typescript
  * class Chunk {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
  *   @Choice('type', {
@@ -322,7 +322,7 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *   _type: number
  *
  *   @Count('_length')
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   data: number[]
  *
  *   ...
@@ -335,18 +335,18 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * class Header {
  *   @Count(4)
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   magic: number
  *
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   crc: number
  * }
  *
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   length: number
  *
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
  *   @Choice('type', {
@@ -363,10 +363,10 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   length: number
  *
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   type: number
  *
  *   @Choice(_ => _.type, {
@@ -384,10 +384,10 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u32)
+ *   @Uint32
  *   length: number
  *
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint32
  *   type: number
  *
  *   @Choice('type', {
@@ -406,7 +406,7 @@ export function Else<This extends object, Target, Value, Args extends string> (t
  *
  * ```typescript
  * class Protocol {
- *   @Relation(PrimitiveSymbol.u8)
+ *   @Uint8
  *   something: number
  *
  *   @Choice('something', {
@@ -489,10 +489,10 @@ export function Choice<This extends object, Value, Args extends string> (cmp: St
  * }
  *
  * class Protocol {
- *   @Relation(PrimitiveType.u8)
+ *   @Uint8
  *   foo: number
  *
- *   @Relation(PrimitiveType.u8)
+ *   @Uint8
  *   bar: number
  *
  *   @Select(_ => DEFINITION[_.foo][_.bar])
@@ -519,6 +519,7 @@ export function Choice<This extends object, Value, Args extends string> (cmp: St
  *   }[_.type]()))
  *   data: any
  * }
+ *
  * class Protocol {
  *   @Uint32
  *   length: number
