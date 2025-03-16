@@ -1,4 +1,4 @@
-import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, BinaryWriter } from '../../src/index.ts'
+import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, BinaryWriter, computeBinSize } from '../../src/index.ts'
 
 // When calling JSON.stringify on a BigInt an error will be raised by default
 // We need to define the serializer for this type.
@@ -9,6 +9,9 @@ declare global {
 }
 
 BigInt.prototype.toJSON = () => Number(this)
+
+type JSONPrimitive = string | number | boolean | JSONObject | null | undefined
+type JSONObject = { [key: string]: JSONPrimitive } | JSONPrimitive[]
 
 enum BSONType {
   EndOfObject = 0x00,
@@ -44,7 +47,7 @@ class BsonString {
 
   @Match(0)
   @Uint8
-  terminator: number
+  terminator: number = 0
 
   toJson () {
     return this.name
@@ -192,6 +195,38 @@ export class BsonElement {
         return { [this.name]: jsonify(this.data) }
     }
   }
+
+  static create (property: string, obj: JSONPrimitive | JSONObject) {
+    const res = new BsonElement()
+    res.name = property
+    if (Array.isArray(obj)) {
+      res.bson_type = BSONType.Array
+      res.data = Bson.fromObject(obj)
+    } else if (typeof obj === 'string') {
+      res.bson_type = BSONType.String
+      const str = new BsonString()
+      str.name = obj
+      str.size = (obj.length + 1)
+      res.data = str
+    } else if (typeof obj === 'number') {
+      res.bson_type = BSONType.NumberInt
+      res.data = obj
+    } else if (typeof obj === 'bigint') {
+      res.bson_type = BSONType.NumberLong
+      res.data = obj
+    } else if (typeof obj === 'boolean') {
+      res.bson_type = BSONType.Boolean
+      res.data = obj
+    } else if (obj === null || typeof obj === 'undefined') {
+      res.bson_type = BSONType.Null
+      res.data = undefined
+    } else if (typeof obj === 'object') {
+      res.bson_type = BSONType.Object
+      res.data = Bson.fromObject(obj)
+    }
+
+    return res
+  }
 }
 
 @LittleEndian
@@ -205,7 +240,7 @@ export class Bson {
 
   @Match(0)
   @Uint8
-  terminator: number
+  terminator: number = 0
 
   toJson () {
     return this.fields.reduce((obj, curr) => ({
@@ -220,5 +255,15 @@ export class Bson {
 
   static from (buf: ArrayBufferLike) {
     return binread(new BinaryReader(buf), Bson)
+  }
+
+  static fromObject (obj: JSONObject) {
+    const bson = new Bson()
+    const fields = Object.entries(obj).map(([k, v]) => BsonElement.create(k, v))
+
+    bson.fields = fields
+    bson.size = (computeBinSize(fields) + 5)
+
+    return bson
   }
 }
