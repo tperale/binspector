@@ -493,6 +493,28 @@ export function Count<This extends object, Value, Args extends string> (arg: Num
  * }
  * ```
  *
+ * A simple literal arithmetic expression can also be used by the `@Size`
+ * decorator.
+ *
+ * In the following example the `length` property include the terminator to
+ * count the string length. The `@Size` decorator substract that number from
+ * the size.
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Uint32
+ *   length: number
+ *
+ *   @Size('length - 1')
+ *   @Ascii
+ *   data: string
+ *
+ *   @Match(0)
+ *   @Uint8
+ *   terminator: number
+ * }
+ * ```
+ *
  * @typeParam This The type of the class the decorator is applied to.
  * @typeParam Value The type of the decorated property.
  *
