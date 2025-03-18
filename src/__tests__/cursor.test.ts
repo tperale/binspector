@@ -72,6 +72,37 @@ describe('Tests BinaryReader', () => {
   })
 })
 
+describe('Tests BinaryReader: 24 bits', () => {
+  it('read unsigned number -> 0', () => {
+    testBinaryReader([0x00, 0x00, 0x00], [PrimitiveSymbol.u24], [0])
+    testBinaryReader([0x00, 0x00, 0x00], [PrimitiveSymbol.u24], [0], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read unsigned number -> ordering', () => {
+    testBinaryReader([0x12, 0x34, 0x56], [PrimitiveSymbol.u24], [0x123456])
+    testBinaryReader([0x56, 0x34, 0x12], [PrimitiveSymbol.u24], [0x123456], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read signed number -> ordering', () => {
+    testBinaryReader([0x12, 0x34, 0x56], [PrimitiveSymbol.i24], [0x123456])
+    testBinaryReader([0x56, 0x34, 0x12], [PrimitiveSymbol.i24], [0x123456], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read signed -> 0', () => {
+    testBinaryReader([0x00, 0x00, 0x00], [PrimitiveSymbol.i24], [0])
+    testBinaryReader([0x00, 0x00, 0x00], [PrimitiveSymbol.i24], [0], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read signed -> -1', () => {
+    testBinaryReader([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.i24], [-1])
+    testBinaryReader([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.i24], [-1], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read signed number -> Max', () => {
+    testBinaryReader([0x7F, 0xFF, 0xFF], [PrimitiveSymbol.i24], [8388607])
+    testBinaryReader([0xFF, 0xFF, 0x7F], [PrimitiveSymbol.i24], [8388607], BinaryCursorEndianness.LittleEndian)
+  })
+  it('read signed number -> Min', () => {
+    testBinaryReader([0x80, 0x00, 0x00], [PrimitiveSymbol.i24], [-8388608])
+    testBinaryReader([0x00, 0x00, 0x80], [PrimitiveSymbol.i24], [-8388608], BinaryCursorEndianness.LittleEndian)
+  })
+})
+
 describe('Tests read -> write equality', () => {
   it('u64: BigInt', () => {
     testReadWriteEquality([0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF], [PrimitiveSymbol.u64])
@@ -84,5 +115,31 @@ describe('Tests read -> write equality', () => {
   it('float64: double precision float', () => {
     testReadWriteEquality([0x40, 0x93, 0x4a, 0x45, 0x6d, 0x5c, 0xfa, 0xad], [PrimitiveSymbol.float64])
     testReadWriteEquality([0xad, 0xfa, 0x5c, 0x6d, 0x45, 0x4a, 0x93, 0x40], [PrimitiveSymbol.float64], BinaryCursorEndianness.LittleEndian)
+  })
+  it('u24: unsigned 24 bit integer', () => {
+    // MaxValue
+    testReadWriteEquality([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.u24])
+    testReadWriteEquality([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.u24], BinaryCursorEndianness.LittleEndian)
+
+    // Min Value
+    testReadWriteEquality([0x00, 0x00, 0x00], [PrimitiveSymbol.u24])
+    testReadWriteEquality([0x00, 0x00, 0x00], [PrimitiveSymbol.u24], BinaryCursorEndianness.LittleEndian)
+
+    // Ordering
+    testReadWriteEquality([0x12, 0x34, 0x56], [PrimitiveSymbol.u24])
+    testReadWriteEquality([0x56, 0x34, 0x12], [PrimitiveSymbol.u24], BinaryCursorEndianness.LittleEndian)
+  })
+  it('i24: signed 24 bit integer', () => {
+    // -1
+    testReadWriteEquality([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.i24])
+    testReadWriteEquality([0xFF, 0xFF, 0xFF], [PrimitiveSymbol.i24], BinaryCursorEndianness.LittleEndian)
+
+    // Min Value
+    testReadWriteEquality([0x80, 0x00, 0x00], [PrimitiveSymbol.i24])
+    testReadWriteEquality([0x00, 0x00, 0x80], [PrimitiveSymbol.i24], BinaryCursorEndianness.LittleEndian)
+
+    // Max Value
+    testReadWriteEquality([0x7F, 0xFF, 0xFF], [PrimitiveSymbol.i24])
+    testReadWriteEquality([0xFF, 0xFF, 0x7F], [PrimitiveSymbol.i24], BinaryCursorEndianness.LittleEndian)
   })
 })
