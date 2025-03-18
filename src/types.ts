@@ -3,10 +3,12 @@ export const EOF = Symbol('End Of File')
 export enum PrimitiveSymbol {
   u8,
   u16,
+  u24,
   u32,
   u64,
   i8,
   i16,
+  i24,
   i32,
   i64,
   float32,

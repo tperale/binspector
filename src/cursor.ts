@@ -1,5 +1,52 @@
 import { EOF, PrimitiveSymbol } from './types.ts'
 
+declare global {
+  interface DataView {
+    getUint24(pos: number, littleEndian: boolean): number
+    getInt24(pos: number, littleEndian: boolean): number
+    setUint24(pos: number, val: number, littleEndian: boolean): void
+    setInt24(pos: number, val: number, littleEndian: boolean): void
+  }
+}
+
+DataView.prototype.getUint24 = function (pos, littleEndian) {
+  const p1 = this.getUint8(pos)
+  const p2 = this.getUint8(pos + 1)
+  const p3 = this.getUint8(pos + 2)
+
+  return littleEndian
+    ? (p3 << 16) | (p2 << 8) | p1
+    : (p1 << 16) | (p2 << 8) | p3
+}
+
+DataView.prototype.getInt24 = function (pos, littleEndian) {
+  const num = this.getUint24(pos, littleEndian)
+
+  const negative = (num & 0x800000) > 0
+
+  if (negative) {
+    return -(((~num) & 0xFFFFFF) + 1)
+  } else {
+    return num
+  }
+}
+
+DataView.prototype.setUint24 = function (pos, val, littleEndian) {
+  if (littleEndian) {
+    this.setUint8(pos, val & 0xFF)
+    this.setUint8(pos + 1, (val >> 8) & 0xFF)
+    this.setUint8(pos + 2, (val >> 16) & 0xFF)
+  } else {
+    this.setUint8(pos + 2, val & 0xFF)
+    this.setUint8(pos + 1, (val >> 8) & 0xFF)
+    this.setUint8(pos, (val >> 16) & 0xFF)
+  }
+}
+
+DataView.prototype.setInt24 = function (pos, val, littleEndian) {
+  this.setUint24(pos, val, littleEndian)
+}
+
 /**
  * Cursor
  */
@@ -52,6 +99,9 @@ export abstract class BinaryCursor extends Cursor {
       case PrimitiveSymbol.u16:
       case PrimitiveSymbol.i16:
         return 2
+      case PrimitiveSymbol.u24:
+      case PrimitiveSymbol.i24:
+        return 3
       case PrimitiveSymbol.u32:
       case PrimitiveSymbol.i32:
       case PrimitiveSymbol.float32:
@@ -76,6 +126,8 @@ export class BinaryReader extends BinaryCursor {
         return this.data.getUint8(this.index)
       case PrimitiveSymbol.u16:
         return this.data.getUint16(this.index, endian)
+      case PrimitiveSymbol.u24:
+        return this.data.getUint24(this.index, endian)
       case PrimitiveSymbol.u32:
         return this.data.getUint32(this.index, endian)
       case PrimitiveSymbol.u64:
@@ -84,6 +136,8 @@ export class BinaryReader extends BinaryCursor {
         return this.data.getInt8(this.index)
       case PrimitiveSymbol.i16:
         return this.data.getInt16(this.index, endian)
+      case PrimitiveSymbol.i24:
+        return this.data.getInt24(this.index, endian)
       case PrimitiveSymbol.i32:
         return this.data.getInt32(this.index, endian)
       case PrimitiveSymbol.i64:
@@ -151,6 +205,9 @@ export class BinaryWriter extends BinaryCursor {
         case PrimitiveSymbol.u16:
           buf.setUint16(index, Number(value), endian)
           break
+        case PrimitiveSymbol.u24:
+          buf.setUint24(index, Number(value), endian)
+          break
         case PrimitiveSymbol.u32:
           buf.setUint32(index, Number(value), endian)
           break
@@ -162,6 +219,9 @@ export class BinaryWriter extends BinaryCursor {
           break
         case PrimitiveSymbol.i16:
           buf.setInt16(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.i24:
+          buf.setInt24(index, Number(value), endian)
           break
         case PrimitiveSymbol.i32:
           buf.setInt32(index, Number(value), endian)

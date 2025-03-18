@@ -417,6 +417,32 @@ export function Uint16<This extends object, Value> (_1: undefined, _2: Context<T
 }
 
 /**
+ * `@Uint24` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.u24)`.
+ *
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as an unsigned 24 bits integer.
+ *
+ * @example
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Uint24
+ *   data: number
+ * }
+ * ```
+ *
+ * @see {@link Relation}
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @category Decorators
+ */
+export function Uint24<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Relation(PrimitiveSymbol.u24)(_, context)
+}
+
+/**
  * `@Uint32` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.u32)`.
  *
  * Using this decorator specifies that the decorated should be interpreted as a
@@ -518,6 +544,32 @@ export function Int8<This extends object, Value> (_1: undefined, _2: Context<Thi
  */
 export function Int16<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
   Relation(PrimitiveSymbol.i16)(_, context)
+}
+
+/**
+ * `@Int24` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.i24)`.
+ *
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 24 bits integer.
+ *
+ * @example
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Int24
+ *   data: number
+ * }
+ * ```
+ *
+ * @see {@link Relation}
+ *
+ * @typeParam This The type of the class the decorator is applied to.
+ * @typeParam Value The type of the decorated property.
+ *
+ * @category Decorators
+ */
+export function Int24<This extends object, Value> (_: undefined, context: Context<This, Value>): void {
+  Relation(PrimitiveSymbol.i24)(_, context)
 }
 
 /**
