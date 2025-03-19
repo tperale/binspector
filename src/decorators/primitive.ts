@@ -367,8 +367,8 @@ export function Relation<This extends object, Target, Value, Args extends string
 /**
  * `@Uint8` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.u8)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * unsigned 8 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as an unsigned 8 bits integer.
  *
  * @example
  *
@@ -445,8 +445,8 @@ export function Uint24<This extends object, Value> (_: undefined, context: Conte
 /**
  * `@Uint32` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.u32)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * unsigned 32 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as an unsigned 32 bits integer.
  *
  * @example
  *
@@ -471,8 +471,8 @@ export function Uint32<This extends object, Value> (_1: undefined, _2: Context<T
 /**
  * `@Uint64` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.u64)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * unsigned 64 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as an unsigned 64 bits integer.
  *
  * @example
  *
@@ -497,8 +497,8 @@ export function Uint64<This extends object, Value> (_1: undefined, _2: Context<T
 /**
  * `@Int8` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.i8)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * signed 8 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 8 bits integer.
  *
  * @example
  *
@@ -523,8 +523,8 @@ export function Int8<This extends object, Value> (_1: undefined, _2: Context<Thi
 /**
  * `@Int16` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.i16)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * signed 16 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 16 bits integer.
  *
  * @example
  *
@@ -575,8 +575,8 @@ export function Int24<This extends object, Value> (_: undefined, context: Contex
 /**
  * `@Int32` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.i32)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * signed 32 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 32 bits integer.
  *
  * @example
  *
@@ -601,8 +601,8 @@ export function Int32<This extends object, Value> (_: undefined, context: Contex
 /**
  * `@Int64` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.i64)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * signed 64 bits integer.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 64 bits integer.
  *
  * @example
  *
@@ -627,8 +627,8 @@ export function Int64<This extends object, Value> (_: undefined, context: Contex
 /**
  * `@Float32` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.float32)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * 32 floating point number.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 32 bits floating point number.
  *
  * @example
  *
@@ -653,8 +653,8 @@ export function Float32<This extends object, Value> (_: undefined, context: Cont
 /**
  * `@Float64` decorator is syntactic sugar for `@Relation(PrimitiveSymbol.float64)`.
  *
- * Using this decorator specifies that the decorated should be interpreted as a
- * 64 floating point number.
+ * Using this decorator specifies that the decorated property should be
+ * interpreted as a signed 64 bits floating point number.
  *
  * @example
  *
