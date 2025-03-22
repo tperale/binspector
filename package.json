@@ -3,7 +3,10 @@
   "description": "A _truly_ declarative library for binary file and protocol definition written in typescript. Read binary files based on class definition and decorators directly from your webapp.",
   "version": "1.1.1",
   "types": "module",
-  "exports": "./dist/lib/index.js",
+  "exports": {
+    ".": "./dist/lib/index.js",
+    "./*": "./dist/lib/decorators/*.js"
+  },
   "files": [
     "/dist/lib",
     "/src"
