@@ -31,3 +31,192 @@ describe('Using the hexdump', () => {
     expect(true).toBe(true)
   })
 })
+
+describe('Dumping object metadata', () => {
+  it('should display binary objects', () => {
+    const obj = {
+      foo: 1,
+      bar: [
+        {
+          field_1: 10,
+          field_2: 12,
+          field_3: 13,
+        },
+        {
+          field_1: 20,
+          field_2: 22,
+          field_3: 23,
+        }
+      ],
+      array: [1, 2, 3]
+    }
+
+    const objMeta = {
+      className: 'Test',
+      startOffset: 0,
+      endOffset: 0,
+      properties: [
+        {
+          propertyName: 'foo',
+          components: {
+            startOffset: 0,
+            endOffset: 2,
+          }
+        }, {
+          propertyName: 'bar',
+          startOffset: 2,
+          endOffset: 4,
+          components: [{
+            className: 'SubProtocol',
+            startOffset: 2,
+            endOffset: 8,
+            properties: [{
+              propertyName: 'field_1',
+              components: {
+                startOffset: 2,
+                endOffset: 4,
+              }
+            }, {
+              propertyName: 'field_2',
+              components: {
+                startOffset: 4,
+                endOffset: 6,
+              }
+            }, {
+              propertyName: 'field_3',
+              components: {
+                startOffset: 6,
+                endOffset: 8,
+              }
+            }]
+          }, {
+            className: 'SubProtocol',
+            startOffset: 8,
+            endOffset: 14,
+            properties: [{
+              propertyName: 'field_1',
+              components: {
+                startOffset: 8,
+                endOffset: 10,
+              }
+            }, {
+              propertyName: 'field_2',
+              components: {
+                startOffset: 10,
+                endOffset: 12,
+              }
+            }, {
+              propertyName: 'field_3',
+              components: {
+                startOffset: 12,
+                endOffset: 14,
+              }
+            }]
+          }]
+        }, {
+          propertyName: 'array',
+          components: [{
+            startOffset: 14,
+            endOffset: 18,
+          }, {
+            startOffset: 18,
+            endOffset: 22,
+          }, {
+            startOffset: 22,
+            endOffset: 26,
+          }]
+        }
+
+      ]
+    }
+
+    console.log(BinDump.dump(arr, objMeta, obj))
+  })
+  it('should display unfinished binary objects', () => {
+    const obj = {
+      foo: 1,
+      bar: [
+        {
+          field_1: 10,
+        },
+      ],
+    }
+
+    const objMeta = {
+      className: 'Test',
+      startOffset: 0,
+      endOffset: 0,
+      properties: [
+        {
+          propertyName: 'foo',
+          components: {
+            startOffset: 0,
+            endOffset: 2,
+          }
+        }, {
+          propertyName: 'bar',
+          startOffset: 2,
+          endOffset: 4,
+          components: [{
+            className: 'SubProtocol',
+            startOffset: 2,
+            endOffset: 8,
+            properties: [{
+              propertyName: 'field_1',
+              components: {
+                startOffset: 2,
+                endOffset: 4,
+              }
+            }, {
+              propertyName: 'field_2',
+              components: {
+                startOffset: 4,
+              }
+            }]
+          }]
+        }
+      ]
+    }
+
+    console.log(BinDump.dump(arr, objMeta, obj))
+  })
+  it('should display binary objects dump without the associated values', () => {
+    const objMeta = {
+      className: 'Test',
+      startOffset: 0,
+      endOffset: 0,
+      properties: [
+        {
+          propertyName: 'foo',
+          components: {
+            startOffset: 0,
+            endOffset: 2,
+          }
+        }, {
+          propertyName: 'bar',
+          startOffset: 2,
+          endOffset: 4,
+          components: [{
+            className: 'SubProtocol',
+            startOffset: 2,
+            endOffset: 8,
+            properties: [{
+              propertyName: 'field_1',
+              components: {
+                startOffset: 2,
+                endOffset: 4,
+              }
+            }, {
+              propertyName: 'field_2',
+              components: {
+                startOffset: 4,
+              }
+            }]
+          }]
+        }
+      ]
+    }
+
+    console.log(BinDump.dump(arr, objMeta))
+  })
+})

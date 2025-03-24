@@ -5,6 +5,27 @@ const ansi = (start: number, end: number) => (input: string) => `\u001B[${start}
 const dim = ansi(2, 22)
 const green = ansi(32, 39)
 
+export interface BinspectorMeta {
+  startOffset: number
+  endOffset: number
+}
+
+export interface BinspectorMetaClass extends BinspectorMeta {
+  className: string
+  properties: BinspectorMetaProperty[]
+}
+
+export type BinspectorMetaPropertiesComponent = BinspectorMeta | BinspectorMetaClass
+
+export interface BinspectorMetaProperty {
+  propertyName: string
+  components: BinspectorMetaPropertiesComponent | BinspectorMetaPropertiesComponent[]
+}
+
+function isMetaClass (component: BinspectorMetaPropertiesComponent): component is BinspectorMetaClass {
+  return Object.hasOwn(component, 'className')
+}
+
 enum TerminalColors {
   none,
   dim,
@@ -105,6 +126,28 @@ function hexToAscii (value: number, opt: BindumpOptions): string {
   }
 }
 
+function binDumpEmptyLine (opt: BindumpOptions): string {
+  let line = ''
+
+  const baseReprSize = (2 ** 8 - 1).toString(opt.base).length
+  const basePadding = ' '.repeat(baseReprSize)
+
+  // Address representation
+  if (opt.showAddress) {
+    line += `${' '.repeat(opt.addressMinPadding)} ${opt.separator} `
+  }
+
+  // Binary content representation
+  line += ` ${basePadding}`.repeat(opt.lineLength)
+
+  // Content in ASCII representation
+  if (opt.showAsciiRepresentation) {
+    line += `${opt.separator} ${' '.repeat(opt.lineLength)} ${opt.separator}`
+  }
+
+  return line
+}
+
 export function binDumpLine (cur: BinaryReader, offset: number, endOffset: number = 0, opt: BindumpOptions): string {
   let line = ''
 
@@ -181,11 +224,71 @@ export function binDump (cur: BinaryReader, start: number = 0, end: number = 0, 
   return content.join('\n')
 }
 
+function binDumpPrimitive (cur: BinaryReader, startOffset: number, endOffset: number, propertyName: string, value: any, opt: BindumpOptions, indent = 0) {
+  const line = ((typeof startOffset === 'number') && (typeof endOffset === 'number') && (endOffset > 0))
+    ? binDump(cur, startOffset, endOffset, opt)
+    : binDumpEmptyLine(opt)
+
+  return `${line} ${' '.repeat(indent)}${propertyName}`.concat(value !== undefined ? `: ${value}` : '')
+}
+
+function binDumpClass (cur: BinaryReader, meta: BinspectorMetaClass | BinspectorMetaClass[], obj: any = {}, indent = 0): string {
+  const opt = defaultBindumpOptions
+  const emptyLineOpt = { ...opt, separator: '┊' }
+
+  function _dumpProperties (x: BinspectorMetaClass, obj: any = {}) {
+    return x.properties.flatMap(({ propertyName, components }) => {
+      const newObj = obj[propertyName] === undefined ? {} : obj[propertyName]
+      if (Array.isArray(components)) {
+        if (components.every(isMetaClass)) {
+          return [
+            `${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent + 2)}${propertyName}[:${components.length}]{}:`,
+            binDumpClass(cur, components, newObj, indent + 4)
+          ]
+        } else {
+          if (typeof newObj === 'string') {
+            const startOffset = Math.min(...components.map(x => x.startOffset))
+            const endOffset = Math.max(...components.map(x => x.endOffset))
+            return binDumpPrimitive(cur, startOffset, endOffset, propertyName, newObj, opt, indent + 2)
+          } else {
+            return components.map((x, i) =>
+              binDumpPrimitive(cur, x.startOffset, x.endOffset, `${propertyName}_${i}`, newObj[i], opt, indent + 2)
+            )
+          }
+        }
+      } else {
+        if (isMetaClass(components)) {
+          return [
+            `${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent + 2)}${propertyName}{}:`,
+            binDumpClass(cur, components, newObj, indent + 4)
+          ]
+        } else {
+          return binDumpPrimitive(cur, components.startOffset, components.endOffset, propertyName, newObj, opt, indent + 2)
+        }
+      }
+    })
+  }
+
+  if (Array.isArray(meta)) {
+    return [
+      ...meta.flatMap((x, i) => ([
+        `${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent)}[${i}]{}: ${x.className} `,
+        ..._dumpProperties(x, obj[i])]
+      ))
+    ].join('\n')
+  } else {
+    return [`${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent)}{}: ${meta.className} `, ..._dumpProperties(meta, obj)].join('\n')
+  }
+}
+
 export default {
   show: (cur: BinaryReader) => {
     return binDump(cur, 0, cur.length, defaultBindumpOptions)
   },
   at: (cur: BinaryReader, start: number, end: number = 0) => {
     return binDump(cur, start, end, defaultBindumpOptions)
+  },
+  dump: (cur: BinaryReader, meta: BinspectorMetaClass, obj?: any) => {
+    return binDumpClass(cur, meta, obj)
   }
 }
