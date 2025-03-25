@@ -22,6 +22,7 @@ import { useConditions } from './decorators/condition.ts'
 import { usePrePost } from './decorators/prepost.ts'
 import { useBitField } from './decorators/bitfield.ts'
 import { useContextGet, useContextSet, CtxType } from './decorators/context.ts'
+import { type BinspectorMetaClass, type BinspectorMetaPropertiesComponent, type BinspectorMetaProperty } from './bindump.ts'
 
 /**
  * binread.
@@ -45,14 +46,15 @@ import { useContextGet, useContextSet, CtxType } from './decorators/context.ts'
  * `ObjectDefinition` passed in param.
  * You can create self refering field by using conditionnal decorator.
  */
-export function binread<Target> (content: Cursor, ObjectDefinition: InstantiableObject<Target>, ctx = {}, ...args: any[]): Target {
+export function binread<Target> (content: Cursor, ObjectDefinition: InstantiableObject<Target>, ctx = {}, meta: Partial<BinspectorMetaClass> = {}, ...args: any[]): Target {
   const ObjectDefinitionName = ObjectDefinition.name
-  function getBinReader (field: PropertyType<Target>, instance: Target): ControllerReader {
+  function getBinReader (field: PropertyType<Target>, instance: Target): (meta?: Partial<BinspectorMetaPropertiesComponent>, arg?: any) => any {
     if (isPrimitiveRelation(field)) {
-      return () => content.read(field.primitive)
+      return () =>
+        content.read(field.primitive)
     } else if (isRelation(field)) {
       // TODO No need to do the check inside the function.
-      return (readerArgs?: any[]) => {
+      return (meta: Partial<BinspectorMetaClass>, readerArgs?: any[]) => {
         const finalArgs = field.args !== undefined
           ? field.args(instance)
           : readerArgs !== undefined
@@ -64,7 +66,7 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
         }
 
         try {
-          return binread(content, field.relation, ctx, ...finalArgs)
+          return binread(content, field.relation, ctx, meta, ...finalArgs)
         } catch (error) {
           // We need to catch the EOF error because the binread function
           // can't return it so it just throw it EOFError.
@@ -86,7 +88,6 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
       throw new UnknownPropertyType(field)
     }
   }
-  // TODO [Cursor] Enter a new 'namespace' that will be used for the debugging history
 
   const instance: Target = new ObjectDefinition(...args)
 
@@ -103,6 +104,10 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
 
   usePrePost(Meta.getClassPre(metadata), instance, content, ExecutionScope.OnRead)
 
+  // Meta used for debugging
+  meta.className = ObjectDefinitionName
+  meta.properties = []
+
   Meta.getFields<Target>(metadata).forEach((field) => {
     usePrePost(Meta.getPre(metadata, field.propertyName), instance, content, ExecutionScope.OnRead)
 
@@ -114,13 +119,33 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
       return
     }
 
-    // TODO [Cursor] Pass the field name information to add to the namespace
     const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
+      const metaProp: Partial<BinspectorMetaProperty> = {
+        propertyName: String(field.propertyName),
+      }
+      meta.properties?.push(metaProp as BinspectorMetaProperty)
+
       const transformers = Meta.getTransformers(metadata, field.propertyName)
-      const propertyReader = (args?: any[]) =>
-        useTransformer(transformers, getBinReader(finalRelationField, instance)(args), instance, ExecutionScope.OnRead, TransformerExecLevel.PrimitiveTranformer)
+      const propertyReader = (args?: any[]) => {
+        const metaComponent: Partial<BinspectorMetaPropertiesComponent> = {}
+
+        if (Array.isArray(metaProp.components)) {
+          metaProp.components.push(metaComponent as BinspectorMetaPropertiesComponent)
+        } else {
+          metaProp.components = metaComponent as BinspectorMetaPropertiesComponent
+        }
+
+        metaComponent.startOffset = content.offset()
+        const result = useTransformer(transformers, getBinReader(finalRelationField, instance)(metaComponent, args), instance, ExecutionScope.OnRead, TransformerExecLevel.PrimitiveTranformer)
+        metaComponent.endOffset = content.offset()
+
+        return result
+      }
       const controllers = Meta.getControllers(metadata, field.propertyName)
+      if (controllers.length > 0) {
+        metaProp.components = []
+      }
       const value = controllers.length > 0
         ? useController(controllers, instance, content, propertyReader)
         : propertyReader()
