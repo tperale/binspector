@@ -1,5 +1,3 @@
-import { type BinaryReader } from './cursor.ts'
-
 const ansi = (start: number, end: number) => (input: string) => `\u001B[${start}m${input}\u001B[${end}m`
 
 const dim = ansi(2, 22)
@@ -148,7 +146,7 @@ function binDumpEmptyLine (opt: BindumpOptions): string {
   return line
 }
 
-export function binDumpLine (cur: BinaryReader, offset: number, endOffset: number = 0, opt: BindumpOptions): string {
+export function binDumpLine (arr: ArrayBufferLike, offset: number, endOffset: number = 0, opt: BindumpOptions): string {
   let line = ''
 
   const baseReprSize = (2 ** 8 - 1).toString(opt.base).length
@@ -157,8 +155,8 @@ export function binDumpLine (cur: BinaryReader, offset: number, endOffset: numbe
   const lineAddress = Math.floor(offset / opt.lineLength) * opt.lineLength
   const paddingStart = lineAddress > 0 ? offset % lineAddress : offset
 
-  const offsetFinish = endOffset === 0 ? Math.min(offset + opt.lineLength, cur.length) : Math.min(endOffset, offset + opt.lineLength, cur.length)
-  const buf = [...new Uint8Array(cur.data.buffer.slice(offset, offsetFinish))]
+  const offsetFinish = endOffset === 0 ? Math.min(offset + opt.lineLength, arr.byteLength) : Math.min(endOffset, offset + opt.lineLength, arr.byteLength)
+  const buf = [...new Uint8Array(arr.slice(offset, offsetFinish))]
 
   // Address representation
   if (opt.showAddress) {
@@ -195,27 +193,27 @@ export function binDumpLine (cur: BinaryReader, offset: number, endOffset: numbe
   return line
 }
 
-export function binDump (cur: BinaryReader, start: number = 0, end: number = 0, opt?: Partial<BindumpOptions>): string {
+export function binDump (arr: ArrayBufferLike, start: number = 0, end: number = 0, opt?: Partial<BindumpOptions>): string {
   const options = { ...defaultBindumpOptions, ...opt }
   const content = []
 
-  if (start > cur.length) {
+  if (start > arr.byteLength) {
     throw new Error('Start Offset bigger than the buffer length')
   }
 
-  if (end > cur.length) {
+  if (end > arr.byteLength) {
     throw new Error('End Offset bigger than the buffer length')
   }
 
   const startOffset = Math.max(start - options.bufferOffsetPadding, 0)
   const endOffset = end > 0
-    ? Math.min(end + options.bufferOffsetPadding, cur.length)
-    : cur.length
+    ? Math.min(end + options.bufferOffsetPadding, arr.byteLength)
+    : arr.byteLength
 
   let offset = startOffset
   while (offset < endOffset) {
     const endLine = offset + (options.lineLength - (offset % options.lineLength))
-    content.push(binDumpLine(cur, offset, Math.min(endLine, endOffset), options))
+    content.push(binDumpLine(arr, offset, Math.min(endLine, endOffset), options))
     offset += options.lineLength
     // Re-align the offset to the address
     offset = offset - (offset % options.lineLength)
@@ -224,15 +222,15 @@ export function binDump (cur: BinaryReader, start: number = 0, end: number = 0, 
   return content.join('\n')
 }
 
-function binDumpPrimitive (cur: BinaryReader, startOffset: number, endOffset: number, propertyName: string, value: any, opt: BindumpOptions, indent = 0) {
+function binDumpPrimitive (arr: ArrayBufferLike, startOffset: number, endOffset: number, propertyName: string, value: any, opt: BindumpOptions, indent = 0) {
   const line = ((typeof startOffset === 'number') && (typeof endOffset === 'number') && (endOffset > 0))
-    ? binDump(cur, startOffset, endOffset, opt)
+    ? binDump(arr, startOffset, endOffset, opt)
     : binDumpEmptyLine(opt)
 
   return `${line} ${' '.repeat(indent)}${propertyName}`.concat(value !== undefined ? `: ${value}` : '')
 }
 
-function binDumpClass (cur: BinaryReader, meta: BinspectorMetaClass | BinspectorMetaClass[], obj: any = {}, indent = 0): string {
+function binDumpClass (arr: ArrayBufferLike, meta: BinspectorMetaClass | BinspectorMetaClass[], obj: any = {}, indent = 0): string {
   const opt = defaultBindumpOptions
   const emptyLineOpt = { ...opt, separator: '┊' }
 
@@ -243,16 +241,16 @@ function binDumpClass (cur: BinaryReader, meta: BinspectorMetaClass | Binspector
         if (components.every(isMetaClass)) {
           return [
             `${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent + 2)}${propertyName}[:${components.length}]{}:`,
-            binDumpClass(cur, components, newObj, indent + 4)
+            binDumpClass(arr, components, newObj, indent + 4)
           ]
         } else {
           if (typeof newObj === 'string') {
             const startOffset = Math.min(...components.map(x => x.startOffset))
             const endOffset = Math.max(...components.map(x => x.endOffset))
-            return binDumpPrimitive(cur, startOffset, endOffset, propertyName, newObj, opt, indent + 2)
+            return binDumpPrimitive(arr, startOffset, endOffset, propertyName, newObj, opt, indent + 2)
           } else {
             return components.map((x, i) =>
-              binDumpPrimitive(cur, x.startOffset, x.endOffset, `${propertyName}_${i}`, newObj[i], opt, indent + 2)
+              binDumpPrimitive(arr, x.startOffset, x.endOffset, `${propertyName}_${i}`, newObj[i], opt, indent + 2)
             )
           }
         }
@@ -260,10 +258,10 @@ function binDumpClass (cur: BinaryReader, meta: BinspectorMetaClass | Binspector
         if (isMetaClass(components)) {
           return [
             `${binDumpEmptyLine(emptyLineOpt)} ${' '.repeat(indent + 2)}${propertyName}{}:`,
-            binDumpClass(cur, components, newObj, indent + 4)
+            binDumpClass(arr, components, newObj, indent + 4)
           ]
         } else {
-          return binDumpPrimitive(cur, components.startOffset, components.endOffset, propertyName, newObj, opt, indent + 2)
+          return binDumpPrimitive(arr, components.startOffset, components.endOffset, propertyName, newObj, opt, indent + 2)
         }
       }
     })
@@ -282,13 +280,13 @@ function binDumpClass (cur: BinaryReader, meta: BinspectorMetaClass | Binspector
 }
 
 export default {
-  show: (cur: BinaryReader) => {
-    return binDump(cur, 0, cur.length, defaultBindumpOptions)
+  show: (arr: ArrayBufferLike | ArrayBufferView) => {
+    return binDump(ArrayBuffer.isView(arr) ? arr.buffer : arr, 0, arr.byteLength, defaultBindumpOptions)
   },
-  at: (cur: BinaryReader, start: number, end: number = 0) => {
-    return binDump(cur, start, end, defaultBindumpOptions)
+  at: (arr: ArrayBufferLike | ArrayBufferView, start: number, end: number = 0) => {
+    return binDump(ArrayBuffer.isView(arr) ? arr.buffer : arr, start, end, defaultBindumpOptions)
   },
-  dump: (cur: BinaryReader, meta: BinspectorMetaClass, obj?: any) => {
-    return binDumpClass(cur, meta, obj)
+  dump: (arr: ArrayBufferLike | ArrayBufferView, meta: BinspectorMetaClass, obj?: any) => {
+    return binDumpClass(ArrayBuffer.isView(arr) ? arr.buffer : arr, meta, obj)
   }
 }
