@@ -2,7 +2,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import BinDump from '../hexdump.ts'
+import BinDump from '../bindump.ts'
 
 const arr = new Uint8Array([
   0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
@@ -12,7 +12,7 @@ const arr = new Uint8Array([
   0x29, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x30, 0x31, 0x32,
 ]).buffer
 
-describe('Using the hexdump', () => {
+describe('Using the bindump', () => {
   it('should display the entire bindump', () => {
     console.log(BinDump.show(arr))
     expect(true).toBe(true)
