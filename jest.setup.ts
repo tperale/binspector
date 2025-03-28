@@ -50,7 +50,7 @@ expect.extend({
     const writtenBuf = new BinaryWriter()
     binwrite(writtenBuf, ObjectDefinition, decoded)
 
-    return equalArrayBuffer(arr, writtenBuf.buffer())
+    return equalArrayBuffer(arr, writtenBuf.buffer)
   },
   fileReadWriteEquality (filename: string, ObjectDefinition: any) {
     const data = fs.readFileSync(filename)
@@ -60,7 +60,7 @@ expect.extend({
     const writtenBuf = new BinaryWriter()
     binwrite(writtenBuf, ObjectDefinition, decoded)
 
-    return equalArrayBuffer(data, writtenBuf.buffer())
+    return equalArrayBuffer(data, writtenBuf.buffer)
   },
 })
 

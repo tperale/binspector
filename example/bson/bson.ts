@@ -251,7 +251,7 @@ export class Bson {
   }
 
   toBuffer () {
-    return binwrite(new BinaryWriter(), Bson, this).buffer()
+    return binwrite(new BinaryWriter(), Bson, this).buffer
   }
 
   static from (buf: ArrayBufferLike, meta: Partial<BinspectorMetaClass> = {}) {

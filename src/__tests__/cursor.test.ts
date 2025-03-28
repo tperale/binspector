@@ -32,15 +32,40 @@ function testReadWriteEquality (arr: number[], sequence: PrimitiveSymbol[], endi
   bw.setEndian(endian)
   sequence.map((prim: PrimitiveSymbol, i: number) => bw.write(prim, content[i] as number | bigint))
 
-  const buf_out = new Uint8Array(bw.buffer())
+  const buf_out = new Uint8Array(bw.buffer)
 
   expect(buf_in).toBeEqualArrayBuffer(buf_out)
 }
 
+describe('Tests BinaryCursor construction', () => {
+  it('BinaryReader: should be an ArrayView', () => {
+    const arr = Uint8Array.from([1, 2, 3])
+    const br = new BinaryReader(arr)
+    expect(ArrayBuffer.isView(br)).toEqual(true)
+
+    const brr = new BinaryReader(br)
+    expect(ArrayBuffer.isView(brr)).toEqual(true)
+    expect(brr).toBeEqualArrayBuffer(br)
+  })
+  it('BinaryWriter: should be an ArrayView', () => {
+    const bw = new BinaryWriter()
+    expect(ArrayBuffer.isView(bw)).toEqual(true)
+  })
+  it('BinaryReader: should accept BinaryWriter as argument', () => {
+    const bw = new BinaryWriter()
+    bw.write(PrimitiveSymbol.u8, 0x01)
+    bw.write(PrimitiveSymbol.u16, 0x02)
+    expect(bw.byteLength).toEqual(3)
+    const br = new BinaryReader(bw)
+    expect(bw.byteLength).toEqual(br.byteLength)
+    expect(bw).toBeEqualArrayBuffer(br)
+  })
+})
+
 describe('Tests BinaryReader', () => {
   it('BinaryReader: reads a sequence', () => {
     const cur = testBinaryReader([0x09, 0x20, 0xFF, 0x34, 0x56], [PrimitiveSymbol.u8, PrimitiveSymbol.u32], [0x09, 0x20FF3456])
-    expect(cur.index).toStrictEqual(5)
+    expect(cur.offset()).toStrictEqual(5)
   })
   it('BinaryReader: reads EOF', () => {
     const cur = testBinaryReader([0x09], [PrimitiveSymbol.u8], [9])

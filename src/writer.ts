@@ -81,7 +81,7 @@ export function computeBinSize (instance: any): number {
   function _getSize (x: any): number {
     const bw = new BinaryWriter()
     binwrite(bw, x.constructor, x)
-    return bw.length
+    return bw.byteLength
   }
 
   if (Array.isArray(instance)) {

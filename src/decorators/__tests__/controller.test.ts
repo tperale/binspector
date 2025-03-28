@@ -21,7 +21,7 @@ class TestCursor extends Cursor {
   }
 
   constructor () {
-    super()
+    super(new ArrayBuffer(0))
   }
 }
 
