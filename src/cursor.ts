@@ -1,4 +1,4 @@
-import { EOF, PrimitiveSymbol } from './types.ts'
+import { Context, EOF, PrimitiveSymbol } from './types.ts'
 
 declare global {
   interface DataView {
@@ -50,7 +50,7 @@ DataView.prototype.setInt24 = function (pos, val, littleEndian) {
 /**
  * Cursor
  */
-export abstract class Cursor {
+export abstract class Cursor extends DataView<ArrayBufferLike> {
   abstract offset (): number
   abstract move (address: number): number
   abstract read (primitive: PrimitiveSymbol): number | bigint | typeof EOF
@@ -67,9 +67,9 @@ export enum BinaryCursorEndianness {
 }
 
 export abstract class BinaryCursor extends Cursor {
-  index: number = 0
-  length: number = 0
-  endianness: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian
+  protected index: number = 0
+  protected length: number = 0
+  protected endianness: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian
 
   move (offset: number): number {
     this.index = offset
@@ -91,7 +91,7 @@ export abstract class BinaryCursor extends Cursor {
     this.endianness = endian
   }
 
-  _getPrimitiveSize (primType: PrimitiveSymbol): number {
+  static getPrimitiveSize (primType: PrimitiveSymbol): number {
     switch (primType) {
       case PrimitiveSymbol.u8:
       case PrimitiveSymbol.i8:
@@ -117,35 +117,33 @@ export abstract class BinaryCursor extends Cursor {
 }
 
 export class BinaryReader extends BinaryCursor {
-  data: DataView
-
-  _readPrimitive (primType: PrimitiveSymbol): number | bigint {
+  protected _readPrimitive (primType: PrimitiveSymbol): number | bigint {
     const endian = this.endianness === BinaryCursorEndianness.LittleEndian
     switch (primType) {
       case PrimitiveSymbol.u8:
-        return this.data.getUint8(this.index)
+        return this.getUint8(this.index)
       case PrimitiveSymbol.u16:
-        return this.data.getUint16(this.index, endian)
+        return this.getUint16(this.index, endian)
       case PrimitiveSymbol.u24:
-        return this.data.getUint24(this.index, endian)
+        return this.getUint24(this.index, endian)
       case PrimitiveSymbol.u32:
-        return this.data.getUint32(this.index, endian)
+        return this.getUint32(this.index, endian)
       case PrimitiveSymbol.u64:
-        return this.data.getBigUint64(this.index, endian)
+        return this.getBigUint64(this.index, endian)
       case PrimitiveSymbol.i8:
-        return this.data.getInt8(this.index)
+        return this.getInt8(this.index)
       case PrimitiveSymbol.i16:
-        return this.data.getInt16(this.index, endian)
+        return this.getInt16(this.index, endian)
       case PrimitiveSymbol.i24:
-        return this.data.getInt24(this.index, endian)
+        return this.getInt24(this.index, endian)
       case PrimitiveSymbol.i32:
-        return this.data.getInt32(this.index, endian)
+        return this.getInt32(this.index, endian)
       case PrimitiveSymbol.i64:
-        return this.data.getBigInt64(this.index, endian)
+        return this.getBigInt64(this.index, endian)
       case PrimitiveSymbol.float32:
-        return this.data.getFloat32(this.index, endian)
+        return this.getFloat32(this.index, endian)
       case PrimitiveSymbol.float64:
-        return this.data.getFloat64(this.index, endian)
+        return this.getFloat64(this.index, endian)
       default:
         return 0
     }
@@ -158,7 +156,7 @@ export class BinaryReader extends BinaryCursor {
   read (primitive: PrimitiveSymbol): number | bigint | typeof EOF {
     try {
       const value = this._readPrimitive(primitive)
-      this.forward(this._getPrimitiveSize(primitive))
+      this.forward(BinaryCursor.getPrimitiveSize(primitive))
       return value
     } catch {
       return EOF
@@ -166,20 +164,117 @@ export class BinaryReader extends BinaryCursor {
   }
 
   constructor (array: ArrayBufferView | ArrayBufferLike, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-    super()
-    this.data = ArrayBuffer.isView(array)
-      ? new DataView(array.buffer, array.byteOffset, array.byteLength)
-      : new DataView(array)
+    if (ArrayBuffer.isView(array)) {
+      super(array.buffer, array.byteOffset, array.byteLength)
+    } else {
+      super(array)
+    }
+
     this.endianness = endian
-    this.length = this.data.byteLength
+  }
+}
+
+function BufferAccessor (_: unknown, context: Context<BinaryWriter, ArrayBufferLike>) {
+  function createArrayBufferFromBinaryReader (view: DataView, data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]>): ArrayBufferLike {
+    data.forEach(([value, primitive, index, _endian]) => {
+      const endian = _endian === BinaryCursorEndianness.LittleEndian
+
+      switch (primitive) {
+        case PrimitiveSymbol.u8:
+          view.setUint8(index, Number(value))
+          break
+        case PrimitiveSymbol.u16:
+          view.setUint16(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.u24:
+          view.setUint24(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.u32:
+          view.setUint32(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.u64:
+          view.setBigUint64(index, BigInt(value), endian)
+          break
+        case PrimitiveSymbol.i8:
+          view.setInt8(index, Number(value))
+          break
+        case PrimitiveSymbol.i16:
+          view.setInt16(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.i24:
+          view.setInt24(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.i32:
+          view.setInt32(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.i64:
+          view.setBigInt64(index, BigInt(value), endian)
+          break
+        case PrimitiveSymbol.float32:
+          view.setFloat32(index, Number(value), endian)
+          break
+        case PrimitiveSymbol.float64:
+          view.setFloat64(index, Number(value), endian)
+          break
+      }
+    }, 0)
+
+    return view.buffer
+  }
+
+  if (context.kind === 'accessor') {
+    return {
+      get (this: BinaryWriter) {
+        if (this.hasChanged) {
+          this.cachedBuffer = createArrayBufferFromBinaryReader(new DataView(new ArrayBuffer(this.length)), this.data)
+          this.hasChanged = false
+        }
+        return this.cachedBuffer
+      },
+    }
+  }
+}
+
+function ByteLengthAccessor (_: unknown, context: Context<BinaryWriter, number>) {
+  if (context.kind === 'accessor') {
+    return {
+      get (this: BinaryWriter) {
+        return this.length
+      },
+    }
   }
 }
 
 export class BinaryWriter extends BinaryCursor {
-  data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]> = []
+  protected hasChanged: boolean = false
+  protected cachedBuffer: ArrayBufferLike = new ArrayBuffer(0)
+  protected data: Array<[(number | bigint), PrimitiveSymbol, number, BinaryCursorEndianness]> = []
+
+  /**
+   * This accessor overwrite the `byteLength` property inherited from the DataView.
+   *
+   * Because the `byteLength` property is readOnly the decorator here is used as
+   * an hack to remain compliant as a ArrayBufferView but manage to show
+   * dynamic data.
+   */
+  @ByteLengthAccessor
+  accessor byteLength: number
+
+  /**
+   * This accessor overwrite the `buffer` property inherited from the DataView.
+   *
+   * This accessor is used because `buffer` are difficult to resize with
+   * DataView.
+   * The decorator is used as an hack to re-write the getter of this property
+   * and returns the ArrayBuffer based on the data written at any time while
+   * remaining compliant with the ArrayBufferView interface.
+   */
+  @BufferAccessor
+  accessor buffer: ArrayBufferLike
 
   write (primitive: PrimitiveSymbol, value: number | bigint): void {
-    const size = this._getPrimitiveSize(primitive)
+    this.hasChanged = true
+    const size = BinaryCursor.getPrimitiveSize(primitive)
     const index = this.offset()
     const endian = this.getEndian()
 
@@ -192,59 +287,9 @@ export class BinaryWriter extends BinaryCursor {
     throw new Error('Shouldn\'t call "read" method on a BinaryWriter object')
   }
 
-  buffer (): ArrayBufferLike {
-    const buf = new DataView(new ArrayBuffer(this.length))
-
-    this.data.forEach(([value, primitive, index, _endian]) => {
-      const endian = _endian === BinaryCursorEndianness.LittleEndian
-
-      switch (primitive) {
-        case PrimitiveSymbol.u8:
-          buf.setUint8(index, Number(value))
-          break
-        case PrimitiveSymbol.u16:
-          buf.setUint16(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.u24:
-          buf.setUint24(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.u32:
-          buf.setUint32(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.u64:
-          buf.setBigUint64(index, BigInt(value), endian)
-          break
-        case PrimitiveSymbol.i8:
-          buf.setInt8(index, Number(value))
-          break
-        case PrimitiveSymbol.i16:
-          buf.setInt16(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.i24:
-          buf.setInt24(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.i32:
-          buf.setInt32(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.i64:
-          buf.setBigInt64(index, BigInt(value), endian)
-          break
-        case PrimitiveSymbol.float32:
-          buf.setFloat32(index, Number(value), endian)
-          break
-        case PrimitiveSymbol.float64:
-          buf.setFloat64(index, Number(value), endian)
-          break
-      }
-
-      return index + this._getPrimitiveSize(primitive)
-    }, 0)
-
-    return buf.buffer
-  }
-
   constructor (endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-    super()
+    super(new ArrayBuffer(0))
+
     this.endianness = endian
   }
 }

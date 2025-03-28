@@ -167,7 +167,7 @@ const obj = {
 
 const protocol = binwrite(new BinaryWriter(), obj, Protocol)
 
-const buf = protocol.buffer() // <= ArrayBuffer(...)
+const buf = protocol.buffer // <= ArrayBuffer(...)
 
 await fs.appendFile(path.join(__dirname, 'proto.bin'), new Uint8Array(buf));
 ```
