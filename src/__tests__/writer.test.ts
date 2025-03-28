@@ -8,7 +8,7 @@ function expectWriteTest<Target> (instance: any, ObjectDefinition: InstantiableO
   const writtenBuf = new BinaryWriter(endian)
   binwrite(writtenBuf, ObjectDefinition, instance)
 
-  expect(new Uint8Array(writtenBuf.buffer())).toBeEqualArrayBuffer(Uint8Array.from(buf))
+  expect(writtenBuf.buffer()).toBeEqualArrayBuffer(Uint8Array.from(buf))
 }
 
 function decodeEncodeTest<Target> (ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {

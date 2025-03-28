@@ -5,14 +5,21 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
-      toBeEqualArrayBuffer (expected: Uint8Array): R
+      toBeEqualArrayBuffer (expected: ArrayBufferLike | ArrayBufferView): R
       binReadWriteEquality (ObjectDefinition: any): R
       fileReadWriteEquality (ObjectDefinition: any): R
     }
   }
 }
 
-function equalArrayBuffer (arr1: Uint8Array, arr2: Uint8Array) {
+function equalArrayBuffer (buf1: ArrayBufferLike | ArrayBufferView, buf2: ArrayBufferLike | ArrayBufferView) {
+  const arr1 = ArrayBuffer.isView(buf1)
+    ? new Uint8Array(buf1.buffer.slice(buf1.byteOffset, buf1.byteOffset + buf1.byteLength))
+    : new Uint8Array(buf1)
+  const arr2 = ArrayBuffer.isView(buf2)
+    ? new Uint8Array(buf2.buffer.slice(buf2.byteOffset, buf2.byteOffset + buf2.byteLength))
+    : new Uint8Array(buf2)
+
   if (arr1.byteLength !== arr2.byteLength) {
     return {
       message: () => `Buffer length not matching ${arr1.byteLength} !== ${arr2.byteLength} | ${arr1} !== ${arr2}`,
@@ -34,16 +41,16 @@ function equalArrayBuffer (arr1: Uint8Array, arr2: Uint8Array) {
 }
 
 expect.extend({
-  toBeEqualArrayBuffer (arr1: Uint8Array, arr2: Uint8Array) {
+  toBeEqualArrayBuffer (arr1: ArrayBufferLike | ArrayBufferView, arr2: ArrayBufferLike | ArrayBufferView) {
     return equalArrayBuffer(arr1, arr2)
   },
-  binReadWriteEquality (arr: ArrayBuffer, ObjectDefinition: any) {
+  binReadWriteEquality (arr: ArrayBufferLike | ArrayBufferView, ObjectDefinition: any) {
     const decoded = binread(new BinaryReader(arr), ObjectDefinition)
 
     const writtenBuf = new BinaryWriter()
     binwrite(writtenBuf, ObjectDefinition, decoded)
 
-    return equalArrayBuffer(new Uint8Array(arr), new Uint8Array(writtenBuf.buffer()))
+    return equalArrayBuffer(arr, writtenBuf.buffer())
   },
   fileReadWriteEquality (filename: string, ObjectDefinition: any) {
     const data = fs.readFileSync(filename)
@@ -53,7 +60,7 @@ expect.extend({
     const writtenBuf = new BinaryWriter()
     binwrite(writtenBuf, ObjectDefinition, decoded)
 
-    return equalArrayBuffer(data, new Uint8Array(writtenBuf.buffer()))
+    return equalArrayBuffer(data, writtenBuf.buffer())
   },
 })
 

@@ -165,7 +165,7 @@ export class BinaryReader extends BinaryCursor {
     }
   }
 
-  constructor (array: Uint8Array | ArrayBufferLike, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+  constructor (array: ArrayBufferView | ArrayBufferLike, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
     super()
     this.data = ArrayBuffer.isView(array)
       ? new DataView(array.buffer, array.byteOffset, array.byteLength)
