@@ -1,4 +1,4 @@
-import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src/index.ts'
+import { PrimitiveSymbol, Relation, Count, Enum, IfThen, Else, Choice, Matrix, Offset, Uint8, Uint16, Uint32, Ascii, LittleEndian } from '../../src/index.ts'
 import {
   OS22XBITMAPHEADER, BITMAPINFOHEADER, BITMAPV2INFOHEADER, BITMAPV3INFOHEADER, BITMAPV4INFOHEADER, BITMAPV5INFOHEADER,
 } from './header.ts'
@@ -50,7 +50,7 @@ class BitmapFileHeader {
   offset: number
 }
 
-@Endian(BinaryCursorEndianness.LittleEndian)
+@LittleEndian
 export class Bitmap {
   @Relation(BitmapFileHeader)
   file_header: BitmapFileHeader
@@ -80,7 +80,6 @@ export class Bitmap {
   color_table: RGBQ[]
 
   /* The gap size depend on the offset found in the BitmapFileHeader */
-  /* Just use the `@Pre` decorator to move the cursor to the correct place */
   @Offset('file_header.offset')
   @Matrix('bitmap_header.width', 'bitmap_header.height', 4)
   @Choice('bitmap_header.bits_per_pixels', {
@@ -112,3 +111,5 @@ export class Bitmap {
     console.log(lines.reverse().join('\n'))
   }
 }
+
+export default Bitmap

@@ -1,4 +1,4 @@
-import { Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii, Endian, BinaryCursorEndianness } from '../../src/index.ts'
+import { Relation, Count, Match, Validate, While, Enum, Choice, Uint8, Uint16, Uint32, Ascii, BigEndian } from '../../src/index.ts'
 
 enum PNGTypes {
   IHDR = 'IHDR',
@@ -139,12 +139,11 @@ class PNGChunk {
   })
   data: PNGChunkIDAT | PNGChunkPLTE | PNGChunkbKGD | PNGChunkpHYs | PNGChunktIME | PNGChunkIHDR
 
-  // @Crc(u32)
   @Uint32
   crc: number
 }
 
-@Endian(BinaryCursorEndianness.BigEndian)
+@BigEndian
 export class PNG {
   @Match([137, 80, 78, 71, 13, 10, 26, 10])
   @Count(8)
@@ -156,3 +155,5 @@ export class PNG {
   @Relation(PNGChunk)
   chunks: PNGChunk[]
 }
+
+export default PNG

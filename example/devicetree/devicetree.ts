@@ -1,4 +1,4 @@
-import { NullTerminatedString, Choice, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64, Padding, Endian, BinaryCursorEndianness } from '../../src/index.ts'
+import { NullTerminatedString, Choice, Relation, Count, Match, While, Enum, Peek, Offset, Until, EOF, Uint8, Uint32, Uint64, Padding, BigEndian } from '../../src/index.ts'
 
 enum DTBStructureBlockToken {
   FDT_BEGIN_NODE = 0x1,
@@ -168,7 +168,7 @@ function asObjectDtb (structs: DTBStructBlock[]): object {
   return result
 }
 
-@Endian(BinaryCursorEndianness.BigEndian)
+@BigEndian
 export class DTB {
   @Relation(DTBHeader)
   header: DTBHeader
@@ -192,3 +192,5 @@ export class DTB {
     return Reflect.get(asObjectDtb(this.structs), '')
   }
 }
+
+export default DTB
