@@ -1,4 +1,5 @@
 import { Context, EOF, PrimitiveSymbol } from './types.ts'
+import { EOFError } from './error'
 
 declare global {
   interface DataView {
@@ -53,7 +54,7 @@ DataView.prototype.setInt24 = function (pos, val, littleEndian) {
 export abstract class Cursor extends DataView<ArrayBufferLike> {
   abstract offset (): number
   abstract move (address: number): number
-  abstract read (primitive: PrimitiveSymbol): number | bigint | typeof EOF
+  abstract read (primitive: PrimitiveSymbol): number | bigint
   abstract write (primitive: PrimitiveSymbol, value: number | bigint): void
 
   forward (x: number): number {
@@ -153,13 +154,16 @@ export class BinaryReader extends BinaryCursor {
     throw new Error('Shouldn\'t call "write" method on a BinaryReader object')
   }
 
-  read (primitive: PrimitiveSymbol): number | bigint | typeof EOF {
+  read (primitive: PrimitiveSymbol): number | bigint {
     try {
       const value = this._readPrimitive(primitive)
       this.forward(BinaryCursor.getPrimitiveSize(primitive))
       return value
-    } catch {
-      return EOF
+    } catch (err) {
+      if (err instanceof RangeError) {
+        throw new EOFError()
+      }
+      throw err
     }
   }
 
@@ -283,7 +287,7 @@ export class BinaryWriter extends BinaryCursor {
     this.forward(size)
   }
 
-  read (_: PrimitiveSymbol): number | bigint | typeof EOF {
+  read (_: PrimitiveSymbol): number | bigint {
     throw new Error('Shouldn\'t call "read" method on a BinaryWriter object')
   }
 

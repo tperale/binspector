@@ -13,7 +13,7 @@ class TestCursor extends Cursor {
     return address
   }
 
-  read (_: PrimitiveSymbol): | number | bigint | typeof EOF {
+  read (_: PrimitiveSymbol): | number | bigint {
     return 0
   }
 

@@ -188,23 +188,32 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
       let ret
       try {
         ret = read()
-      } catch (error) {
-        // In the case of chained controller the inner reader would reach EOF first
-        // and throw an EOFError but the actual value we want to send to the outer
-        // controller is the one built over the inner controller.
-        if (error instanceof EOFError) {
-          ret = EOF
-        } else {
-          throw error
+      } catch (err) {
+        // In the case of chained controller, for instance:
+        //
+        // ```
+        // class {
+        //   @Until(EOF)
+        //   @NullTerminatedString
+        //   property: string[]
+        // }
+        // ```
+        //
+        // The inner reader (`@NullTerminatedString`) would reach EOF first
+        // and throw an EOFError but the actual value we want to send to the
+        // outer controller is the one built over the inner controller.
+        //
+        // This is the reason why the `EOFError` will store the result in its
+        // properties so that the `Until(EOF)` controller can catch it and
+        // handle it.
+        //
+        // If no one handle that value the error will just be passed through.
+        if (err instanceof EOFError) {
+          throw new EOFError(result)
         }
+        throw err
       }
 
-      if (ret === EOF) {
-        // If you attempt to read a primitive but reached the EOF.
-        // EOF might be the only value we don't want to put inside the result array.
-        // Other special character like `\0` is discutable.
-        throw new EOFError(result)
-      }
       result.push(ret)
       if (!cond(ret, result.length, currStateObject, cursor.offset(), startOffset)) {
         if (opt.peek) {

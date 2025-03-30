@@ -6,7 +6,7 @@
  * @module reader
  */
 import { type Cursor } from './cursor.ts'
-import { EOFError, UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error.ts'
+import { UnknownPropertyType, ReferringToEmptyClassError, WrongArgumentReturnType } from './error.ts'
 import Meta from './metadatas.ts'
 import {
   isRelation,
@@ -14,7 +14,7 @@ import {
   isUnknownProperty,
   type PropertyType,
 } from './decorators/primitive.ts'
-import { EOF, ExecutionScope, type InstantiableObject } from './types.ts'
+import { ExecutionScope, type InstantiableObject } from './types.ts'
 import { useController, type ControllerReader } from './decorators/controller.ts'
 import { TransformerExecLevel, useTransformer } from './decorators/transformer.ts'
 import { useValidators } from './decorators/validator.ts'
@@ -65,24 +65,7 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
           throw new WrongArgumentReturnType(ObjectDefinitionName, String(field.propertyName))
         }
 
-        try {
-          return binread(content, field.relation, ctx, meta, ...finalArgs)
-        } catch (error) {
-          // We need to catch the EOF error because the binread function
-          // can't return it so it just throw it EOFError.
-          // It's necessary to return EOF for relation that were not completely read
-          // in a controller. For instance:
-          // class Protocol {
-          //   @Until(EOF)
-          //   @Controller(DataChunk)
-          //   data: DataChunk
-          // }
-          if (error instanceof EOFError) {
-            return EOF
-          } else {
-            throw error
-          }
-        }
+        return binread(content, field.relation, ctx, meta, ...finalArgs)
       }
     } else {
       throw new UnknownPropertyType(field)
@@ -149,13 +132,6 @@ export function binread<Target> (content: Cursor, ObjectDefinition: Instantiable
       const value = controllers.length > 0
         ? useController(controllers, instance, content, propertyReader)
         : propertyReader()
-
-      if (value === EOF) {
-        // TODO error handling throwing an error containing the backtrace + the current state of the object
-        // If the value is EOF here it means it wasn't handled correctly inside a controller
-        // Mandatory to throw EOF because returning EOF would break the typing.
-        throw new EOFError()
-      }
 
       const transformedValue = useTransformer(transformers, value, instance)
 
