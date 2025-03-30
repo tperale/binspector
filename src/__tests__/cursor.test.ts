@@ -1,5 +1,6 @@
 import { BinaryCursorEndianness, BinaryReader, BinaryWriter } from '../cursor.ts'
-import { EOF, PrimitiveSymbol } from '../types.ts'
+import { PrimitiveSymbol } from '../types.ts'
+import { EOFError } from '../error.ts'
 
 function testBinaryReader<T extends readonly [] | readonly PrimitiveSymbol[]> (arr: number[], sequence: T, result: { [K in keyof T]: number | bigint }, endian = BinaryCursorEndianness.BigEndian): BinaryReader {
   const buf = Uint8Array.from(arr).buffer
@@ -69,7 +70,9 @@ describe('Tests BinaryReader', () => {
   })
   it('BinaryReader: reads EOF', () => {
     const cur = testBinaryReader([0x09], [PrimitiveSymbol.u8], [9])
-    expect(cur.read(PrimitiveSymbol.u8)).toStrictEqual(EOF)
+    expect(() => {
+      cur.read(PrimitiveSymbol.u8)
+    }).toThrow(EOFError)
   })
   it('u16: reads u16', () => {
     testBinaryReader([0x12, 0x34], [PrimitiveSymbol.u16], [0x1234])
