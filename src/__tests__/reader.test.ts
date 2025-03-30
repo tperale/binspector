@@ -845,3 +845,23 @@ describe('Reading a relation to an empty definition', () => {
     expectReadTestToThrow([0x01, 0x02, 0x03, 0x04], Protocol)
   })
 })
+
+describe('Reading an uncomplete relation with @Until(EOF))', () => {
+  it('should throw an error', () => {
+    class SubProtocol {
+      @Uint8
+      x: number
+
+      @Uint8
+      y: number
+    }
+
+    class Protocol {
+      @Until(EOF)
+      @Relation(SubProtocol)
+      header: SubProtocol
+    }
+
+    expectReadTestToThrow([0x01, 0x02, 0x03], Protocol)
+  })
+})
