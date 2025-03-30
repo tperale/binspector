@@ -372,28 +372,24 @@ export function While<This, Value> (func: ControllerWhileFunction<This>, opt?: P
  * @category Decorators
  */
 export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Partial<ControllerOptions>): DecoratorType<This, Value> {
-  function untilEofController (): ControllerFunction<This> {
-    const wrap = whileFunctionFactory(() => true)
-    return function (
-      currStateObject: This,
-      cursor: Cursor,
-      read: ControllerReader,
-      opt: ControllerOptions,
-    ): any {
-      try {
-        wrap(currStateObject, cursor, read, opt)
-      } catch (error) {
-        if (error instanceof EOFError) {
-          return error.value
-        } else {
-          throw error
+  function untilEofController<This> (_: This, cursor: Cursor, read: ControllerReader, opt: ControllerOptions): any[] {
+    const result: any[] = []
+    const startOffset = cursor.offset()
+
+    while (true) {
+      result.push(read())
+      if (cursor.offset() === cursor.byteLength) {
+        if (opt.peek) {
+          cursor.move(startOffset)
         }
+
+        return result
       }
     }
   }
 
   if (cmp === EOF) {
-    return controllerDecoratorFactory('until', untilEofController(), opt)
+    return controllerDecoratorFactory('until', untilEofController, opt)
   } else {
     return controllerDecoratorFactory('until', whileFunctionFactory((x: number | string | typeof EOF) => x !== cmp), opt)
   }

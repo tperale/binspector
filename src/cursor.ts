@@ -1,5 +1,5 @@
 import { Context, EOF, PrimitiveSymbol } from './types.ts'
-import { EOFError } from './error'
+import { EOFError } from './error.ts'
 
 declare global {
   interface DataView {
