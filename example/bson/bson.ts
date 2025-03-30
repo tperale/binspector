@@ -255,7 +255,7 @@ export class Bson {
   }
 
   static from (buf: ArrayBufferLike, meta: Partial<BinspectorMetaClass> = {}) {
-    return binread(new BinaryReader(buf), Bson, {}, meta)
+    return binread(new BinaryReader(buf), Bson, { meta })
   }
 
   static fromObject (obj: JSONObject) {
@@ -268,3 +268,5 @@ export class Bson {
     return bson
   }
 }
+
+export default Bson
