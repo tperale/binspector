@@ -4,14 +4,8 @@ import { PropertyType } from './decorators/index.ts'
 import { type Context, type DecoratorMetadataObject } from './types.ts'
 
 export class EOFError extends Error {
-  value: any
-
-  constructor (value?: any) {
+  constructor (public value?: any) {
     super('EOF Error')
-    this.name = this.constructor.name
-    this.value = value
-    // TODO Do something with the history
-    // this.history = history
   }
 }
 
@@ -62,6 +56,18 @@ export class WrongArgumentReturnType extends Error {
 export class WrongBitfieldClassImplementation extends Error {
   constructor (property: string) {
     super(`WrongBitfieldClassImplementation: The property '@Bitfield() ${property}' can't be declared alongside a relation '@Relation(...) ${property}'.`)
+  }
+}
+
+/**
+ * Error is thrown when an error is catched during the reading process.
+ *
+ * @param {value} Temporary unfinished object that was being read.
+ * @param {err} The error catch during the reading phase.
+ */
+export class PartialReadingError extends Error {
+  constructor (public value: any, public err: Error) {
+    super(`The object reading operation didn't finished correctly. Caught the following exception: '${err.name}'.`)
   }
 }
 

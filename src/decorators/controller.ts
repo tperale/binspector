@@ -53,7 +53,7 @@
 import { createPropertyMetaDescriptor, NumberOrRecursiveKey, type PropertyMetaDescriptor, recursiveGet, StringFormattedRecursiveKeyOf } from './common.ts'
 import { type Cursor } from '../cursor.ts'
 import { EOF, type DecoratorType, type Context } from '../types.ts'
-import { relationExistsOrThrow, EOFError } from '../error.ts'
+import { relationExistsOrThrow, EOFError, PartialReadingError } from '../error.ts'
 import Meta from '../metadatas.ts'
 
 export const ControllerSymbol = Symbol('controller')
@@ -185,36 +185,41 @@ function whileFunctionFactory<This> (cond: ControllerWhileFunction<This>): Contr
     // object. It's probably one for the condition that check the inner object property.
     while (true) {
       const beforeReadOffset = cursor.offset()
-      let ret
-      try {
-        ret = read()
-      } catch (err) {
-        // In the case of chained controller, for instance:
-        //
-        // ```
-        // class {
-        //   @Until(EOF)
-        //   @NullTerminatedString
-        //   property: string[]
-        // }
-        // ```
-        //
-        // The inner reader (`@NullTerminatedString`) would reach EOF first
-        // and throw an EOFError but the actual value we want to send to the
-        // outer controller is the one built over the inner controller.
-        //
-        // This is the reason why the `EOFError` will store the result in its
-        // properties so that the `Until(EOF)` controller can catch it and
-        // handle it.
-        //
-        // If no one handle that value the error will just be passed through.
-        if (err instanceof EOFError) {
-          throw new EOFError(result)
+
+      const ret = (() => {
+        try {
+          return read()
+        } catch (err) {
+          // In the case of chained controller, for instance:
+          //
+          // ```
+          // class {
+          //   @Until(EOF)
+          //   @NullTerminatedString
+          //   property: string[]
+          // }
+          // ```
+          //
+          // The inner reader (`@NullTerminatedString`) would reach EOF first
+          // and throw an EOFError but the actual value we want to send to the
+          // outer controller is the one built over the inner controller.
+          //
+          // This is the reason why the `EOFError` will store the result in its
+          // properties so that the `Until(EOF)` controller can catch it and
+          // handle it.
+          //
+          // If no one handle that value the error will just be passed through.
+          if (err instanceof EOFError) {
+            throw new EOFError(result)
+          } else if (err instanceof PartialReadingError) {
+            throw new PartialReadingError([...result, err.value], err.err)
+          }
+          throw err
         }
-        throw err
-      }
+      })()
 
       result.push(ret)
+
       if (!cond(ret, result.length, currStateObject, cursor.offset(), startOffset)) {
         if (opt.peek) {
           result.pop()
@@ -244,7 +249,16 @@ function mapFunctionFactory<This> (array: any[]): ControllerFunction<This> {
   ): any {
     const startOffset = cursor.offset()
 
-    const result = array.map(read)
+    const result = array.reduce((tmpResult, elem) => {
+      try {
+        return [...tmpResult, read(elem)]
+      } catch (err) {
+        if (err instanceof PartialReadingError) {
+          throw new PartialReadingError([...tmpResult, err.value], err.err)
+        }
+        throw err
+      }
+    }, [])
 
     if (opt.peek) {
       cursor.move(startOffset)
@@ -377,7 +391,15 @@ export function Until<This, Value> (cmp: number | string | typeof EOF, opt?: Par
     const startOffset = cursor.offset()
 
     while (true) {
-      result.push(read())
+      try {
+        result.push(read())
+      } catch (err) {
+        if (err instanceof PartialReadingError) {
+          throw new PartialReadingError([...result, err.value], err.err)
+        }
+        throw err
+      }
+
       if (cursor.offset() === cursor.byteLength) {
         if (opt.peek) {
           cursor.move(startOffset)
