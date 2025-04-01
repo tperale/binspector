@@ -4,11 +4,12 @@ import { binread } from '../reader.ts'
 import { BinaryReader, BinaryCursorEndianness } from '../cursor.ts'
 import { CtxGet, CtxSet } from '../decorators/context.ts'
 
-function expectReadTest<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ctx = {}, ...args: any[]) {
-  return expect(binread(new BinaryReader(new Uint8Array(buffer), endian), ObjectDefinition, ctx, {}, ...args))
+function expectReadTest<Target extends object> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>, endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian, ctx = {}, ...args: any[]) {
+  const obj = new ObjectDefinition(...args)
+  return expect(binread(new BinaryReader(new Uint8Array(buffer), endian), obj, { ctx }))
 }
 
-function expectReadTestToThrow<Target> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
+function expectReadTestToThrow<Target extends object> (buffer: Array<number>, ObjectDefinition: InstantiableObject<Target>) {
   return expect(() => binread(new BinaryReader(new Uint8Array(buffer)), ObjectDefinition)).toThrow()
 }
 
