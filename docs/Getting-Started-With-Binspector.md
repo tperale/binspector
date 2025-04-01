@@ -93,7 +93,7 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 const data = fs.readFileSync(path.join(import.meta.dirname, 'file.bin'))
-const protocol = binread(new BinaryReader(data), Protocol)
+const protocol = binread(data, Protocol)
 ```
 
 From an high level point of view the `binread` function will first check
@@ -230,7 +230,7 @@ fileDownload.addEventListener("click", handleFileDownload)
 function handleFileInput(event) {
   const file = event.target.files[0]
   file.arraybuffer().then((arr) => {
-      protocol = binread(new BinaryReader(arr), Protocol)
+      protocol = binread(arr, Protocol)
   })
 }
 

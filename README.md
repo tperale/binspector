@@ -136,11 +136,11 @@ class Protocol {
 ### 🔍 Reading an ArrayBuffer into Objects
 
 ```typescript
-import { binread, BinaryReader } from 'binspector'
+import { binread } from 'binspector'
 
 const buf = new Uint8Array([0x02, 0x01, 0x02, 0x03, 0x04])
 
-binread(new BinaryReader(buf), Protocol)
+binread(buf, Protocol)
 // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 ```
 
