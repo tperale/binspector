@@ -1,11 +1,9 @@
 /**
- * The reader module
+ * The writer module
  *
- * @mermaid
- *
- * @module reader
+ * @module writer
  */
-import { BinaryWriter } from './cursor.ts'
+import { BinaryCursorEndianness, BinaryWriter } from './cursor.ts'
 import { UnknownPropertyType } from './error.ts'
 import Meta from './metadatas.ts'
 import {
@@ -14,52 +12,51 @@ import {
   isPrimitiveRelation,
   type PropertyType,
 } from './decorators/primitive.ts'
-import { ExecutionScope, type InstantiableObject } from './types.ts'
+import { ExecutionScope, InstantiableObject } from './types.ts'
 import { usePrePost } from './decorators/prepost.ts'
 import { useConditions } from './decorators/condition.ts'
 import { TransformerExecLevel, useTransformer } from './decorators/transformer.ts'
 import { writeBitField } from './decorators/bitfield.ts'
 
-/**
- * binwrite.
- *
- * @param {BinaryWriter} cursor
- * @param {InstantiableObject} ObjectDefinition
- * @param {Target} instance
- * @returns {void}
- *
- */
-export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
-  const metadata = ObjectDefinition[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
-  if (metadata === undefined) {
+interface BinwriteOptions {
+  endian?: BinaryCursorEndianness
+}
+
+const defaultBinwriteOptions = {
+  endian: undefined,
+}
+
+function _binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: InstantiableObject<Target>, instance: Target): BinaryWriter {
+  const ObjectMetadata = ObjectDefinition[Symbol.metadata] as NonNullable<DecoratorMetadataObject>
+  if (ObjectMetadata === undefined) {
     throw new Error('undefined')
   }
 
-  const bitfields = Meta.getBitFields(metadata)
+  const bitfields = Meta.getBitFields(ObjectMetadata)
   if (bitfields.length > 0) {
     writeBitField(bitfields, instance, cursor)
     return cursor
   }
 
-  usePrePost(Meta.getClassPre(metadata), instance, cursor, ExecutionScope.OnWrite)
+  usePrePost(Meta.getClassPre(ObjectMetadata), instance, cursor, ExecutionScope.OnWrite)
 
-  Meta.getFields<Target>(metadata).forEach((field) => {
-    usePrePost(Meta.getPre(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
+  Meta.getFields<Target>(ObjectMetadata).forEach((field) => {
+    usePrePost(Meta.getPre(ObjectMetadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
 
-    const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(field.metadata, field.propertyName), instance) : field
+    const finalRelationField = isUnknownProperty(field) ? useConditions(Meta.getConditions(ObjectMetadata, field.propertyName), instance) : field
     if (finalRelationField !== undefined) {
       function write (field: PropertyType<Target>, value: any): void {
         if (isPrimitiveRelation(field)) {
           cursor.write(field.primitive, value as number)
         } else if (isRelation(field)) {
-          binwrite(cursor, field.relation, value)
+          _binwrite(cursor, field.relation, value)
         } else {
           throw new UnknownPropertyType(field)
         }
       }
 
       // Condition don't need to be used since the object are already in here.
-      const transformers = Meta.getTransformers(metadata, field.propertyName, true)
+      const transformers = Meta.getTransformers(ObjectMetadata, field.propertyName, true)
       const value = useTransformer(transformers, instance[field.propertyName], instance, ExecutionScope.OnWrite)
       if (Array.isArray(value)) {
         value.flat(Infinity).forEach((x) => {
@@ -69,19 +66,86 @@ export function binwrite<Target> (cursor: BinaryWriter, ObjectDefinition: Instan
         write(finalRelationField, useTransformer(transformers, value, instance, ExecutionScope.OnWrite, TransformerExecLevel.PrimitiveTranformer))
       }
     }
-    usePrePost(Meta.getPost(metadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
+    usePrePost(Meta.getPost(ObjectMetadata, field.propertyName), instance, cursor, ExecutionScope.OnWrite)
   })
 
-  usePrePost(Meta.getClassPost(metadata), instance, cursor, ExecutionScope.OnWrite)
+  usePrePost(Meta.getClassPost(ObjectMetadata), instance, cursor, ExecutionScope.OnWrite)
 
   return cursor
 }
 
-export function computeBinSize (instance: any): number {
-  function _getSize (x: any): number {
-    const bw = new BinaryWriter()
-    binwrite(bw, x.constructor, x)
-    return bw.byteLength
+/**
+ * `binwrite` transforms a binspector definition instance into an
+ * `ArrayBuffer`.
+ *
+ * @example
+ *
+ * Given the following protocol definition:
+ *
+ * ```typescript
+ * class Protocol {
+ *   @Uint8
+ *   x: number
+ *
+ *   @Uint8
+ *   y: number
+ * }
+ * ```
+ *
+ * There are two ways to call the `binwrite` function:
+ *
+ * - Pass an instance of the `Protocol` class to binwrite:
+ *
+ * ```typescript
+ * const protocol = new Protocol()
+ * protocol.x = 1
+ * protocol.y = 2
+ *
+ * binwrite(protocol) // => ArrayBuffer { [Uint8Contents]: <01 02>, byteLength: 2 }
+ * ```
+ *
+ * - Pass an object that represent the definition with the definition
+ *   constructor
+ *
+ * ```typescript
+ * const protocol = { x: 1, y: 2 }
+ *
+ * binwrite(protocol, Protocol) // => ArrayBuffer { [Uint8Contents]: <01 02>, byteLength: 2 }
+ * ```
+ *
+ * @param {Target} instance Object or definition instance to serialize.
+ * @param {InstantiableObject<Target> | Partial<BinwriteOptions>} ObjectDefinitionOrOpt
+ * @param {Partial<BinwriteOptions>} opt
+ *
+ * @returns {ArrayBufferLike} The serialized object buffer.
+ */
+export function binwrite<Target> (instance: Target, ObjectDefinitionOrOpt: InstantiableObject<Target> | Partial<BinwriteOptions> = defaultBinwriteOptions, opt?: Partial<BinwriteOptions>): ArrayBufferLike {
+  const isConstructor = typeof ObjectDefinitionOrOpt === 'function' && !!ObjectDefinitionOrOpt.prototype && ObjectDefinitionOrOpt.prototype.constructor === ObjectDefinitionOrOpt
+  const argOpt = isConstructor
+    ? (opt === undefined ? defaultBinwriteOptions : opt)
+    : ObjectDefinitionOrOpt
+  const finalOpt = { ...defaultBinwriteOptions, ...argOpt }
+  const cursor = new BinaryWriter(finalOpt.endian)
+
+  const definition = isConstructor
+    ? ObjectDefinitionOrOpt
+    : ((instance as object).constructor as InstantiableObject<Target>)
+
+  return _binwrite(cursor, definition, instance).buffer
+}
+
+/**
+ * `computeBinSize` compute the size in byte of a binspector declaration
+ * instance.
+ *
+ * @param {Target} instance Binspector declaration instance.
+ *
+ * @returns {number} Size in byte.
+ */
+export function computeBinSize<Target extends object> (instance: Target | Target[]): number {
+  function _getSize (x: Target): number {
+    const buf = binwrite(x)
+    return buf.byteLength
   }
 
   if (Array.isArray(instance)) {

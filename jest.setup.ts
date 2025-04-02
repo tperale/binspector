@@ -1,5 +1,5 @@
 import * as fs from 'node:fs'
-import { binread, binwrite, BinaryReader, BinaryWriter } from './src/index'
+import { binread, binwrite, BinaryReader } from './src/index'
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -47,20 +47,18 @@ expect.extend({
   binReadWriteEquality (arr: ArrayBufferLike | ArrayBufferView, ObjectDefinition: any) {
     const decoded = binread(new BinaryReader(arr), ObjectDefinition)
 
-    const writtenBuf = new BinaryWriter()
-    binwrite(writtenBuf, ObjectDefinition, decoded)
+    const writtenBuf = binwrite(decoded)
 
-    return equalArrayBuffer(arr, writtenBuf.buffer)
+    return equalArrayBuffer(arr, writtenBuf)
   },
   fileReadWriteEquality (filename: string, ObjectDefinition: any) {
     const data = fs.readFileSync(filename)
 
     const decoded = binread(new BinaryReader(data), ObjectDefinition)
 
-    const writtenBuf = new BinaryWriter()
-    binwrite(writtenBuf, ObjectDefinition, decoded)
+    const writtenBuf = binwrite(decoded)
 
-    return equalArrayBuffer(data, writtenBuf.buffer)
+    return equalArrayBuffer(data, writtenBuf)
   },
 })
 
