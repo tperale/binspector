@@ -2,19 +2,18 @@ import { Bitfield, Relation, Choice, Count, Matrix, Peek, Offset, Endian, NullTe
 import { ExecutionScope, InstantiableObject, PrimitiveSymbol, EOF } from '../types.ts'
 import { binwrite } from '../writer.ts'
 import { binread } from '../reader.ts'
-import { BinaryReader, BinaryWriter, BinaryCursorEndianness } from '../cursor.ts'
+import { BinaryReader, BinaryCursorEndianness } from '../cursor.ts'
 
-function expectWriteTest<Target extends object> (instance: any, ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-  const writtenBuf = new BinaryWriter(endian)
-  binwrite(writtenBuf, ObjectDefinition, instance)
+function expectWriteTest<Target extends object> (instance: Target, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
+  const writtenBuf = binwrite(instance, { endian })
 
-  expect(writtenBuf.buffer).toBeEqualArrayBuffer(Uint8Array.from(buf))
+  expect(writtenBuf).toBeEqualArrayBuffer(Uint8Array.from(buf))
 }
 
 function decodeEncodeTest<Target extends object> (ObjectDefinition: InstantiableObject<Target>, buf: number[], endian: BinaryCursorEndianness = BinaryCursorEndianness.BigEndian) {
-  const decoded = binread(new BinaryReader(new Uint8Array(buf), endian), ObjectDefinition)
+  const decoded = binread(new BinaryReader(Uint8Array.from(buf), endian), ObjectDefinition)
 
-  expectWriteTest(decoded, ObjectDefinition, buf, endian)
+  expectWriteTest(decoded, buf, endian)
 }
 
 describe('Binary Writter testing', () => {
@@ -459,5 +458,24 @@ describe('Writing binary definition with Condition decorators', () => {
     }
 
     decodeEncodeTest(Protocol, [0x02, 0x00, 0x03])
+  })
+})
+
+describe('Using binwrite without an instance of the definition', () => {
+  it('should be equal arrays', () => {
+    class Protocol {
+      @Uint8
+      x: number
+
+      @Uint8
+      y: number
+    }
+
+    const obj = {
+      x: 1,
+      y: 2,
+    }
+
+    expect(binwrite(obj, Protocol)).toBeEqualArrayBuffer(Uint8Array.from([1, 2]))
   })
 })

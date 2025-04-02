@@ -1,5 +1,5 @@
 import { type BinspectorMetaClass } from '../../src/bindump.ts'
-import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, BinaryWriter, computeBinSize } from '../../src/index.ts'
+import { Count, Enum, Int32, Match, PrimitiveSymbol, Relation, Select, Size, Uint16, Uint32, Uint8, Utf8, LittleEndian, NullTerminated, BinaryReader, binread, jsonify, binwrite, computeBinSize } from '../../src/index.ts'
 
 // When calling JSON.stringify on a BigInt an error will be raised by default
 // We need to define the serializer for this type.
@@ -251,7 +251,7 @@ export class Bson {
   }
 
   toBuffer () {
-    return binwrite(new BinaryWriter(), Bson, this).buffer
+    return binwrite(this)
   }
 
   static from (buf: ArrayBufferLike, meta: Partial<BinspectorMetaClass> = {}) {
