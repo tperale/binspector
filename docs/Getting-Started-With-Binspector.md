@@ -165,7 +165,7 @@ const obj = {
     bar: 0x01
 }
 
-const protocol = binwrite(new BinaryWriter(), obj, Protocol)
+const protocol = binwrite(obj, Protocol)
 
 const buf = protocol.buffer // <= ArrayBuffer(...)
 
@@ -236,7 +236,7 @@ function handleFileInput(event) {
 
 function handleFileDownload(event) {
     if (protocol !== undefined) {
-        const _protocol = binwrite(new BinaryWriter(), Protocol, protocol)
+        const _protocol = binwrite(protocol, Protocol)
 
         const blob = new Blob([_protocol.buffer])
         const url = URL.createObjectURL(blob)
