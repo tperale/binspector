@@ -151,7 +151,7 @@ import { binwrite, BinaryWriter } from 'binspector'
 
 const obj = { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 
-binwrite(new BinaryWriter(), Protocol, obj).buffer
+binwrite(obj, Protocol)
 // => [0x02, 0x01, 0x02, 0x03, 0x04]
 ```
 
