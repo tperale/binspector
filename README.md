@@ -1,16 +1,19 @@
 # 🕵️ binspector, your binary file assistant
 
-A _truly declarative_ TypeScript library to help you create binary file and
-protocol definitions.
+A _truly declarative_ TypeScript library for describing, reading, and writing
+binary file formats and protocol.
 
-- 🗣️  __Declarative__ – Define binary structures using __decorators__.
-- 🔄 __Read & Write Support__ – Seamlessly __parse & serialize__ binary data.
-- ⬆️  __Extensible__ - Write __custom__ decorators.
-- 🖋️ __Typed__ – Leverage TypeScript’s type system for validation.
-- 🌐 __Works in the Browser__ – Use Binspector for frontend or backend binary processing.
-- 📦 __Zero Dependencies__ – No external dependencies.
+Instead of manually parsing buffers, define protocols with TypeScript classes
+and decorators to handle serialization and de-serialization.
 
-## 📌 What does it looks like ?
+- __Declarative__ – Define binary structures using __decorators__.
+- __Read & Write Support__ – Parse binary data and serialize objects.
+- __Extensible__ - Write __custom__ decorators.
+- __Typed__ – Leverage TypeScript’s type system for validation.
+- __Browser & node__ – Works in different environments.
+- __Zero Dependencies__ – No external dependencies.
+
+## Example
 
 See [examples](https://github.com/tperale/binspector/tree/main/example) for
 real files formats.
@@ -85,7 +88,7 @@ class Protocol {
 }
 ```
 
-## 🚀 Features
+## Features
 
 - Declarative Class-Based Approach – Define binary structures as TypeScript classes.
 - Leverages TypeScript's Type System – No need to write separate type definitions.
@@ -100,7 +103,7 @@ class Protocol {
   - String encodings (UTF-8, UTF-16, UTF-32, ASCII)
   - Shared context
 
-## 📦 Installation
+## Installation
 
 Install __Binspector__ from [npm](https://www.npmjs.com/package/binspector):
 
@@ -108,7 +111,7 @@ Install __Binspector__ from [npm](https://www.npmjs.com/package/binspector):
 > npm install binspector
 ```
 
-## 📁 Usage
+## Usage
 
 Here’s a simple example of reading and writing a binary coordinate system.
 
@@ -133,7 +136,7 @@ class Protocol {
 }
 ```
 
-### 🔍 Reading an ArrayBuffer into Objects
+### Reading an ArrayBuffer into Objects
 
 ```typescript
 import { binread } from 'binspector'
@@ -144,7 +147,7 @@ binread(buf, Protocol)
 // => { len: 2, coords: [{ x: 1, y: 2 }, { x: 3, y: 4 }] }
 ```
 
-### ✍️  Writing Objects to ArrayBuffer
+### Writing Objects to ArrayBuffer
 
 ```typescript
 import { binwrite, BinaryWriter } from 'binspector'
@@ -155,7 +158,7 @@ binwrite(obj, Protocol)
 // => [0x02, 0x01, 0x02, 0x03, 0x04]
 ```
 
-## 📖 Learn more
+## Learn more
 
 - 📚 Documentation: [Getting Started](https://tperale.github.io/binspector/documents/Getting-Started-With-Binspector.html)
 - 📂 Examples: [/example](https://github.com/tperale/binspector/tree/main/example)

@@ -6,7 +6,7 @@ It integrates the same principle as JSON format allowing to defines recursive
 object that can contains: arrays, numbers or string and extends some of those
 data types as well.
 
-## 🏗 Understanding the Structure
+## Understanding the Structure
 
 The following graph illustrates a simplified BSON definition:
 
@@ -30,7 +30,7 @@ graph TD
 The BSON definition consists of a series of _elements_ that each have an
 associated _data type_, _property name_ and _data_.
 
-## ♦ Step 1: A naive BSON definition
+## Step 1: A naive BSON definition
 
 To make it easier this article will use a reduced number of data types. More
 are defined in the code source available in the [example](https://github.com/tperale/binspector/blob/dev-example-bson/example/bson/bson.ts)
@@ -114,7 +114,7 @@ equals to `undefined`.
 Once the `@Choice` decorator is executed the recursive definition will
 reference `undefined`.
 
-## ♦ Step 2: Using Lazy Evaluation
+## Step 2: Using Lazy Evaluation
 
 Instead of referencing Bson directly inside `@Choice`, define a lookup table
 where values are functions that return types dynamically:
@@ -132,7 +132,7 @@ const CHOICES = {
 This ensures Bson is only resolved when CHOICES is accessed, not when the class
 is initially defined.
 
-## ♦ Step 3: Use `@Select` instead of `@Choice`
+## Step 3: Use `@Select` instead of `@Choice`
 
 Replace the `@Choice` decorator with the `@Select`. Both
 are similar in practice but the `@Choice` one defines the conditions and
@@ -156,7 +156,7 @@ class Element {
 Now, when `data` is read, the correct relation is selected at runtime, avoiding
 the premature reference issue.
 
-## 🎯 Final BSON Definition
+## Final BSON Definition
 
 With these fixes, we can now define a full BSON parser using Binspector:
 
@@ -205,7 +205,7 @@ export class Bson {
 }
 ```
 
-## 🔑 Key Takeaways
+## Key Takeaways
 
 When working with recursive binary file format:
 

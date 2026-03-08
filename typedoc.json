@@ -16,5 +16,5 @@
   "includeVersion": true,
   "exclude": ["**/__test__/*.test.ts*"],
   "plugin": ["typedoc-plugin-mermaid"],
-  "projectDocuments": ["docs/Getting-Started-With-Binspector.md", "docs/Case-Study-*.md"]
+  "projectDocuments": ["docs/Getting-Started-With-Binspector.md", "docs/Using-Binspector-In-Browser.md", "docs/Case-Study-*.md"]
 }
